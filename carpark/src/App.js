@@ -9,6 +9,7 @@ import GlobalStyle from "./styles/GlobalStyle";
 import NotFound from "./pages/NotFound";
 import WebLayout from "./layout/WebLayout";
 import LoginPage from "./pages/LoginPage";
+import QRCodePage from "./pages/QRCodePage";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: "login",
         element: <LoginPage />,
+      },
+      {
+        path: 'qr',
+        element: <QRCodePage />,
       },
     ]
   },
