@@ -1,51 +1,24 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import React from 'react'
+import {Routes,Route,Navigate} from 'react-router-dom'
+// import Home from './pages/Home'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import GlobalStyle from "./styles/GlobalStyle";
-import NotFound from "./pages/NotFound";
-import WebLayout from "./layout/WebLayout";
-import LoginPage from "./pages/LoginPage";
-import QRCodePage from "./pages/QRCodePage";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <WebLayout />,
-    errorElement: <NotFound />,
-    children: [
-      {
-      path: "",
-      element: <Navigate to="/login" replace />, //바로 로그인 페이지로
-      },
-      {
-        path: "login",
-        element: <LoginPage />,
-      },
-      {
-        path: 'qr',
-        element: <QRCodePage />,
-      },
-    ]
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
 
-const queryClient = new QueryClient(); 
-
-function App() {
+const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <GlobalStyle />
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
+    <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+      <Routes>
+        {/* <Route path='/' element={<Home /> } /> */}
+        <Route path='/login' element={<LoginPage />} />
+        <Route path='/signup' element={<SignupPage />} />
+
+
+      </Routes>
+      
+    </div>
+  )
 }
 
-export default App;
+export default App
