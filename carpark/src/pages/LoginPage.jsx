@@ -26,14 +26,14 @@ const LoginPage = () => {
         <div className='inputuptext'>아이디</div>
         <div className="input">
           <input type="text" placeholder={idPlaceholder}
-          onFocus={()=> setIdPlaceholder('입력 중..')}
+          onFocus={()=> setIdPlaceholder('')}
           onBlur={()=> setIdPlaceholder('아이디를 입력해 주세요')}
           />
         </div>
         <div className='inputuptext'>비밀번호</div>
         <div className="input">
           <input type="password" placeholder={pwPlaceholder}
-          onFocus={()=>setPwPlaceholder('입력 중..')}
+          onFocus={()=>setPwPlaceholder('')}
           onBlur={()=>setPwPlaceholder('비밀번호를 입력해 주세요')}
           />
         </div>

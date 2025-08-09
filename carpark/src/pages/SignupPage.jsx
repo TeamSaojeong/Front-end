@@ -30,28 +30,28 @@ const SignupPage = () => {
         <div className="input">
           {/* <img src={user_icon} alt="" /> 나중에 이미지 삽입할 상황 있을시 사용*/}
           <input type="text" placeholder={idPlaceholder} 
-          onFocus={()=>setIdPlaceholder('입력 중..')}
+          onFocus={()=>setIdPlaceholder('')}
           onBlur={()=>setIdPlaceholder('아이디를 입력해 주세요(최소 8자리)')}
           />
         </div>
         <div className='inputuptext'>비밀번호</div>
         <div className="input">
           <input type="password" placeholder={pwPlaceholder}
-          onFocus={()=>setPwPlaceholder('입력 중..')}
+          onFocus={()=>setPwPlaceholder('')}
           onBlur={()=>setPwPlaceholder('비밀번호를 입력해 주세요(최소 10자리)')}
           />
         </div>
         <div className='inputuptext'>이름</div>
         <div className="input">
           <input type="text" placeholder={namePlaceholder}
-          onFocus={()=>setNamePlaceholder('입력 중..')}
+          onFocus={()=>setNamePlaceholder('')}
           onBlur={()=>setNamePlaceholder('이름을 입력해 주세요')}
           />
         </div>
         <div className='inputuptext'>차량번호</div>
          <div className="input">
           <input type="text" placeholder={carPlaceholder}
-          onFocus={()=>setCarPlaceholder('입력 중..')}
+          onFocus={()=>setCarPlaceholder('')}
           onBlur={()=>setCarPlaceholder('차량번호를 입력해 주세요 (EX)123가4568')}
           />
         </div>
