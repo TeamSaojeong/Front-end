@@ -27,6 +27,7 @@ const LoginPage = () => {
           <img src={password_icon} alt="" />
           <input type="password" placeholder="Password"/>
         </div>
+        
       </div>
       <div className="forgot-password">Lost Password? <span>Click Here!</span></div>
       <div className="submit-container">

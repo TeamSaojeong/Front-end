@@ -34,22 +34,31 @@
     margin-top:55px;
     display:flex;
     flex-direction: column;
-    gap:25px;
+    gap:15px;
+}
+
+.inputuptext{
+    color:black;
+    font-size:15px;
+    font-weight:500;
+    margin-left: 20px;
+    width: 342px;
+    margin:0 auto 2px;
 }
 
 .input{
     display: flex;
     align-items:center;
     margin:auto;
-    width:480px;
-    height:80px;
+    width:342px;
+    height:48px;
     background:#eaeaea;
     border-radius:6px;
 }
 
-.input img{
+/* .input img{
     margin:0px 30px;
-}
+} */
 
 .input input{
     height:50px;
@@ -58,7 +67,7 @@
     border:none;
     outline:none;
     color:#797979;
-    font-size:20px;
+    font-size:16px;
 }
 
 .forgot-password{
