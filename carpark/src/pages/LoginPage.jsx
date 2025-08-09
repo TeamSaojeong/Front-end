@@ -15,24 +15,23 @@ const LoginPage = () => {
   return (
     <div className='container'>
       <div className="header">
-        <div className="text">Login</div>
+        {/* <img src={email_icon} alt="" /> 로고 이미지 넣을 곳*/}
+        <div className="text">로고예정</div>
         <div className="underline"></div>
       </div>
-      <div className="inputs">
+     <div className="inputs">
+        <div className='inputuptext'>아이디</div>
         <div className="input">
-          <img src={email_icon} alt="" />
-          <input type="email" placeholder="Email Id"/>
+          <input type="text" placeholder="아이디를 입력해 주세요" />
         </div>
+        <div className='inputuptext'>비밀번호</div>
         <div className="input">
-          <img src={password_icon} alt="" />
-          <input type="password" placeholder="Password"/>
+          <input type="email" placeholder="비밀번호를 입력해 주세요"/>
         </div>
-        
       </div>
-      <div className="forgot-password">Lost Password? <span>Click Here!</span></div>
+      <div className="notyet-customer" onClick={() => navigate('/signup')}>아직 회원이 아니신가요? <span>회원가입</span></div>
       <div className="submit-container">
-        <div className="submit" onClick={handleLogin}>Login</div>
-        <div className="submit gray" onClick={() => navigate('/signupage')}>Go to Sign Up</div>
+        <div className="submit" onClick={handleLogin}>로그인</div>
       </div>
     </div>
   )

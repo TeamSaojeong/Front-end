@@ -20,24 +20,23 @@ const SignupPage = () => {
         <div className='inputuptext'>아이디</div>
         <div className="input">
           {/* <img src={user_icon} alt="" /> 나중에 이미지 삽입할 상황 있을시 사용*/}
-          <input type="text" placeholder="  아이디를 입력해 주세요 (최소 8자리)" />
+          <input type="text" placeholder="아이디를 입력해 주세요 (최소 8자리)" />
         </div>
         <div className='inputuptext'>비밀번호</div>
         <div className="input">
-          <input type="email" placeholder="  비밀번호를 입력해 주세요(최소 10자리)"/>
+          <input type="email" placeholder="비밀번호를 입력해 주세요(최소 10자리)"/>
         </div>
         <div className='inputuptext'>이름</div>
         <div className="input">
-          <input type="password" placeholder="  이름을 입력해 주세요"/>
+          <input type="password" placeholder="이름을 입력해 주세요"/>
         </div>
         <div className='inputuptext'>차량번호</div>
          <div className="input">
-          <input type="password" placeholder="  EX)123가4568"/>
+          <input type="password" placeholder="EX)123가4568"/>
         </div>
       </div>
       <div className="submit-container">
-        <div className="submit" onClick={() => {/* 회원가입 로직 */}}>Sign Up</div>
-        <div className="submit gray" onClick={() => navigate('/loginpage')}>Go to Login</div>
+        <div className="submit" onClick={() => {/* 회원가입 로직 */}}>가입하기</div>
       </div>
     </div>
   )
