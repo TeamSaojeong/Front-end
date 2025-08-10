@@ -47,9 +47,9 @@ const LoginPage = () => {
           />
         </div>
       </div>
-      <div className="submit-container">
+      <div className="loginsubmit-container">
       <div className="notyet-customer" onClick={() => navigate('/signup')}>아직 회원이 아니신가요? <span>회원가입</span></div>
-        <div className={`submit ${!isEnabled ? 'gray' : ''}`} 
+        <div className={`loginsubmit ${!isEnabled ? 'gray' : ''}`} 
         onClick={handleLogin}
         disabled={!isEnabled}>로그인</div>
       </div>
@@ -57,3 +57,4 @@ const LoginPage = () => {
   )
 }
 export default LoginPage;
+

@@ -71,8 +71,8 @@ const SignupPage = () => {
           />
         </div>
       </div>
-      <div className="submit-container">
-        <div className={`submit ${!isEnabled ? 'gray' : ''}`} 
+      <div className="signupsubmit-container">
+        <div className={`signupsubmit ${!isEnabled ? 'gray' : ''}`} 
          onClick={handleSignup}
          disabled={!isEnabled}>가입하기</div>
       </div>

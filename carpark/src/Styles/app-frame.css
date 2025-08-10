@@ -1,0 +1,41 @@
+/* 지도 크기 디자인 크기 조절위해 몰라서 전체 코드 GPT 코드 사용 */
+
+:root { --app-width: 390px; }
+
+html, body, #root {
+  height: 100%;
+}
+
+/* 바깥 배경(좌우 여백) */
+.app-outer{
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  background: #f5f6f8;      /* 바깥 회색 배경 */
+}
+
+/* 실제 앱 화면(디자인 영역) */
+.app-shell{
+  width: min(100%, var(--app-width)); /* 최대 390px, 그 이하 화면은 100% */
+  min-height: 100dvh;
+  background: #fff;
+  position: relative;
+  overflow: hidden;          /* 내부 요소가 튀어나오지 않도록 */
+  border-radius: 18px;       /* 데스크탑에서 기기 느낌 */
+  box-shadow: 0 10px 40px rgba(0,0,0,.12);
+}
+
+/* 모바일(폭이 좁을 때)은 진짜 앱처럼 풀스크린 */
+@media (max-width: 420px){
+  .app-shell{
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* 지도를 포함한 “캔버스 전체 채우기”가 필요한 컴포넌트용 유틸 */
+.fill {
+  position: absolute;
+  inset: 0;
+}
