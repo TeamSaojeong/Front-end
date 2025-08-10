@@ -82,34 +82,12 @@
     cursor:pointer;
 }
 
-.loginsubmit-container{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap:8px;
-    margin-top:334px;
-}
-
 .signupsubmit-container{
     display: flex;
     flex-direction: column;
     align-items: center;
     gap:8px;
     margin-top:150px;
-}
-
-.loginsubmit{
-    display:flex;
-    justify-content: center;;
-    align-items: center;
-    width:342px;
-    height:56px;
-    color:#fff;
-    background:#2E80EC;
-    border-radius:5px;
-    font-size:20px;
-    font-weight:700;
-    cursor:pointer;
 }
 
 .signupsubmit{
