@@ -1,0 +1,67 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 390px;
+  height: 844px;
+  margin: 0 auto;
+  background: #fff;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 34px;
+}
+
+.header img {
+  width: 280px;
+  height: 90px;
+  margin-top: 85px;
+}
+
+.car-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 105px;
+}
+
+.car-section img {
+  width: 100%;
+  height: auto;
+}
+
+.notyet-customer {
+  text-align: center;
+  font-size: 14px;
+  color: #797979;
+  margin-top: 16px;
+}
+
+.notyet-customer span {
+  color: #2e80ec;
+  cursor: pointer;
+}
+
+.Nowstart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 342px;
+  height: 56px;
+  margin-top: 62px;
+  margin-left: 24px;
+  color: #fff;
+  background: #2e80ec;
+  border: 0;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.Nowstart:hover {
+  background: #1a5bbd;
+}
