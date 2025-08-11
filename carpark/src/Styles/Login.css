@@ -104,6 +104,10 @@
   cursor: pointer;
 }
 
+.loginsubmit:hover {
+  background: #1a5bbd;
+}
+
 .gray {
   background: #eaeaea;
   color: #767676;
