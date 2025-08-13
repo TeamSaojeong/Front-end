@@ -56,4 +56,6 @@ body,
 .map-fill {
   position: absolute;
   inset: 0;
+  z-index: 1; /* 오버레이보다 뒤에 깔리면 클릭 못잡음 → 위로 올려줌 */
+  touch-action: pan-x pan-y; /* 터치 패닝 허용 (필수!) */
 }
