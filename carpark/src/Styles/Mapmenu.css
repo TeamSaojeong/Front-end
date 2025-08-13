@@ -1,13 +1,12 @@
-/* 햄버거 버튼 (지도 왼쪽 상단) */
 .menu-fab {
   position: absolute;
   top: 16px;
   left: 16px;
   z-index: 30;
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 50%; /*동그랗게 만들어줌*/
   background: #fff;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   display: flex;
@@ -17,10 +16,11 @@
   gap: 4px;
   cursor: pointer;
 }
+
 .menu-fab .bar {
   width: 18px;
   height: 2px;
-  background: #111;
+  background: #2e80ec;
   border-radius: 2px;
 }
 
