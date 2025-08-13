@@ -8,15 +8,17 @@ export default function MapMenu() {
   return (
     <>
       {/* 왼쪽 상단 메뉴 버튼 */}
-      <button
-        className="menu-fab"
-        onClick={() => setOpen(true)}
-        aria-label="메뉴 열기"
-      >
-        <span className="bar" />
-        <span className="bar" />
-        <span className="bar" />
-      </button>
+      {!open && (//메뉴가 열리면, 즉 open이 false일 때
+        <button
+          className="menu-fab"
+          onClick={() => setOpen(true)}
+          aria-label="메뉴 열기"
+        >
+          <span className="bar" />
+          <span className="bar" />
+          <span className="bar" />
+        </button>
+      )}
 
       {/* 딤드 */}
       <div
@@ -41,7 +43,8 @@ export default function MapMenu() {
           <h1 className="menu-hello">
             안녕하세요,
             <br />
-            <strong>홍길동님!</strong>
+            <strong>홍길동</strong>
+            님!
           </h1>
 
           <div className="menu-section">
