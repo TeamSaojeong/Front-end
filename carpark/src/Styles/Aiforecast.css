@@ -1,0 +1,66 @@
+.ai-box {
+  position: absolute;
+  top: 16px;
+  left: calc(
+    16px + 48px + 12px
+  ); /*메뉴버튼이 시작하는 위치:16, 메뉴버튼의 너비인 48만큼 오른쪽 이동, 메뉴버튼과 ai박스 간격 12 */
+  right: 16px;
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px; /* 높이 56px로 고정 */
+  padding: 0 14px;
+  background: #fff;
+  border-radius: 16px;
+  backdrop-filter: blur(10px); /*피그마 값*/
+  border: 1px solid #fff;
+
+  cursor: pointer;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+/* 아이콘 영역 */
+.ai-box-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-icon,
+.ai-icon.small {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  object-fit: contain; /*원본 비율 유지 */
+}
+
+/* 텍스트 */
+.ai-box-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ai-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.2;
+  margin: 0;
+}
+.ai-sub {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ai박스안 꺾쇠 */
+.ai-chevron {
+  font-size: 18px;
+  /* width: 20px;
+  height: 20px; */
+  color: #2e80ec;
+}

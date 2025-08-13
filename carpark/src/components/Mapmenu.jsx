@@ -7,8 +7,7 @@ export default function MapMenu() {
 
   return (
     <>
-      {/* 왼쪽 상단 메뉴 버튼 */}
-      {!open && (//메뉴가 열리면, 즉 open이 false일 때
+      {!open && ( //메뉴가 열리면, 즉 open이 false일 때
         <button
           className="menu-fab"
           onClick={() => setOpen(true)}
