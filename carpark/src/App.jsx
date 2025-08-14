@@ -10,6 +10,7 @@ import OutSoon_cancel from "./pages/OutSoon_cancel";
 import PrivateOutSoon from "./pages/PrivateOutSoon";
 import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
+import ParkingEnd from "./pages/ParkingEnd";
 import "./Styles/app-frame.css";
 
 const App = () => {
@@ -26,7 +27,11 @@ const App = () => {
           <Route path="/outsoon_cancel" element={<OutSoon_cancel />} />
           <Route path="/privateoutsoon" element={<PrivateOutSoon />} />
           <Route path="/privateoutsoon_10m" element={<PrivateOutSoon_10m />} />
-          <Route path="/privateoutsoon_cancel" element={<PrivateOutSoon_cancel />} />
+          <Route
+            path="/privateoutsoon_cancel"
+            element={<PrivateOutSoon_cancel />}
+          />
+          <Route path="/parkingend" element={<ParkingEnd />} />
         </Routes>
       </div>
     </div>
