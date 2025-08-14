@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../Styles/Mapmenu.css";
 import parkherelogo from "../Assets/phlogo.png";
 
 export default function MapMenu() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -51,7 +53,13 @@ export default function MapMenu() {
             <button className="menu-row">
               주차 장소 등록<span className="chev">›</span>
             </button>
-            <button className="menu-row">
+            <button
+              className="menu-row"
+              onClick={() => {
+                setOpen(false);
+                navigate("/parkingplacemanage");
+              }}
+            >
               주차 장소 관리<span className="chev">›</span>
             </button>
           </div>

@@ -12,6 +12,13 @@ export default function Home() {
   const mapEl = useRef(null);
   const mapRef = useRef(null);
 
+  //임의 데이터 삽입 부분, 아마 여기에 백엔드 데이터를 받아올 것으로 예상
+  const places = [
+    { id: 1, name: "서울특별시", distanceKm: 24, etaMin: 36, price: 0 },
+    { id: 2, name: "부산광역시", distanceKm: 24, etaMin: 36, price: 0 },
+    { id: 3, name: "인천광역시", distanceKm: 24, etaMin: 36, price: 0 },
+  ];
+
   useEffect(() => {
     const init = () => {
       const kakao = window.kakao;
@@ -37,7 +44,9 @@ export default function Home() {
       <Mapmenu />
 
       <Aiforecast onClick={() => console.log("AI 예보 클릭")} />
-      <BottomSheet hostRef={wrapRef} />
+        
+      {/*places를 BottomSheet로 전달 */}
+      <BottomSheet hostRef={wrapRef} places={places} />
     </div>
   );
 }

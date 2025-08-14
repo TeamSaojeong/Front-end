@@ -11,6 +11,7 @@ import PrivateOutSoon from "./pages/PrivateOutSoon";
 import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
+import ParkingPlaceManage from "./pages/ParkingPlaceManage";
 import "./Styles/app-frame.css";
 
 const App = () => {
@@ -32,6 +33,7 @@ const App = () => {
             element={<PrivateOutSoon_cancel />}
           />
           <Route path="/parkingend" element={<ParkingEnd />} />
+          <Route path="/parkingplacemanage" element={<ParkingPlaceManage />} />
         </Routes>
       </div>
     </div>
