@@ -1,0 +1,45 @@
+.next-button {
+  height: 3.5rem;
+  width: 21.375rem;
+  border-radius: 6px;
+  border: none;
+  position: relative;
+  background: #f0f0f0;
+  color: #9e9e9e;
+  font-family: "Pretendard", Helvetica;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+  letter-spacing: -0.025rem;
+  margin: 26.75rem 0 2.875rem;
+}
+
+.next-button.disable {
+  background-color: #e4e4e4;
+  cursor: not-allowed;
+}
+
+.next-button.enabled {
+  background-color: #2e80ec;
+}
+
+.next-button .text-wrapper {
+  position: absolute;
+  top: 0.9375rem;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: "Pretendard", Helvetica;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.5rem;
+  letter-spacing: -0.025rem;
+}
+
+.next-button.enabled .text-wrapper {
+  color: #ffffff;
+}
+.next-button.disable .text-wrapper {
+  color: rgba(153, 153, 153, 1);
+}
