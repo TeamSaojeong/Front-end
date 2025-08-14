@@ -16,10 +16,10 @@ export default function Address() {
     }
   }, [location.state]);
 
-  const goSearch = () => {
-    // 돌아올 경로를 알려주고 싶으면 state에 넣어 전달 가능
-    navigate("/zipcode", { state: { returnTo: "/register/address" } });
-  };
+
+    const goSearch = () => {
+    navigate("/zipcode", { state: { returnTo: location.pathname } });
+    };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -34,7 +34,6 @@ export default function Address() {
         <button type="button" onClick={goSearch}>주소 검색</button>
       </div>
       <input type="text" placeholder="주소" value={address} readOnly />
-      <button type="submit">다음</button>
     </form>
   );
 }

@@ -1,11 +1,4 @@
-.previousBtn{
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    display: flex;
-  align-items: center;
-}
+
 .previousImg{
     width: 1.75rem;
     height: 1.75rem;
@@ -16,7 +9,8 @@
     height: 3.5rem; 
     margin-top: 2.75rem; 
     width: 100%; 
-    position: relative; 
+    position: sticky;
+    z-index: 1000; 
 }
 
 .back-inner { 
