@@ -1,0 +1,18 @@
+.previousImg{
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+}
+
+.back { 
+    height: 3.5rem; 
+    margin-top: 2.75rem; 
+    width: 100%; 
+    position: relative; 
+}
+
+.back-inner { 
+    height: 100%; 
+    display: flex; 
+    align-items: center; 
+}
