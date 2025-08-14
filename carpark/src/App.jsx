@@ -5,7 +5,9 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Start from "./pages/Start";
 import NamePage from "./pages/Register/NamePage";
-import Description from "./pages/Register/Description";
+import DescriptionPage from "./pages/Register/DescriptionPage";
+import Address from "./components/Register/Address";
+import ZipCodePage from "./pages/Register/ZipCodePage";
 import "./Styles/app-frame.css";
 
 const App = () => {
@@ -18,7 +20,9 @@ const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/name" element={<NamePage />}/>
-          <Route path="/description" element={<Description />}/>
+          <Route path="/description" element={<DescriptionPage />}/>
+          <Route path="/address" element={<Address />}/>
+          <Route path="zipcode" element={<ZipCodePage />}/>
         </Routes>
       </div>
     </div>
