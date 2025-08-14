@@ -7,19 +7,20 @@ import car_icon from "../Assets/car.png";
 import clock_icon from "../Assets/clock.svg";
 import infoyellow_icon from "../Assets/info-yellow.svg";
 
-const PrivateOutSoon_cancel = () => {
+const PrivateOutSoon = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="container-outsoon-cancel">
+    <div className="privatecancel-container">
       <img
         src={arrow}
         alt="뒤로가기"
         className="back-arrow"
         onClick={() => navigate(-1)}
       />
-      <div className="header">
-        <div className="text">
+
+      <div className="privatecancel-header">
+        <div className="privatecancel-text">
           콘하스 DDP 앞 주차장
           <br />
           이용중...
@@ -35,11 +36,7 @@ const PrivateOutSoon_cancel = () => {
 
       <div className="notice-box">
         <div className="notice-inner">
-          <img
-            src={infoyellow_icon}
-            alt="안내 아이콘"
-            className="infoyellow_icon"
-          />
+          <img src={infoyellow_icon} alt="안내 아이콘" className="info-icon" />
           <div className="notice-text">
             <p className="info-text1">
               출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
@@ -53,23 +50,16 @@ const PrivateOutSoon_cancel = () => {
         <img src={car_icon} alt="자동차 아이콘" />
       </div>
 
-      <div className="button-section">
-        <button className="extend" onClick={() => navigate("/login")}>
-          연장하기
+      <div className="privatecancel-button-section">
+        <button
+          className="privatecancel-outsoon"
+          onClick={() => navigate("/login")}
+        >
+          곧 나감
         </button>
-        <div className="bubble-container">
-          <div className="bubble-box">
-            <span className="bubble-text">
-              주차 마감 시간 <strong>10분 전에 '곧 나감'</strong> 버튼을
-              눌러주세요
-            </span>
-          </div>
-          <button className="outsoon-cancel" onClick={() => navigate("/login")}>
-            곧 나감
-          </button>
-        </div>
       </div>
     </div>
   );
 };
-export default PrivateOutSoon_cancel;
+
+export default PrivateOutSoon;

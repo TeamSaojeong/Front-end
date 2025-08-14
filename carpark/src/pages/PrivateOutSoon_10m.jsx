@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/PrivateOutSoon_10m.css";
 
@@ -7,19 +7,19 @@ import car_icon from "../Assets/car.png";
 import clock_icon from "../Assets/clock.svg";
 import infoyellow_icon from "../Assets/info-yellow.svg";
 
-const PrivateOutSoon_10m = () => {
+const PrivateOutSoon = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="container-outsoon-10m">
+    <div className="private10m-container">
       <img
         src={arrow}
         alt="뒤로가기"
         className="back-arrow"
         onClick={() => navigate(-1)}
       />
-      <div className="header">
-        <div className="text">
+      <div className="private10m-header">
+        <div className="private10m-text">
           콘하스 DDP 앞 주차장
           <br />
           이용중...
@@ -53,23 +53,23 @@ const PrivateOutSoon_10m = () => {
         <img src={car_icon} alt="자동차 아이콘" />
       </div>
 
-      <div className="button-section">
-        <button className="extend" onClick={() => navigate("/login")}>
-          연장하기
-        </button>
-        <div className="bubble-container">
-          <div className="bubble-box">
-            <span className="bubble-text">
+      <div className="private10m-button-section">
+        <div className="private10m-bubble-container">
+          <div className="private10m-bubble-box">
+            <span className="private10m-bubble-text">
               주차 마감 시간 <strong>10분 전에 '곧 나감'</strong> 버튼을
-              눌러주세요
+              눌러주세요!
             </span>
           </div>
-          <button className="outsoon-10m" onClick={() => navigate("/login")}>
-            {/*아직 누르면 작동하진않음 */}곧 나감
+          <button
+            className="private10m-outsoon"
+            onClick={() => navigate("/login")}
+          >
+            곧 나감
           </button>
         </div>
       </div>
     </div>
   );
 };
-export default PrivateOutSoon_10m;
+export default PrivateOutSoon;

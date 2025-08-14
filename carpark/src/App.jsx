@@ -26,7 +26,7 @@ const App = () => {
           <Route path="/outsoon_cancel" element={<OutSoon_cancel />} />
           <Route path="/privateoutsoon" element={<PrivateOutSoon />} />
           <Route path="/privateoutsoon_10m" element={<PrivateOutSoon_10m />} />
-          <Route path="/outsoon_cancel" element={<PrivateOutSoon_cancel />} />
+          <Route path="/privateoutsoon_cancel" element={<PrivateOutSoon_cancel />} />
         </Routes>
       </div>
     </div>
