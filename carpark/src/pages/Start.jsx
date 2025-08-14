@@ -9,12 +9,12 @@ const Start = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="container">
-      <div className="header">
+    <div className="start-container">
+      <div className="start-header">
         <img src={mainpic} alt="메인 로고" />
       </div>
 
-      <div className="car-section">
+      <div className="start-car-section">
         <img src={car_icon} alt="자동차 아이콘" />
       </div>
 
@@ -22,7 +22,7 @@ const Start = () => {
         바로 시작하기
       </div>
 
-      <div className="notyet-customer" onClick={() => navigate("/signup")}>
+      <div className="start-notyet-customer" onClick={() => navigate("/signup")}>
         아직 회원이 아니신가요? <span>회원가입</span>
       </div>
     </div>
