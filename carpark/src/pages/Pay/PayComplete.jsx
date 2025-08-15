@@ -1,15 +1,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import "../Styles/ParkingEnd.css";
+import "../../Styles/Pay/PayComplete.css";
 
-import arrow from "../Assets/arrow.png";
-import backcar_icon from "../Assets/backcar.svg";
+import arrow from "../../Assets/arrow.png";
+import backcar_icon from "../../Assets/paycomplete.svg";
 
 const ParkingEnd = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="parkingend-container">
+    <div className="paycomplete-container">
       <img
         src={arrow}
         alt="뒤로가기"
@@ -17,8 +17,8 @@ const ParkingEnd = () => {
         onClick={() => navigate(-1)}
       />
 
-      <div className="parkingend-header">
-        <div className="parkingend-text">
+      <div className="paycomplete-header">
+        <div className="paycomplete-text">
           주차 이용 종료
           <br />
           <p>
@@ -33,10 +33,10 @@ const ParkingEnd = () => {
         <img src={backcar_icon} alt="자동차 아이콘" />
       </div>
 
-      <div className="parkingend-button-section">
+      <div className="paycomplete-button-section">
         <button
-          className="parkingend-outcomplete"
-          onClick={() => navigate("/login")}
+          className="paycomplete-outcomplete"
+          onClick={() => navigate("/outsoon")}
         >
           출차 완료
         </button>

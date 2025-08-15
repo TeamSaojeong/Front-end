@@ -1,4 +1,4 @@
-.parkingend-container {
+.paycomplete-container {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -16,7 +16,7 @@
   cursor: pointer;
 }
 
-.parkingend-header {
+.paycomplete-header {
   margin-top: 124px;
   display: flex;
   flex-direction: column;
@@ -24,7 +24,7 @@
   padding: 0 24px;
 }
 
-.parkingend-header .parkingend-text {
+.paycomplete-header .paycomplete-text {
   font-size: 24px;
   font-weight: 600;
   color: #303030;
@@ -32,7 +32,7 @@
   text-align: left;
 }
 
-.parkingend-header .parkingend-text p {
+.paycomplete-header .paycomplete-text p {
   font-size: 14px;
   font-weight: 400;
   color: #767676;
@@ -41,23 +41,24 @@
 }
 
 .car-section {
-  margin-top: 56px;
+  margin-top: 45px;
+  margin-left: 35px;
   display: flex;
   justify-content: center;
 }
 
 .car-section img {
-  width: 100%;
-  height: auto;
+  width: 450px;
+  height: 450px;
 }
 
-.parkingend-button-section {
+.paycomplete-button-section {
   display: flex;
-  margin: 1px 20px;
+  margin: 40px 20px;
   width: calc(100% - 48px);
 }
 
-.parkingend-outcomplete {
+.paycomplete-outcomplete {
   width: 342px;
   height: 56px;
   margin-left: 24px;

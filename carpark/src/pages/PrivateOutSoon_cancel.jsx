@@ -27,26 +27,26 @@ const PrivateOutSoon = () => {
         </div>
       </div>
 
-      <div className="time-box">
-        <div className="time-inner">
+      <div className="privatecancel-time-box">
+        <div className="privatecancel-time-inner">
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
-          <span className="time-text">00:00 ~ 00:00 (3시간 20분)</span>
+          <span className="privatecancel-time-text">00:00 ~ 00:00 (3시간 20분)</span>
         </div>
       </div>
 
-      <div className="notice-box">
-        <div className="notice-inner">
+      <div className="privatecancel-notice-box">
+        <div className="privatecancel-notice-inner">
           <img src={infoyellow_icon} alt="안내 아이콘" className="info-icon" />
-          <div className="notice-text">
-            <p className="info-text1">
+          <div className="privatecancel-notice-text">
+            <p className="privatecancel-info-text1">
               출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
             </p>
-            <p className="info-text2">곧 나감 누르시고, 포인트 받아가세요!</p>
+            <p className="privatecancel-info-text2">곧 나감 누르시고, 포인트 받아가세요!</p>
           </div>
         </div>
       </div>
 
-      <div className="car-section">
+      <div className="privatecancel-car-section">
         <img src={car_icon} alt="자동차 아이콘" />
       </div>
 

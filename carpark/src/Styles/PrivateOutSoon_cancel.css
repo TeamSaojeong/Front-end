@@ -32,7 +32,7 @@
   text-align: left;
 }
 
-.privatecancel-container .time-box {
+.privatecancel-container .privatecancel-time-box {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -46,7 +46,7 @@
   background: #f1f1f5;
 }
 
-.time-inner {
+.privatecancel-time-inner {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -64,14 +64,14 @@
   display: block;
 }
 
-.time-text {
+.privatecancel-time-text {
   font-size: 20px;
   line-height: 28px;
   font-weight: 500;
   color: #5c5c5c;
 }
 
-.notice-box {
+.privatecancel-notice-box {
   width: 342px;
   height: 64px;
   margin: 8px auto 0;
@@ -82,48 +82,48 @@
   background: #f1f1f5;
 }
 
-.notice-inner {
+.privatecancel-notice-inner {
   display: flex;
   align-items: flex-start;
   gap: 4px;
   margin-top: -2px;
 }
 
-.info-icon {
+.privatecancel-info-icon {
   width: 16px;
   height: 16px;
   position: relative;
   top: 2px;
 }
 
-.notice-text {
+.privatecancel-notice-text {
   display: flex;
   flex-direction: column;
   line-height: 18px;
   margin-top: 0;
 }
 
-.info-text1 {
+.privatecancel-info-text1 {
   font-size: 12px;
   font-weight: 600;
   color: #5c5c5c;
   margin: 0;
 }
 
-.info-text2 {
+.privatecancel-info-text2 {
   font-size: 12px;
   font-weight: 400;
   color: #5c5c5c;
   margin: 0;
 }
 
-.car-section {
+.privatecancel-car-section {
   margin-top: 56px;
   display: flex;
   justify-content: center;
 }
 
-.car-section img {
+.privatecancel-car-section img {
   width: 90%;
   height: auto;
 }

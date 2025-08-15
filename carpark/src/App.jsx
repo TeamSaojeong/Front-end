@@ -29,6 +29,11 @@ import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
 
+/** 결제 */
+import PayPage from "./pages/Pay/PayPage";
+import PayLoading from "./pages/Pay/PayLoading";
+import PayComplete from "./pages/Pay/PayComplete";
+
 /** 설정/관리 */
 import ParkingPlaceManage from "./pages/ParkingPlaceManage";
 
@@ -66,6 +71,10 @@ function App() {
             element={<PrivateOutSoon_cancel />}
           />
           <Route path="/parkingend" element={<ParkingEnd />} />
+          {/** 결제 */}
+          <Route path="/paypage" element={<PayPage />} />
+          <Route path="/payloading" element={<PayLoading />} />
+          <Route path="/paycomplete" element={<PayComplete />} />
 
           {/* 설정/관리 */}
           <Route path="/parkingplacemanage" element={<ParkingPlaceManage />} />

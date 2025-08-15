@@ -1,4 +1,4 @@
-.container-outsoon-cancel {
+.outsoon-cancel-container {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -16,14 +16,14 @@
   cursor: pointer;
 }
 
-.header {
+.outsoon-cancel-header {
   margin-top: 124px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.header .text {
+.outsoon-cancel-header .outsoon-cancel-text {
   font-size: 24px;
   font-weight: 600;
   color: #303030;
@@ -31,7 +31,7 @@
   line-height: 1.4;
 }
 
-.container-outsoon-cancel .time-box {
+.outsoon-cancel-container .outsoon-cancel-time-box {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -46,7 +46,7 @@
   background: #f1f1f5;
 }
 
-.time-inner {
+.outsoon-cancel-time-inner {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -64,14 +64,14 @@
   display: block;
 }
 
-.time-text {
+.outsoon-cancel-time-text {
   font-size: 20px;
   line-height: 28px;
   font-weight: 500;
   color: #5c5c5c;
 }
 
-.notice-box {
+.outsoon-cancel-notice-box {
   width: 342px;
   height: 64px;
   margin: 8px auto 0;
@@ -82,60 +82,60 @@
   background: #f1f1f5;
 }
 
-.notice-inner {
+.outsoon-cancel-notice-inner {
   display: flex;
   align-items: flex-start;
   gap: 4px;
   margin-top: -2px; /* 조절이 쉽지 않아서 임의로 넣어둠 */
 }
 
-.info-icon {
+.outsoon-cancel-info-icon {
   width: 16px;
   height: 16px;
   position: relative;
   top: 2px; /* 여기도 조절이 쉽지 않아서 임의로 넣어둠 */
 }
 
-.notice-text {
+.outsoon-cancel-notice-text {
   display: flex;
   flex-direction: column;
   line-height: 18px;
   margin-top: 0;
 }
 
-.info-text1 {
+.outsoon-cancel-info-text1 {
   font-size: 12px;
   font-weight: 600;
   color: #5c5c5c;
   margin: 0;
 }
 
-.info-text2 {
+.outsoon-cancel-info-text2 {
   font-size: 12px;
   font-weight: 400;
   color: #5c5c5c;
   margin: 0;
 }
 
-.car-section {
+.outsoon-cancel-car-section {
   margin-top: 56px;
   display: flex;
   justify-content: center;
 }
 
-.car-section img {
+.outsoon-cancel-car-section img {
   width: 90%;
   height: auto;
 }
 
-.button-section {
+.outsoon-cancel-button-section {
   display: flex;
   gap: 8px;
   margin: 46px 24px;
 }
 
-.extend,
-.outsoon-cancel {
+.outsoon-cancel-extend,
+.outsoon-cancel-outsoon-cancel {
   height: 56px;
   display: flex;
   justify-content: center;
@@ -149,16 +149,16 @@
   width: 167px;
   flex: 0 0 167px;
 }
-.extend {
+.outsoon-cancel-extend {
   background: #fff;
   color: #5c5c5c;
 }
-.outsoon-cancel {
+.outsoon-cancel-outsoon-cancel {
   background: #ededed;
   color: #5c5c5c;
 }
 
-.bubble-container {
+.outsoon-cancel-bubble-container {
   position: relative;
   width: 167px;
   height: 56px;
@@ -168,7 +168,7 @@
   flex: 0 0 167px;
 }
 
-.bubble-box {
+.outsoon-cancel-bubble-box {
   position: absolute;
   bottom: calc(100% + 8px);
   right: 0;
@@ -184,7 +184,7 @@
   white-space: nowrap;
 }
 
-.bubble-box::before {
+.outsoon-cancel-bubble-box::before {
   content: "";
   position: absolute;
   top: 100%;
@@ -193,7 +193,7 @@
   border-style: solid;
   border-color: #eaeaea transparent transparent transparent;
 }
-.bubble-box::after {
+.outsoon-cancel-bubble-box::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -204,7 +204,7 @@
   border-color: #fff transparent transparent transparent;
 }
 
-.bubble-text {
+.outsoon-cancel-bubble-text {
   font-size: 13px;
   font-weight: 400;
   line-height: 18px;
