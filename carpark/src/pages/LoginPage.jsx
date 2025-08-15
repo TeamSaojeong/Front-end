@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Login.css";
-import client from "../api/client";
+import client from "../apis/client";
 import mainpic from "../Assets/main_logo_text.png";
 
 const LoginPage = () => {

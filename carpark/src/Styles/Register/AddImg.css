@@ -1,0 +1,36 @@
+.add_img_wrap {
+  width: 100%;
+}
+
+.file-label {
+  display: block;
+  cursor: pointer;
+}
+
+.add_img {
+  display: flex;
+  width: 342px;
+  height: 192px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: #eaeaea;
+  overflow: hidden;
+}
+
+.add_img img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.add_img_icon {
+  width: 50px;
+  height: 50px;
+}
+
+.add_img_input {
+  display: none;
+}

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Signup.css";
 import arrow from "../Assets/arrow.png";
-import client from "../api/client";
+import client from "../apis/client";
 
 const SignupPage = () => {
   const navigate = useNavigate();
