@@ -8,7 +8,7 @@ import NamePage from "./pages/Register/NamePage";
 import DescriptionPage from "./pages/Register/DescriptionPage";
 import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
-import TimePicker from "./components/Register/TimePicker";
+import TimePage from "./pages/Register/TimePage";
 import "./Styles/app-frame.css";
 
 const App = () => {
@@ -24,7 +24,7 @@ const App = () => {
           <Route path="/description" element={<DescriptionPage />}/>
           <Route path="/address" element={<Address />}/>
           <Route path="zipcode" element={<ZipCodePage />}/>
-          <Route path="/timepicker" element={<TimePicker/>}/>
+          <Route path="/time" element={<TimePage/>}/>
         </Routes>
       </div>
     </div>

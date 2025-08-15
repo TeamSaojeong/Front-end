@@ -3,8 +3,9 @@
 // import InputBox from "../../components/InputBox";
 // import NextBtn from "../../components/Register/NextBtn";
 // import PreviousBtn from "../../components/Register/PreviousBtn";
+import TimePicker from "../../components/Register/TimePicker";
 // import "../../Styles/Register/NamePage.css";
-// const TimePage = () => {
+const TimePage = () => {
 //     const [time, setTime] = useState("");
 //     const navigate = useNavigate();
 
@@ -13,7 +14,7 @@
 //         if() return;
 //         navigate("/description");
 //     }
-//     return (
+    return (
 //     <>
 //         <div className="Wrapper">
 //                     <PreviousBtn/>
@@ -23,6 +24,10 @@
 
 //             </div>
 //             </>
-// }
+        <div style={{padding: 24}}>
+            <TimePicker/>
+        </div>
+    )
+}
 
-// export default TimePage;
+export default TimePage;

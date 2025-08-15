@@ -43,7 +43,7 @@ const DescriptionPage = () => {
         <div className="input-wrapper">
             <InputBox 
                 className = "input" 
-                value={description}
+                value={content}
                 onChange={(e)=> setField("content", e.target.value)}
                 placeholder="주차 장소 상세 설명" 
                 maxLength={80}/>
