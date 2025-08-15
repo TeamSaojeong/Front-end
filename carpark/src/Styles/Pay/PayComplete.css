@@ -17,7 +17,7 @@
 }
 
 .paycomplete-header {
-  margin-top: 124px;
+  margin-top: 120px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -34,35 +34,71 @@
 
 .paycomplete-header .paycomplete-text p {
   font-size: 14px;
-  font-weight: 400;
   color: #767676;
+  font-weight: 400;
   line-height: 20px;
-  margin-top: 8px;
 }
 
-.car-section {
-  margin-top: 45px;
-  margin-left: 35px;
+.paycomplete-container .paycomplete-time-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 342px;
+  height: 60px;
+  padding: 16px 39px;
+  margin: 0px auto 0;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: 1px solid #eaeaea;
+  background: #f1f1f5;
+}
+
+.paycomplete-time-inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 28px;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.clock-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  object-fit: contain;
+  display: block;
+}
+
+.paycomplete-time-text {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  color: #5c5c5c;
+}
+
+.paycomplete-car-section {
+  margin-top: 20px;
   display: flex;
   justify-content: center;
 }
 
-.car-section img {
-  width: 450px;
-  height: 450px;
+.paycomplete-car-section img {
+  width: 100%;
+  height: auto;
 }
 
+/*버튼 영역*/
 .paycomplete-button-section {
   display: flex;
-  margin: 40px 20px;
+  margin: 26px 24px;
   width: calc(100% - 48px);
 }
 
-.paycomplete-outcomplete {
+.paycomplete-outsoon {
   width: 342px;
   height: 56px;
-  margin-left: 24px;
-  margin-bottom: 46px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -71,7 +107,7 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid #fff;
+  border: 1px solid #a8a8a8;
   background: #2e80ec;
   color: #fff;
 }
