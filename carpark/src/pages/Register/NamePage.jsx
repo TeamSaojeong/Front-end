@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import InputBox from "../../components/InputBox";
 import NextBtn from "../../components/Register/NextBtn";
@@ -9,6 +9,16 @@ const NamePage = () => {
     const isActive = name.trim() !== ""; // 비활성 처리
     const navigate = useNavigate();
 
+    useEffect(()=> {
+        const savedName = localStorage.getItem("register:name");
+        if(savedName) setName(savedName);
+    }, []);
+
+    const handleChange = (e)=>{
+        const value = e.target.value;
+        setName(value);
+        localStorage.setItem("register:name", value);
+    }
 
     const handleNext = () => {
         if(!isActive) return;
@@ -16,7 +26,7 @@ const NamePage = () => {
     }
     return (
         <div className="Wrapper">
-                    <PreviousBtn/>
+            <PreviousBtn/>
         <div>
             <h1 className="title">주차 장소 이름</h1>
             <div>
@@ -33,9 +43,9 @@ const NamePage = () => {
             <InputBox 
                 className = "input" 
                 value={name}
-                onChange={(e)=> setName(e.target.value)}
-                placeholder="주차 장소 이름을 입력해 주세요(최대 16자)" 
-                maxLength={16}/>
+                onChange={handleChange}
+                placeholder="주차 장소 이름을 입력해 주세요(최대 25자)" 
+                maxLength={25}/>
             </div>
         </div>
             <NextBtn

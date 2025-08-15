@@ -1,3 +1,4 @@
+
 .previousImg{
     width: 1.75rem;
     height: 1.75rem;
@@ -8,7 +9,8 @@
     height: 3.5rem; 
     margin-top: 2.75rem; 
     width: 100%; 
-    position: relative; 
+    position: sticky;
+    z-index: 1000; 
 }
 
 .back-inner { 
