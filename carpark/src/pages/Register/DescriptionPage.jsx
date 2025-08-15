@@ -1,33 +1,19 @@
-import {useState, useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import PreviousBtn from "../../components/Register/PreviousBtn";
 import NextBtn from "../../components/Register/NextBtn";
 import Address from "../../components/Register/Address";
 import InputBox from "../../components/InputBox";
 import AddImg from "../../components/Register/AddImg";
+import {useParkingForm} from "../../store/ParkingForm";
+import {ApiRegister} from "../../apis/register";
 import "../../Styles/Register/DescriptionPage.css";
 const DescriptionPage = () => {
-    const [description, setDescription] = useState("");
-    const [address, setAddress] = useState("");
-    const [image, setImage] = useState(null);
-    const [isActive, setIsActive] = useState(false);
     const navigate = useNavigate();
+    const {name, address, content, image, setField, reset} = useParkingForm();
 
-    useEffect(() => {
-        const descOk = String(description ?? "").trim().length > 0;
-        const addrOk = String(address ?? "").trim().length > 0;
-        const imgOk= !!image;
-        // const savedDescription = localStorage.getItem("register:description");
+    //이름과 설명, 이미지가 있어야 다음으로 이동 가능
+    const isActive = name.trim() !== "" && content.trim() !== "" && image !== null;
 
-    setIsActive(descOk && addrOk && imgOk);
-  }, [description, address, image]);
-
-    const handleChange = (e)=>{
-        const value = e.target.value;
-        setDescription(value);
-        localStorage.setItem("register:name", value);
-    }
-    
     const handleNext = () => {
         if (!isActive) return;
         navigate("/time");
@@ -51,14 +37,14 @@ const DescriptionPage = () => {
 
         <div>
             <p className="img-title">주차 장소 사진&설명</p>
-            <AddImg/>
+            <AddImg onChange={(file)=>setField("image", file)}/>
         </div>
 
         <div className="input-wrapper">
             <InputBox 
                 className = "input" 
                 value={description}
-                onChange={handleChange}
+                onChange={(e)=> setField("content", e.target.value)}
                 placeholder="주차 장소 상세 설명" 
                 maxLength={80}/>
         </div>
@@ -69,5 +55,6 @@ const DescriptionPage = () => {
         </div>
     )
 }
+
 
 export default DescriptionPage;

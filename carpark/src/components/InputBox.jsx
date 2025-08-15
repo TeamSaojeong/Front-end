@@ -21,7 +21,7 @@ const InputBox = ({
   return (
     <input
       className={className}
-      type={type}
+      type="text"
       value={value ?? ""}          // uncontrolled 경고 방지
       onChange={onChange}
       onKeyDown={handleKeyDown}

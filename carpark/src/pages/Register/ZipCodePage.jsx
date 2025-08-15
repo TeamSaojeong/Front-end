@@ -1,4 +1,3 @@
-import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DaumPostcodeEmbed } from "react-daum-postcode";
 import PreviousBtn from "../../components/Register/PreviousBtn";
