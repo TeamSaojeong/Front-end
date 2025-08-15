@@ -25,7 +25,7 @@ const TimePage = () => {
 //             </div>
 //             </>
         <div style={{padding: 24}}>
-            <TimePicker/>
+            <TimePicker targetDate={new Date()} onChange={(v)=> console.log(v)}/>
         </div>
     )
 }

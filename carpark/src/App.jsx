@@ -9,6 +9,7 @@ import DescriptionPage from "./pages/Register/DescriptionPage";
 import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
 import TimePage from "./pages/Register/TimePage";
+import CompletePage from "./pages/Register/CompletePage";
 import "./Styles/app-frame.css";
 
 const App = () => {
@@ -25,6 +26,7 @@ const App = () => {
           <Route path="/address" element={<Address />}/>
           <Route path="zipcode" element={<ZipCodePage />}/>
           <Route path="/time" element={<TimePage/>}/>
+          <Route path="/complete" element={<CompletePage/>}/>
         </Routes>
       </div>
     </div>
