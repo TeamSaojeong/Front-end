@@ -1,4 +1,4 @@
-.container-outsoon-10m {
+.outsoon-10m-container {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -18,14 +18,14 @@
   cursor: pointer;
 }
 
-.header {
+.outsoon-10m-header {
   margin-top: 124px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.header .text {
+.outsoon-10m-header .outsoon-10m-text {
   font-size: 24px;
   font-weight: 600;
   color: #303030;
@@ -33,7 +33,7 @@
   line-height: 1.4;
 }
 
-.container-outsoon-10m .time-box {
+.outsoon-10m-container .outsoon-10m-time-box {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -48,7 +48,7 @@
   background: #f1f1f5;
 }
 
-.time-inner {
+.outsoon-10m-time-inner {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -66,14 +66,14 @@
   display: block;
 }
 
-.time-text {
+.outsoon-10m-time-text {
   font-size: 20px;
   line-height: 28px;
   font-weight: 500;
   color: #5c5c5c;
 }
 
-.notice-box {
+.outsoon-10m-notice-box {
   width: 342px;
   height: 64px;
   margin: 8px auto 0;
@@ -84,60 +84,60 @@
   background: #f1f1f5;
 }
 
-.notice-inner {
+.outsoon-10m-notice-inner {
   display: flex;
   align-items: flex-start;
   gap: 4px;
   margin-top: -2px; /* 조절이 쉽지 않아서 임의로 넣어둠 */
 }
 
-.info-icon {
+.outsoon-10m-info-icon {
   width: 16px;
   height: 16px;
   position: relative;
   top: 2px; /* 여기도 조절이 쉽지 않아서 임의로 넣어둠 */
 }
 
-.notice-text {
+.outsoon-10m-notice-text {
   display: flex;
   flex-direction: column;
   line-height: 18px;
   margin-top: 0;
 }
 
-.info-text1 {
+.outsoon-10m-info-text1 {
   font-size: 12px;
   font-weight: 600;
   color: #5c5c5c;
   margin: 0;
 }
 
-.info-text2 {
+.outsoon-10m-info-text2 {
   font-size: 12px;
   font-weight: 400;
   color: #5c5c5c;
   margin: 0;
 }
 
-.car-section {
+.outsoon-10m-car-section {
   margin-top: 56px;
   display: flex;
   justify-content: center;
 }
 
-.car-section img {
+.outsoon-10m-car-section img {
   width: 90%;
   height: auto;
 }
 
-.button-section {
+.outsoon-10m-button-section {
   display: flex;
   gap: 8px;
   margin: 46px 24px;
 }
 
-.extend,
-.outsoon-10m {
+.outsoon-10m-extend,
+.outsoon-10m-outsoon-10m {
   height: 56px;
   display: flex;
   justify-content: center;
@@ -151,16 +151,16 @@
   width: 167px;
   flex: 0 0 167px;
 }
-.extend {
+.outsoon-10m-extend {
   background: #fff;
   color: #5c5c5c;
 }
-.outsoon-10m {
+.outsoon-10m-outsoon-10m {
   background: #de5e56;
   color: #fff;
 }
 
-.bubble-container {
+.outsoon-10m-bubble-container {
   position: relative;
   width: 167px;
   height: 56px;
@@ -170,7 +170,7 @@
   flex: 0 0 167px;
 }
 
-.bubble-box {
+.outsoon-10m-bubble-box {
   position: absolute;
   bottom: calc(100% + 8px);
   right: 0;
@@ -186,7 +186,7 @@
   white-space: nowrap;
 }
 
-.bubble-box::before {
+.outsoon-10m-bubble-box::before {
   content: "";
   position: absolute;
   top: 100%;
@@ -195,7 +195,7 @@
   border-style: solid;
   border-color: #eaeaea transparent transparent transparent;
 }
-.bubble-box::after {
+.outsoon-10m-bubble-box::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -206,7 +206,7 @@
   border-color: #fff transparent transparent transparent;
 }
 
-.bubble-text {
+.outsoon-10m-bubble-text {
   font-size: 13px;
   font-weight: 400;
   line-height: 18px;

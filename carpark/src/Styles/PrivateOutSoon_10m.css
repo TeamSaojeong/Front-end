@@ -31,7 +31,7 @@
   line-height: 1.4;
   text-align: left;
 }
-.private10m-container .time-box {
+.private10m-container .private10m-time-box {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -45,7 +45,7 @@
   background: #f1f1f5;
 }
 
-.time-inner {
+.private10m-time-inner {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -63,14 +63,14 @@
   display: block;
 }
 
-.time-text {
+.private10m-time-text {
   font-size: 20px;
   line-height: 28px;
   font-weight: 500;
   color: #5c5c5c;
 }
 
-.notice-box {
+.private10m-notice-box {
   width: 342px;
   height: 64px;
   margin: 8px auto 0;
@@ -81,48 +81,48 @@
   background: #f1f1f5;
 }
 
-.notice-inner {
+.private10m-notice-inner {
   display: flex;
   align-items: flex-start;
   gap: 4px;
   margin-top: -2px;
 }
 
-.info-icon {
+.private10m-info-icon {
   width: 16px;
   height: 16px;
   position: relative;
   top: 2px;
 }
 
-.notice-text {
+.private10m-notice-text {
   display: flex;
   flex-direction: column;
   line-height: 18px;
   margin-top: 0;
 }
 
-.info-text1 {
+.private10m-info-text1 {
   font-size: 12px;
   font-weight: 600;
   color: #5c5c5c;
   margin: 0;
 }
 
-.info-text2 {
+.private10m-info-text2 {
   font-size: 12px;
   font-weight: 400;
   color: #5c5c5c;
   margin: 0;
 }
 
-.car-section {
+.private10m-car-section {
   margin-top: 56px;
   display: flex;
   justify-content: center;
 }
 
-.car-section img {
+.private10m-car-section img {
   width: 90%;
   height: auto;
 }

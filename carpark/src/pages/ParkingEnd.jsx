@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import "../Styles/ParkingEnd.css";
 
 import arrow from "../Assets/arrow.png";
-import clock_icon from "../Assets/clock.svg";
 import backcar_icon from "../Assets/backcar.svg";
 
 const ParkingEnd = () => {
@@ -34,7 +33,7 @@ const ParkingEnd = () => {
         <img src={backcar_icon} alt="자동차 아이콘" />
       </div>
 
-      <div className="parkingendl-button-section">
+      <div className="parkingend-button-section">
         <button
           className="parkingend-outcomplete"
           onClick={() => navigate("/login")}

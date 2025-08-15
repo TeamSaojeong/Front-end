@@ -1,4 +1,4 @@
-.privatecancel-container {
+.paycomplete-container {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -16,15 +16,15 @@
   cursor: pointer;
 }
 
-.privatecancel-header {
-  margin-top: 124px;
+.paycomplete-header {
+  margin-top: 120px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 0 24px;
 }
 
-.privatecancel-header .privatecancel-text {
+.paycomplete-header .paycomplete-text {
   font-size: 24px;
   font-weight: 600;
   color: #303030;
@@ -32,21 +32,28 @@
   text-align: left;
 }
 
-.privatecancel-container .privatecancel-time-box {
+.paycomplete-header .paycomplete-text p {
+  font-size: 14px;
+  color: #767676;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.paycomplete-container .paycomplete-time-box {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 342px;
   height: 60px;
   padding: 16px 39px;
-  margin: 16px auto 0;
+  margin: 0px auto 0;
   box-sizing: border-box;
   border-radius: 6px;
   border: 1px solid #eaeaea;
   background: #f1f1f5;
 }
 
-.privatecancel-time-inner {
+.paycomplete-time-inner {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -64,78 +71,33 @@
   display: block;
 }
 
-.privatecancel-time-text {
+.paycomplete-time-text {
   font-size: 20px;
   line-height: 28px;
   font-weight: 500;
   color: #5c5c5c;
 }
 
-.privatecancel-notice-box {
-  width: 342px;
-  height: 64px;
-  margin: 8px auto 0;
-  padding: 16px;
-  box-sizing: border-box;
-  border-radius: 6px;
-  border: 1px solid #eaeaea;
-  background: #f1f1f5;
-}
-
-.privatecancel-notice-inner {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  margin-top: -2px;
-}
-
-.privatecancel-info-icon {
-  width: 16px;
-  height: 16px;
-  position: relative;
-  top: 2px;
-}
-
-.privatecancel-notice-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 18px;
-  margin-top: 0;
-}
-
-.privatecancel-info-text1 {
-  font-size: 12px;
-  font-weight: 600;
-  color: #5c5c5c;
-  margin: 0;
-}
-
-.privatecancel-info-text2 {
-  font-size: 12px;
-  font-weight: 400;
-  color: #5c5c5c;
-  margin: 0;
-}
-
-.privatecancel-car-section {
-  margin-top: 56px;
+.paycomplete-car-section {
+  margin-top: 20px;
   display: flex;
   justify-content: center;
 }
 
-.privatecancel-car-section img {
-  width: 90%;
+.paycomplete-car-section img {
+  width: 100%;
   height: auto;
 }
 
-.privatecancel-button-section {
+/*버튼 영역*/
+.paycomplete-button-section {
   display: flex;
-  margin: 46px 24px;
+  margin: 26px 24px;
   width: calc(100% - 48px);
 }
 
-.privatecancel-outsoon {
-  width: 100%;
+.paycomplete-outsoon {
+  width: 342px;
   height: 56px;
   display: flex;
   justify-content: center;
@@ -145,7 +107,7 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid #fff;
-  background: #ededed;
-  color: #5c5c5c;
+  border: 1px solid #a8a8a8;
+  background: #2e80ec;
+  color: #fff;
 }
