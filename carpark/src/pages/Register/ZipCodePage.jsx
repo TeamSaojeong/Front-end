@@ -1,10 +1,9 @@
-import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DaumPostcodeEmbed } from "react-daum-postcode";
 import PreviousBtn from "../../components/Register/PreviousBtn";
 import styled, { createGlobalStyle } from "styled-components";
 
-export default function Zipcode() {
+const ZipCodePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const returnTo = location.state?.returnTo || -1;
@@ -35,7 +34,7 @@ export default function Zipcode() {
       <Wrapper className="zip-page">
         <Back>
           <Backinner>
-            <PreviousBtn />
+            <PreviousBtn onClick={() => navigate(-1)} />
           </Backinner>
         </Back>
         <div style={{ maxWidth: 720, margin: "0 auto", padding: 16 }}>
@@ -48,9 +47,9 @@ export default function Zipcode() {
       </Wrapper>
     </>
   );
-}
+};
 
-/* 기존 Wrapper 그대로 사용 */
+export default ZipCodePage;
 const Wrapper = styled.div`
   background-color: rgba(255, 255, 255, 1);
   width: 24.375rem;
@@ -60,7 +59,6 @@ const Wrapper = styled.div`
   box-sizing: border-box;
 `;
 
-/* 🔥 핵심: Previous.css 수정 없이, 이 페이지에서만 margin-top 제거 */
 const ZipOverrides = createGlobalStyle`
   .zip-page .back {
     margin-top: 0 !important;

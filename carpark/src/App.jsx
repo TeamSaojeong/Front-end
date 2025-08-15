@@ -1,13 +1,26 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+
+import "./Styles/app-frame.css";
+
+/** 공통/인증/시작 */
+import Splash from "./pages/Splash";
+import Start from "./pages/Start";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import Start from "./pages/Start";
+
+/** 메인 */
+import Home from "./pages/Home";
+
+/** 등록 플로우 */
 import NamePage from "./pages/Register/NamePage";
-import DescriptionPage from "./pages/Register/DescriptionPage";
+import DescriptionPage from "./pages/Register/DescriptionPage"; // ← 이 파일이 아직 주석/에러면 이 import와 아래 라우트 주석 처리
 import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
+import TimePage from "./pages/Register/TimePage";
+import CompletePage from "./pages/Register/CompletePage";
+
+/** 주차 진행/알림 */
 import OutSoon from "./pages/OutSoon";
 import OutSoon_10m from "./pages/OutSoon_10m";
 import OutSoon_cancel from "./pages/OutSoon_cancel";
@@ -15,22 +28,34 @@ import PrivateOutSoon from "./pages/PrivateOutSoon";
 import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
-import ParkingPlaceManage from "./pages/ParkingPlaceManage";
-import "./Styles/app-frame.css";
 
-const App = () => {
+/** 설정/관리 */
+import ParkingPlaceManage from "./pages/ParkingPlaceManage";
+
+function App() {
   return (
     <div className="app-outer">
       <div className="app-shell">
         <Routes>
-          <Route path="/" element={<Start />} />
-          <Route path="/Home" element={<Home />} />
+          {/* 시작 흐름 */}
+          <Route path="/" element={<Splash />} />
+          <Route path="/start" element={<Start />} />
+
+          {/* 인증/메인 */}
+          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+
+          {/* 등록 플로우 */}
           <Route path="/name" element={<NamePage />} />
+          {/* DescriptionPage 파일이 아직 주석/에러라면 아래 라우트 한 줄을 주석 처리하세요 */}
           <Route path="/description" element={<DescriptionPage />} />
           <Route path="/address" element={<Address />} />
-          <Route path="zipcode" element={<ZipCodePage />} />
+          <Route path="/zipcode" element={<ZipCodePage />} />
+          <Route path="/time" element={<TimePage />} />
+          <Route path="/complete" element={<CompletePage />} />
+
+          {/* 주차 진행/알림 */}
           <Route path="/outsoon" element={<OutSoon />} />
           <Route path="/outsoon_10m" element={<OutSoon_10m />} />
           <Route path="/outsoon_cancel" element={<OutSoon_cancel />} />
@@ -41,11 +66,13 @@ const App = () => {
             element={<PrivateOutSoon_cancel />}
           />
           <Route path="/parkingend" element={<ParkingEnd />} />
+
+          {/* 설정/관리 */}
           <Route path="/parkingplacemanage" element={<ParkingPlaceManage />} />
         </Routes>
       </div>
     </div>
   );
-};
+}
 
 export default App;

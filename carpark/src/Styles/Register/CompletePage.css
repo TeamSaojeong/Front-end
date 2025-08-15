@@ -1,0 +1,87 @@
+.Wrapper {
+  background: #fff;
+  width: 390px;
+  min-height: 844px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.check {
+  position: absolute !important;
+  top: 88px !important;
+  left: 24px !important;
+  width: 40px;
+  height: 40px;
+}
+
+.title {
+  position: absolute;
+  top: 100px;
+  left: 24px;
+  color: #2f2f2f;
+  font-family: "Pretendard", Helvetica, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 34px;
+  letter-spacing: -0.6px;
+  white-space: nowrap;
+}
+
+.label-name,
+.label-time,
+.label-charge {
+  color: #767676;
+  font-family: "Pretendard", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.35px;
+  position: absolute;
+  left: 24px;
+}
+
+.name,
+.time,
+.charge {
+  color: #2f2f2f;
+  font-family: "Pretendard", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.35px;
+  position: absolute;
+  left: 24px;
+}
+
+.label-name {
+  top: 249px;
+}
+.name {
+  top: 273px;
+}
+.label-time {
+  top: 313px;
+}
+.time {
+  top: 337px;
+}
+.label-charge {
+  top: 377px;
+}
+.charge {
+  top: 401px;
+}
+
+.logo {
+  position: absolute;
+  top: 452px;
+  left: 152px;
+  width: 238px;
+  height: 270px;
+}
+
+.next-btn {
+  position: absolute;
+  top: 742px;
+  left: 24px;
+}
