@@ -1,4 +1,4 @@
-.Wrapper {
+.ds-wrapper {
   background-color: rgba(255, 255, 255, 1);
   width: 24.375rem;
   min-height: 52.75rem;
@@ -7,36 +7,58 @@
   box-sizing: border-box;
   padding: 0 1.5rem;
 }
-.content {
-  padding-bottom: 5.5rem;
+
+.ds-title {
+  color: #303030;
+font-family: Pretendard;
+font-size: 24px;
+font-style: normal;
+font-weight: 600;
+line-height: 34px;
+letter-spacing: -0.6px;
+  margin-top: 24px;
 }
 
-.title {
-  color: #2f2f2f;
-  font-family: "Pretendard", Helvetica;
-  font-size: 1.5rem;
-  font-style: vnormal;
-  font-weight: 600;
-  letter-spacing: -0.0375rem;
-  line-height: -0.0375rem;
-  margin: 1.4375rem 0 0;
-  white-space: nowrap;
-  margin-top: 1.5rem;
+.ds-content {
+  color: #767676;
+font-family: Pretendard;
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 20px;
+letter-spacing: -0.35px;
+  margin-top: 8px;
+}
+.ds-address-title{
+  color: #303030;
+  margin-top: 24px;
+  margin-bottom: 8px !important;
+  font-family: Pretendard;
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 20px;
+letter-spacing: -0.35px;
 }
 
-.description {
-  color: rgba(118, 118, 118, 1);
-  font-family: "Pretendard-Regular", Helvetica;
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.25rem;
-  letter-spacing: -0.021875rem;
-  margin: 0.75rem 0 0;
-  max-width: 19.4375rem;
-  margin-top: 0.5rem;
+.ds-img-title{
+  margin-top: 24px;
+  margin-bottom: 8px !important;
+  color: #303030;
+font-family: Pretendard;
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 20px;
+letter-spacing: -0.35px;
 }
 
-.input-wrapper .input {
+.ds-input{
+  margin-top:8px;
+}
+
+
+.ds-input-wrapper .input {
   .Wrapper {
     background-color: rgba(255, 255, 255, 1);
     width: 24.375rem;
@@ -46,13 +68,13 @@
     box-sizing: border-box;
     padding: 0 1.5rem;
   }
-  .input-wrapper .input {
+  .ds-input-wrapper .input {
     word-break: break-word;
     white-space: pre-wrap;
   }
 }
 
-.title {
+.ds-title {
   color: #2f2f2f;
   font-family: "Pretendard", Helvetica;
   font-size: 1.5rem;
@@ -65,14 +87,6 @@
   margin-top: 1.5rem;
 }
 
-.description {
-  color: rgba(118, 118, 118, 1);
-  font-family: "Pretendard-Regular", Helvetica;
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.25rem;
-  letter-spacing: -0.021875rem;
-  margin: 0.75rem 0 0;
-  max-width: 19.4375rem;
-  margin-top: 0.5rem;
+.ds-nextBtn{
+  margin-top: 80px !important;
 }

@@ -1,0 +1,30 @@
+.inputbox-wrapper { width: 100%; }
+
+.inputbox-wrapper input,
+.inputbox-wrapper textarea,
+.inputbox,
+.inputbox input,
+.inputbox textarea {
+  width: 100%;
+  height: 3rem;
+  border: 0.0625rem solid #eaeaea;
+  border-radius: 6px;
+  padding: 0 1rem;
+  box-sizing: border-box;
+
+  color: #303030;
+  background: #fff;
+  outline: none;
+
+  font-family: "Pretendard", Helvetica;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.021875rem;
+  line-height: 1.25rem;
+}
+
+.inputbox-wrapper input::placeholder,
+.inputbox::placeholder {
+  color: rgba(153, 153, 153, 1);
+}

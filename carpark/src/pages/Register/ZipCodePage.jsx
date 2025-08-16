@@ -13,9 +13,8 @@ const ZipCodePage = () => {
       data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
 
     const selectedAddress = {
-      postcode: data.zonecode || "",
+      zipcode: data.zonecode || "",
       address: addr || "",
-      type: data.userSelectedType,
       roadAddress: data.roadAddress || "",
       jibunAddress: data.jibunAddress || "",
     };
@@ -32,12 +31,12 @@ const ZipCodePage = () => {
       <ZipOverrides />
 
       <Wrapper className="zip-page">
-        <Back>
+        <Back className="zip-back">
           <Backinner>
             <PreviousBtn onClick={() => navigate(-1)} />
           </Backinner>
         </Back>
-        <div style={{ maxWidth: 720, margin: "0 auto", padding: 16 }}>
+        <div style={{ maxWidth: 720, margin: "26px auto"}}>
           <DaumPostcodeEmbed
             onComplete={handleComplete}
             style={{ width: "342px", height: "597px" }}
@@ -57,6 +56,7 @@ const Wrapper = styled.div`
   margin: 0 auto;
   position: relative;
   box-sizing: border-box;
+  padding: 0 1.5rem;
 `;
 
 const ZipOverrides = createGlobalStyle`
@@ -75,7 +75,7 @@ const Back = styled.div`
   width: 100%;
   position: sticky;
   z-index: 1000;
-  padding: 0 1.5rem;
+  
 `;
 
 const Backinner = styled.div`

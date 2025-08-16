@@ -1,8 +1,7 @@
 import "../../Styles/Register/NextBtn.css";
-const NextBtn = ({ disabled = false, onClick }) => {
-  const className = `next-button ${!disabled ? "enabled" : "disable"}`;
+const NextBtn = ({ onClick, isActive, label="다음", className}) => {
   const handleClick = (e) => {
-    if (disabled) {
+    if (!isActive) {
       // 클릭 차단
       e.preventDefault();
       return;
@@ -12,11 +11,11 @@ const NextBtn = ({ disabled = false, onClick }) => {
   return (
     <button
       type="button"
-      className={className}
-      disabled={disabled}
+      className={`${className} next-button ${isActive ? "enabled" : "disable"}`}
       onClick={handleClick}
+      disabled={!isActive}
     >
-      <span className="text-wrapper">다음</span>
+      <span className="text-wrapper">{label}</span>
     </button>
   );
 };

@@ -11,9 +11,10 @@ const DescriptionPage = () => {
   const navigate = useNavigate();
   const { name, address, content, image, setField, reset } = useParkingForm();
 
-  //이름과 설명, 이미지가 있어야 다음으로 이동 가능
-  const isActive =
-    name.trim() !== "" && content.trim() !== "" && image !== null;
+  const hasAddress = typeof address === "string" ? !!address.trim() : !!address?.zip || !!address?.zonecode || !!address.roa || !!address?.roadAddress;
+  const hasContent = !!content?.trim();
+  const hasImage = (image instanceof File) || (!!image && !!image.name);
+  const isActive = hasAddress && hasContent && hasImage;
 
   const handleNext = () => {
     if (!isActive) return;
@@ -21,12 +22,12 @@ const DescriptionPage = () => {
   };
 
   return (
-    <div className="Wrapper">
+    <div className="ds-wrapper">
       <PreviousBtn />
 
       <div>
-        <h1 className="title"> 주차 장소 설명</h1>
-        <p className="description">
+        <h1 className="ds-title"> 주차 장소 설명</h1>
+        <p className="ds-content">
           주차 위치를 이용자가 찾기 쉽도록 주차 장소에 대한
           <br />
           설명을 작성해주세요!
@@ -34,18 +35,22 @@ const DescriptionPage = () => {
       </div>
 
       <div>
-        <p className="address-title">주차 장소과 가장 근접한 위치</p>
-        <Address />
+        <p className="ds-address-title">주차 장소과 가장 근접한 위치</p>
+        <Address onchange={(addr) =>setField("address", addr)}/>
       </div>
 
       <div>
-        <p className="img-title">주차 장소 사진&설명</p>
+        <div>
+        <p className="ds-img-title">주차 장소 사진&설명</p>
+        </div>
+        <div className="ds-img_upload">
         <AddImg onChange={(file) => setField("image", file)} />
+        </div>
       </div>
 
-      <div className="input-wrapper">
+      <div className="ds-input-wrapper">
         <InputBox
-          className="input"
+          className="ds-input"
           value={content}
           onChange={(e) => setField("content", e.target.value)}
           placeholder="주차 장소 상세 설명"
@@ -53,7 +58,7 @@ const DescriptionPage = () => {
         />
       </div>
 
-      <NextBtn disabled={!isActive} onClick={handleNext} />
+      <NextBtn disabled={!isActive} onClick={handleNext} className="ds-nextBtn"/>
     </div>
   );
 };
