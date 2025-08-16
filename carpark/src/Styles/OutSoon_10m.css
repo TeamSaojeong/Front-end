@@ -7,8 +7,6 @@
   background: #fff;
 }
 
-
-
 .back-arrow {
   position: absolute;
   top: 58px;
@@ -22,15 +20,16 @@
   margin-top: 124px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  padding: 0 24px;
 }
 
 .outsoon-10m-header .outsoon-10m-text {
   font-size: 24px;
   font-weight: 600;
   color: #303030;
-  text-align: center;
   line-height: 1.4;
+  text-align: left;
 }
 
 .outsoon-10m-container .outsoon-10m-time-box {

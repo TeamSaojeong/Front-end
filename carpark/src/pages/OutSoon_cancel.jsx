@@ -1,5 +1,5 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/OutSoon_cancel.css";
 
 import arrow from "../Assets/arrow.png";
@@ -7,8 +7,17 @@ import car_icon from "../Assets/car.png";
 import clock_icon from "../Assets/clock.svg";
 import info_icon from "../Assets/info.svg";
 
+import PointModal from "../components/Modal/PointModal";
+
 const OutSoon_cancel = () => {
   const navigate = useNavigate();
+  const { state } = useLocation();
+
+  const [open, setOpen] = useState(state?.openModal ?? true);
+
+  useEffect(() => {
+    if (state?.openModal) setOpen(true);
+  }, [state]);
 
   return (
     <div className="outsoon-cancel-container">
@@ -18,6 +27,7 @@ const OutSoon_cancel = () => {
         className="back-arrow"
         onClick={() => navigate(-1)}
       />
+
       <div className="outsoon-cancel-header">
         <div className="outsoon-cancel-text">
           콘하스 DDP 앞 주차장
@@ -60,13 +70,10 @@ const OutSoon_cancel = () => {
         >
           연장하기
         </button>
+
         <div className="outsoon-cancel-bubble-container">
-          <div className="outsoon-cancel-bubble-box">
-            <span className="outsoon-cancel-bubble-text">
-              주차 마감 시간 <strong>10분 전에 '곧 나감'</strong> 버튼을
-              눌러주세요
-            </span>
-          </div>
+          <div className="outsoon-cancel-bubble-box"></div>
+
           <button
             className="outsoon-cancel-outsoon-cancel"
             onClick={() => navigate("/login")}
@@ -75,7 +82,10 @@ const OutSoon_cancel = () => {
           </button>
         </div>
       </div>
+
+      <PointModal open={open} onClose={() => setOpen(false)} />
     </div>
   );
 };
+
 export default OutSoon_cancel;
