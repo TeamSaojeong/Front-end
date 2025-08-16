@@ -1,10 +1,16 @@
-// src/components/BottomSheet/BottomSheet.jsx
 import React, { useRef } from "react";
 import useBottomSheet from "./useBottomSheet";
 import "../Styles/BottomSheet.css";
 import Content from "./Content";
 
-export default function BottomSheet({ hostRef }) {
+export default function BottomSheet({
+  hostRef,
+  places = [],
+  isLoading = false,
+  errorMsg = "",
+  onRefresh,
+  onRefreshHere,
+}) {
   const sheetRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -16,7 +22,13 @@ export default function BottomSheet({ hostRef }) {
         <div className="bs-handle" />
       </div>
       <div className="bs-content" ref={contentRef}>
-        <Content />
+        <Content
+          places={places}
+          isLoading={isLoading}
+          errorMsg={errorMsg}
+          onRefresh={onRefresh}
+          onRefreshHere={onRefreshHere}
+        />
       </div>
     </div>
   );

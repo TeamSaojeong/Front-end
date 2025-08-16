@@ -1,22 +1,25 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../Styles/Mapmenu.css";
 import parkherelogo from "../Assets/phlogo.png";
 
 export default function MapMenu() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
-      {/* 왼쪽 상단 메뉴 버튼 */}
-      <button
-        className="menu-fab"
-        onClick={() => setOpen(true)}
-        aria-label="메뉴 열기"
-      >
-        <span className="bar" />
-        <span className="bar" />
-        <span className="bar" />
-      </button>
+      {!open && ( //메뉴가 열리면, 즉 open이 false일 때
+        <button
+          className="menu-fab"
+          onClick={() => setOpen(true)}
+          aria-label="메뉴 열기"
+        >
+          <span className="bar" />
+          <span className="bar" />
+          <span className="bar" />
+        </button>
+      )}
 
       {/* 딤드 */}
       <div
@@ -41,7 +44,8 @@ export default function MapMenu() {
           <h1 className="menu-hello">
             안녕하세요,
             <br />
-            <strong>홍길동님!</strong>
+            <strong>홍길동</strong>
+            님!
           </h1>
 
           <div className="menu-section">
@@ -49,7 +53,13 @@ export default function MapMenu() {
             <button className="menu-row">
               주차 장소 등록<span className="chev">›</span>
             </button>
-            <button className="menu-row">
+            <button
+              className="menu-row"
+              onClick={() => {
+                setOpen(false);
+                navigate("/parkingplacemanage");
+              }}
+            >
               주차 장소 관리<span className="chev">›</span>
             </button>
           </div>

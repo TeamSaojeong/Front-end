@@ -37,5 +37,9 @@
   letter-spacing: -0.025rem;
 }
 
-.next-button.enabled .text-wrapper { color: #ffffff; }
-.next-button.disable .text-wrapper { color: rgba(153, 153, 153, 1); }
+.next-button.enabled .text-wrapper {
+  color: #ffffff;
+}
+.next-button.disable .text-wrapper {
+  color: rgba(153, 153, 153, 1);
+}

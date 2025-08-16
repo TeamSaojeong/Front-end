@@ -14,7 +14,6 @@
   height: 40px;
 }
 
-
 .title {
   position: absolute;
   top: 100px;
@@ -28,7 +27,9 @@
   white-space: nowrap;
 }
 
-.label-name, .label-time, .label-charge {
+.label-name,
+.label-time,
+.label-charge {
   color: #767676;
   font-family: "Pretendard", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -39,7 +40,9 @@
   left: 24px;
 }
 
-.name, .time, .charge {
+.name,
+.time,
+.charge {
   color: #2f2f2f;
   font-family: "Pretendard", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -50,12 +53,24 @@
   left: 24px;
 }
 
-.label-name { top: 249px; }
-.name { top: 273px; }
-.label-time { top: 313px; }
-.time { top: 337px; }
-.label-charge { top: 377px; }
-.charge { top: 401px; }
+.label-name {
+  top: 249px;
+}
+.name {
+  top: 273px;
+}
+.label-time {
+  top: 313px;
+}
+.time {
+  top: 337px;
+}
+.label-charge {
+  top: 377px;
+}
+.charge {
+  top: 401px;
+}
 
 .logo {
   position: absolute;

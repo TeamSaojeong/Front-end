@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {useParkingForm} from "../../store/ParkingForm";
+import { useParkingForm } from "../../store/ParkingForm";
 
 export default function Address() {
   const navigate = useNavigate();
   const location = useLocation();
-  //일단 우편번호는 저장 x 화면 표시만 
+  //일단 우편번호는 저장 x 화면 표시만
   const [postcode, setPostcode] = useState("");
   const [address, setAddress] = useState("");
 
   //주소만 전역 상태에 저장
-  const {setField} = useParkingForm();
+  const { setField } = useParkingForm();
 
   //zipcodepage에서 돌아올떼 선택한 값 받음
   // 주소 검색 페이지에서 선택 후 돌아올 때 state로 값이 넘어옴
@@ -21,15 +21,14 @@ export default function Address() {
       setAddress(sel);
       setField("address", sel); // 주소만 전역 저장함
     }
-    if(zonecode){
+    if (zonecode) {
       setPostcode(zonecode);
     }
   }, [location.state, setField]);
 
-
-    const goSearch = () => {
+  const goSearch = () => {
     navigate("/zipcode", { state: { returnTo: location.pathname } });
-    };
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -38,10 +37,15 @@ export default function Address() {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 8, maxWidth: 420 }}>
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "grid", gap: 8, maxWidth: 420 }}
+    >
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
         <input type="text" placeholder="우편번호" value={postcode} readOnly />
-        <button type="button" onClick={goSearch}>주소 검색</button>
+        <button type="button" onClick={goSearch}>
+          주소 검색
+        </button>
       </div>
       <input type="text" placeholder="주소" value={address} readOnly />
     </form>

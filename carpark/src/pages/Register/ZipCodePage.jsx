@@ -9,7 +9,8 @@ const ZipCodePage = () => {
   const returnTo = location.state?.returnTo || -1;
 
   const handleComplete = (data) => {
-    const addr = data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
+    const addr =
+      data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
 
     const selectedAddress = {
       postcode: data.zonecode || "",
@@ -29,12 +30,12 @@ const ZipCodePage = () => {
   return (
     <>
       <ZipOverrides />
-      
+
       <Wrapper className="zip-page">
         <Back>
-            <Backinner>
-        <PreviousBtn onClick={()=> navigate(-1)}/>
-        </Backinner>
+          <Backinner>
+            <PreviousBtn onClick={() => navigate(-1)} />
+          </Backinner>
         </Back>
         <div style={{ maxWidth: 720, margin: "0 auto", padding: 16 }}>
           <DaumPostcodeEmbed
@@ -43,10 +44,10 @@ const ZipCodePage = () => {
             animation
           />
         </div>
-        </Wrapper>
+      </Wrapper>
     </>
   );
-}
+};
 
 export default ZipCodePage;
 const Wrapper = styled.div`
@@ -57,8 +58,6 @@ const Wrapper = styled.div`
   position: relative;
   box-sizing: border-box;
 `;
-
-
 
 const ZipOverrides = createGlobalStyle`
   .zip-page .back {
@@ -71,17 +70,16 @@ const ZipOverrides = createGlobalStyle`
 `;
 
 const Back = styled.div`
-    height: 3.5rem; 
-    margin-top: 2.75rem; 
-    width: 100%; 
-    position: sticky;
-    z-index: 1000; 
-    padding: 0 1.5rem;
-
+  height: 3.5rem;
+  margin-top: 2.75rem;
+  width: 100%;
+  position: sticky;
+  z-index: 1000;
+  padding: 0 1.5rem;
 `;
 
 const Backinner = styled.div`
-    height: 100%; 
-    display: flex; 
-    align-items: center; 
+  height: 100%;
+  display: flex;
+  align-items: center;
 `;

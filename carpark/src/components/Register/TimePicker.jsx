@@ -30,7 +30,8 @@ const to24hStr = ({ meridiem, hour12, minute }) => {
 };
 /* parts a < b ? */
 const partsLT = (a, b) => {
-  if (a.meridiem !== b.meridiem) return a.meridiem === "오전" && b.meridiem === "오후";
+  if (a.meridiem !== b.meridiem)
+    return a.meridiem === "오전" && b.meridiem === "오후";
   if (a.hour12 !== b.hour12) return a.hour12 < b.hour12;
   return a.minute < b.minute;
 };
@@ -81,7 +82,11 @@ function WheelColumn({ values, value, onChange, render = (v) => v }) {
     <WheelWrap>
       <WheelInner ref={ref}>
         {values.map((v) => (
-          <WheelItem key={String(v)} aria-selected={v === value} onClick={() => onChange(v)}>
+          <WheelItem
+            key={String(v)}
+            aria-selected={v === value}
+            onClick={() => onChange(v)}
+          >
             {render(v)}
           </WheelItem>
         ))}
@@ -96,7 +101,10 @@ export default function TimeRangePicker({
   label = "첫 번째 주차 가능 시간",
   onChange,
 }) {
-  const MINUTES = useMemo(() => Array.from({ length: 12 }, (_, i) => i * 5), []);
+  const MINUTES = useMemo(
+    () => Array.from({ length: 12 }, (_, i) => i * 5),
+    []
+  );
   const HOURS = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
   const MER = ["오전", "오후"];
 
@@ -186,7 +194,16 @@ export default function TimeRangePicker({
         setCur((p) => ({ ...p, hour12: 12, minute: 0 }));
       }
     }
-  }, [merOptions, hourOptions, minuteOptions, editing, cur.meridiem, cur.hour12, cur.minute, setCur]);
+  }, [
+    merOptions,
+    hourOptions,
+    minuteOptions,
+    editing,
+    cur.meridiem,
+    cur.hour12,
+    cur.minute,
+    setCur,
+  ]);
 
   const display = `${to24hStr(start)} ~ ${to24hStr(end)}`;
 
@@ -195,10 +212,18 @@ export default function TimeRangePicker({
       <Label>{label}</Label>
       <SummaryInput readOnly value={display} />
       <Segmented>
-        <SegBtn type="button" data-active={editing === "start"} onClick={() => setEditing("start")}>
+        <SegBtn
+          type="button"
+          data-active={editing === "start"}
+          onClick={() => setEditing("start")}
+        >
           시작
         </SegBtn>
-        <SegBtn type="button" data-active={editing === "end"} onClick={() => setEditing("end")}>
+        <SegBtn
+          type="button"
+          data-active={editing === "end"}
+          onClick={() => setEditing("end")}
+        >
           마무리
         </SegBtn>
         <SegThumb aria-hidden />
@@ -208,13 +233,17 @@ export default function TimeRangePicker({
         <WheelColumn
           values={merOptions}
           value={cur.meridiem}
-          onChange={(v) => setCur((p) => clampMin({ ...p, meridiem: v }, minParts))}
+          onChange={(v) =>
+            setCur((p) => clampMin({ ...p, meridiem: v }, minParts))
+          }
           render={(v) => <span className="dim">{v}</span>}
         />
         <WheelColumn
           values={hourOptions}
           value={cur.hour12}
-          onChange={(v) => setCur((p) => clampMin({ ...p, hour12: v }, minParts))}
+          onChange={(v) =>
+            setCur((p) => clampMin({ ...p, hour12: v }, minParts))
+          }
           render={(v) => <strong>{v}</strong>}
         />
         <Colon>:</Colon>
@@ -231,11 +260,13 @@ export default function TimeRangePicker({
                 if (hour12 === 11) {
                   if (meridiem === "오전") {
                     // 11:55 AM → 12:00 PM
-                    meridiem = "오후"; hour12 = 12;
+                    meridiem = "오후";
+                    hour12 = 12;
                   } else {
                     // 11:55 PM → (다음날 00:00) → END만 허용
                     if (!isEnd) return p; // START에선 막음
-                    meridiem = "오전"; hour12 = 12; // 다음날 00:00
+                    meridiem = "오전";
+                    hour12 = 12; // 다음날 00:00
                   }
                 } else if (hour12 === 12) {
                   // 12:55 → 1:00 (동일 meridiem)
@@ -265,40 +296,129 @@ const Wrap = styled.div`
     "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   color: #111;
 `;
-const Label = styled.div`font-size:14px; line-height:20px; margin-bottom:8px;`;
+const Label = styled.div`
+  font-size: 14px;
+  line-height: 20px;
+  margin-bottom: 8px;
+`;
 const SummaryInput = styled.input`
-  width: 100%; height: 48px; border: 1px solid #e5e5ea; border-radius: 8px;
-  padding: 0 14px; font-size: 15px; outline: none; margin-bottom: 14px;
+  width: 100%;
+  height: 48px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 14px;
 `;
 const Segmented = styled.div`
-  position: relative; display: grid; grid-template-columns: 1fr 1fr;
-  background: #f2f2f7; border-radius: 999px; padding: 4px; height: 48px; gap: 6px; margin-bottom: 12px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #f2f2f7;
+  border-radius: 999px;
+  padding: 4px;
+  height: 48px;
+  gap: 6px;
+  margin-bottom: 12px;
 `;
 const SegBtn = styled.button`
-  position: relative; z-index: 1; border: 0; background: transparent;
-  border-radius: 999px; font-weight: 600; font-size: 16px; cursor: pointer;
-  &[data-active="true"] { color: #fff; } &[data-active="false"] { color: #666; }
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  &[data-active="true"] {
+    color: #fff;
+  }
+  &[data-active="false"] {
+    color: #666;
+  }
 `;
 const SegThumb = styled.div`
-  position: absolute; inset: 4px; width: calc(50% - 3px); border-radius: 999px;
-  background: #0a84ff; box-shadow: 0 6px 14px rgba(10,132,255,.25); transition: transform .22s ease; pointer-events: none;
-  ${Segmented}:has(button:nth-child(1)[data-active="true"]) & { transform: translateX(0); }
-  ${Segmented}:has(button:nth-child(2)[data-active="true"]) & { transform: translateX(100%); }
+  position: absolute;
+  inset: 4px;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: #0a84ff;
+  box-shadow: 0 6px 14px rgba(10, 132, 255, 0.25);
+  transition: transform 0.22s ease;
+  pointer-events: none;
+  ${Segmented}:has(button:nth-child(1)[data-active="true"]) & {
+    transform: translateX(0);
+  }
+  ${Segmented}:has(button:nth-child(2)[data-active="true"]) & {
+    transform: translateX(100%);
+  }
 `;
 const PickerGrid = styled.div`
-  margin-top:6px; display:grid; grid-template-columns:1.1fr 1fr auto 1fr; align-items:stretch; gap:8px; position:relative;
-  &::after{ content:""; position:absolute; left:0; right:0; height:0; top:calc(50% - 1px); border-top:2px solid #dfe3eb; pointer-events:none; }
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr auto 1fr;
+  align-items: stretch;
+  gap: 8px;
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    top: calc(50% - 1px);
+    border-top: 2px solid #dfe3eb;
+    pointer-events: none;
+  }
 `;
-const WheelWrap = styled.div`position:relative; height:${ITEM_HEIGHT*3}px; overflow:hidden; border-bottom:1px solid #e8ecf3;`;
+const WheelWrap = styled.div`
+  position: relative;
+  height: ${ITEM_HEIGHT * 3}px;
+  overflow: hidden;
+  border-bottom: 1px solid #e8ecf3;
+`;
 const WheelInner = styled.div`
-  height:100%; overflow-y:auto; scroll-snap-type:y mandatory; padding:${ITEM_HEIGHT}px 0; -webkit-overflow-scrolling:touch;
-  &::-webkit-scrollbar{ display:none; }
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  padding: ${ITEM_HEIGHT}px 0;
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 const WheelItem = styled.div`
-  height:${ITEM_HEIGHT}px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center;
-  font-size:22px; user-select:none; cursor:pointer; color:#9aa3af;
-  &[aria-selected="true"]{ font-weight:700; color:#111; transform: translateZ(0); }
-  .dim{ font-size:20px; }
+  height: ${ITEM_HEIGHT}px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  font-size: 22px;
+  user-select: none;
+  cursor: pointer;
+  color: #9aa3af;
+  &[aria-selected="true"] {
+    font-weight: 700;
+    color: #111;
+    transform: translateZ(0);
+  }
+  .dim {
+    font-size: 20px;
+  }
 `;
-const CenterGuide = styled.div`pointer-events:none; position:absolute; left:0; right:0; top:calc(50% - ${ITEM_HEIGHT/2}px); height:${ITEM_HEIGHT}px;`;
-const Colon = styled.div`font-size:22px; font-weight:700; display:grid; place-items:center; color:#9aa3af;`;
+const CenterGuide = styled.div`
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - ${ITEM_HEIGHT / 2}px);
+  height: ${ITEM_HEIGHT}px;
+`;
+const Colon = styled.div`
+  font-size: 22px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  color: #9aa3af;
+`;

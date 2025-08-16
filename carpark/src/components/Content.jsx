@@ -1,9 +1,13 @@
 import React from "react";
 import searchIcon from "../Assets/glasses.png";
 
-//bs 는 bottom-sheet의 약자로 사용.
-
-export default function Content() {
+// bs = bottom-sheet
+export default function Content({
+  places = [],
+  isLoading = false,
+  errorMsg = "",
+  onRefreshHere,
+}) {
   return (
     <div className="bs-body">
       <div className="bs-search">
@@ -11,31 +15,50 @@ export default function Content() {
         <input placeholder="장소 혹은 주소 검색" />
       </div>
 
-      {/* 섹션 타이틀 */}
       <div className="bs-section">
         <h2 className="bs-title">지금 주차 가능한 곳</h2>
         <p className="bs-sub">현재 위치 기반으로 추천해드려요!</p>
       </div>
 
-      {/* ★★★★임의 데이터 3개임. 여기 코드는 나중에 백에서 데이터 가져오는 코드로 수정해야됌★★★ */}
-      {[1, 2, 3].map((i) => (
-        <div className="bs-card" key={i}>
-          <div className="bs-card-image" aria-hidden="true" />
-          <div className="bs-info">
-            <div className="bs-name">주차 장소 이름</div>
-            <div className="bs-card-details">
-              <span>24km</span>
-              <span>|</span>
-              <span>36분</span>
-            </div>
-            <div className="bs-price">₩ 0,000원</div>
-          </div>
-          <button className="bs-more">상세보기</button>
+      {isLoading && (
+        <div style={{ padding: "8px 2px 12px", color: "#6b7280" }}>
+          불러오는 중…
         </div>
-      ))}
+      )}
+      {errorMsg && (
+        <div style={{ padding: "8px 2px 12px", color: "#de5e56" }}>
+          {errorMsg}
+        </div>
+      )}
 
-      {/* 하단 현 위치 */}
-      <button className="bs-location">현 위치에서 다시 추천</button>
+      {!isLoading &&
+        !errorMsg &&
+        places.map((p) => (
+          <div className="bs-card" key={p.id}>
+            <div className="bs-card-image" aria-hidden="true" />
+            <div className="bs-info">
+              <div className="bs-name">{p.name}</div>
+              <div className="bs-card-details">
+                <span>{p.distanceKm ?? "—"}km</span>
+                <span>|</span>
+                <span>{p.etaMin ?? "—"}분</span>
+              </div>
+              <div className="bs-price">
+                ₩ {(p.price ?? 0).toLocaleString()}원
+              </div>
+            </div>
+            <button className="bs-more">상세보기</button>
+          </div>
+        ))}
+
+      <button
+        className="bs-location"
+        onClick={onRefreshHere} // ← 현 위치로 지도+리스트 동시 갱신
+        disabled={isLoading}
+        aria-busy={isLoading ? "true" : "false"}
+      >
+        {isLoading ? "추천 갱신 중…" : "현 위치에서 다시 추천"}
+      </button>
     </div>
   );
 }

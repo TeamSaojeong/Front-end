@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import Upload_Img from "../../Assets/upload_img.svg";
 import "../../Styles/Register/AddImg.css";
 
-const AddImg = ({onChange}) => {
+const AddImg = ({ onChange }) => {
   const [imageSrc, setImageSrc] = useState(null);
 
   const onUpload = (e) => {
@@ -10,18 +10,22 @@ const AddImg = ({onChange}) => {
     if (!file) return;
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => {setImageSrc(reader.result || null);};
+    reader.onload = () => {
+      setImageSrc(reader.result || null);
+    };
     onChange?.(file);
   };
 
   return (
     <div className="add_img_wrap">
-      <label htmlFor="file-upload" className="file-label" style={{ display: "block", cursor: "pointer" }}>
+      <label
+        htmlFor="file-upload"
+        className="file-label"
+        style={{ display: "block", cursor: "pointer" }}
+      >
         <div className="add_img" role="button" aria-label="이미지 업로드">
           {imageSrc ? (
-            <img
-              src={imageSrc}
-              alt="업로드 이미지"/>
+            <img src={imageSrc} alt="업로드 이미지" />
           ) : (
             <img
               src={Upload_Img} // 아이콘 경로

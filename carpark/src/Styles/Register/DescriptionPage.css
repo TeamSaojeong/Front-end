@@ -1,13 +1,15 @@
 .Wrapper {
   background-color: rgba(255, 255, 255, 1);
-  width: 24.375rem;          
-  min-height: 52.75rem;      
+  width: 24.375rem;
+  min-height: 52.75rem;
   margin: 0 auto;
   position: relative;
   box-sizing: border-box;
   padding: 0 1.5rem;
 }
-.content{padding-bottom: 5.5rem;}
+.content {
+  padding-bottom: 5.5rem;
+}
 
 .title {
   color: #2f2f2f;
@@ -15,9 +17,9 @@
   font-size: 1.5rem;
   font-style: vnormal;
   font-weight: 600;
-  letter-spacing: -0.0375rem;;
+  letter-spacing: -0.0375rem;
   line-height: -0.0375rem;
-  margin: 1.4375rem 0 0;   
+  margin: 1.4375rem 0 0;
   white-space: nowrap;
   margin-top: 1.5rem;
 }
@@ -25,7 +27,7 @@
 .description {
   color: rgba(118, 118, 118, 1);
   font-family: "Pretendard-Regular", Helvetica;
-  font-size: 0.875rem;             
+  font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.25rem;
   letter-spacing: -0.021875rem;
@@ -34,19 +36,19 @@
   margin-top: 0.5rem;
 }
 
-.input-wrapper .input{
-    .Wrapper {
-        background-color: rgba(255, 255, 255, 1);
-        width: 24.375rem;          
-        min-height: 52.75rem;      
-        margin: 0 auto;
-        position: relative;
-        box-sizing: border-box;
-        padding: 0 1.5rem;
-    }
-    .input-wrapper .input{
-        word-break: break-word;
-        white-space: pre-wrap;
+.input-wrapper .input {
+  .Wrapper {
+    background-color: rgba(255, 255, 255, 1);
+    width: 24.375rem;
+    min-height: 52.75rem;
+    margin: 0 auto;
+    position: relative;
+    box-sizing: border-box;
+    padding: 0 1.5rem;
+  }
+  .input-wrapper .input {
+    word-break: break-word;
+    white-space: pre-wrap;
   }
 }
 
@@ -56,9 +58,9 @@
   font-size: 1.5rem;
   font-style: vnormal;
   font-weight: 600;
-  letter-spacing: -0.0375rem;;
+  letter-spacing: -0.0375rem;
   line-height: -0.0375rem;
-  margin: 1.4375rem 0 0;   
+  margin: 1.4375rem 0 0;
   white-space: nowrap;
   margin-top: 1.5rem;
 }
@@ -66,7 +68,7 @@
 .description {
   color: rgba(118, 118, 118, 1);
   font-family: "Pretendard-Regular", Helvetica;
-  font-size: 0.875rem;             
+  font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.25rem;
   letter-spacing: -0.021875rem;
