@@ -1,5 +1,5 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/PrivateOutSoon_cancel.css";
 
 import arrow from "../Assets/arrow.png";
@@ -7,8 +7,17 @@ import car_icon from "../Assets/car.png";
 import clock_icon from "../Assets/clock.svg";
 import infoyellow_icon from "../Assets/info-yellow.svg";
 
-const PrivateOutSoon = () => {
+import PointModal from "../components/Modal/PointModal";
+
+const PrivateOutSoon_cancel = () => {
   const navigate = useNavigate();
+  const { state } = useLocation();
+
+  const [open, setOpen] = useState(state?.openModal ?? true);
+
+  useEffect(() => {
+    if (state?.openModal) setOpen(true);
+  }, [state]);
 
   return (
     <div className="privatecancel-container">
@@ -30,7 +39,9 @@ const PrivateOutSoon = () => {
       <div className="privatecancel-time-box">
         <div className="privatecancel-time-inner">
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
-          <span className="privatecancel-time-text">00:00 ~ 00:00 (3시간 20분)</span>
+          <span className="privatecancel-time-text">
+            00:00 ~ 00:00 (3시간 20분)
+          </span>
         </div>
       </div>
 
@@ -41,7 +52,9 @@ const PrivateOutSoon = () => {
             <p className="privatecancel-info-text1">
               출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
             </p>
-            <p className="privatecancel-info-text2">곧 나감 누르시고, 포인트 받아가세요!</p>
+            <p className="privatecancel-info-text2">
+              곧 나감 누르시고, 포인트 받아가세요!
+            </p>
           </div>
         </div>
       </div>
@@ -58,8 +71,10 @@ const PrivateOutSoon = () => {
           곧 나감
         </button>
       </div>
+
+      <PointModal open={open} onClose={() => setOpen(false)} />
     </div>
   );
 };
 
-export default PrivateOutSoon;
+export default PrivateOutSoon_cancel;

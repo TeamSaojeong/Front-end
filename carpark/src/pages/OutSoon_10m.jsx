@@ -10,6 +10,11 @@ import info_icon from "../Assets/info.svg";
 const OutSoon_10m = () => {
   const navigate = useNavigate();
 
+  const goOutSoonCancel = () => {
+    //취소 페이지에서 모달을 자동으로 열고 싶으면 state로 신호 전달
+    navigate("/outsoon_cancel", { state: { openModal: true } });
+  };
+
   return (
     <div className="outsoon-10m-container">
       <img
@@ -18,6 +23,7 @@ const OutSoon_10m = () => {
         className="back-arrow"
         onClick={() => navigate(-1)}
       />
+
       <div className="outsoon-10m-header">
         <div className="outsoon-10m-text">
           콘하스 DDP 앞 주차장
@@ -29,7 +35,9 @@ const OutSoon_10m = () => {
       <div className="outsoon-10m-time-box">
         <div className="outsoon-10m-time-inner">
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
-          <span className="outsoon-10m-time-text">00:00 ~ 00:00 (3시간 20분)</span>
+          <span className="outsoon-10m-time-text">
+            00:00 ~ 00:00 (3시간 20분)
+          </span>
         </div>
       </div>
 
@@ -40,7 +48,9 @@ const OutSoon_10m = () => {
             <p className="outsoon-10m-info-text1">
               출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
             </p>
-            <p className="outsoon-10m-info-text2">곧 나감 누르시고, 포인트 받아가세요!</p>
+            <p className="outsoon-10m-info-text2">
+              곧 나감 누르시고, 포인트 받아가세요!
+            </p>
           </div>
         </div>
       </div>
@@ -50,9 +60,13 @@ const OutSoon_10m = () => {
       </div>
 
       <div className="outsoon-10m-button-section">
-        <button className="outsoon-10m-extend" onClick={() => navigate("/login")}>
+        <button
+          className="outsoon-10m-extend"
+          onClick={() => navigate("/login")}
+        >
           연장하기
         </button>
+
         <div className="outsoon-10m-bubble-container">
           <div className="outsoon-10m-bubble-box">
             <span className="outsoon-10m-bubble-text">
@@ -60,12 +74,14 @@ const OutSoon_10m = () => {
               눌러주세요
             </span>
           </div>
-          <button className="outsoon-10m-outsoon-10m" onClick={() => navigate("/login")}>
-            {/*아직 누르면 작동하진않음 */}곧 나감
+
+          <button className="outsoon-10m-outsoon-10m" onClick={goOutSoonCancel}>
+            곧 나감
           </button>
         </div>
       </div>
     </div>
   );
 };
+
 export default OutSoon_10m;

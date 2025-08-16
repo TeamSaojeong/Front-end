@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/PrivateOutSoon_10m.css";
 
@@ -10,6 +10,10 @@ import infoyellow_icon from "../Assets/info-yellow.svg";
 const PrivateOutSoon = () => {
   const navigate = useNavigate();
 
+  const goPrivateOutSoonCancel = () => {
+    navigate("/privateoutsoon_cancel", { state: { openModal: true } });
+  };
+
   return (
     <div className="private10m-container">
       <img
@@ -18,6 +22,7 @@ const PrivateOutSoon = () => {
         className="back-arrow"
         onClick={() => navigate(-1)}
       />
+
       <div className="private10m-header">
         <div className="private10m-text">
           콘하스 DDP 앞 주차장
@@ -29,7 +34,9 @@ const PrivateOutSoon = () => {
       <div className="private10m-time-box">
         <div className="private10m-time-inner">
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
-          <span className="private10m-time-text">00:00 ~ 00:00 (3시간 20분)</span>
+          <span className="private10m-time-text">
+            00:00 ~ 00:00 (3시간 20분)
+          </span>
         </div>
       </div>
 
@@ -44,7 +51,9 @@ const PrivateOutSoon = () => {
             <p className="private10m-info-text1">
               출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
             </p>
-            <p className="private10m-info-text2">곧 나감 누르시고, 포인트 받아가세요!</p>
+            <p className="private10m-info-text2">
+              곧 나감 누르시고, 포인트 받아가세요!
+            </p>
           </div>
         </div>
       </div>
@@ -61,9 +70,10 @@ const PrivateOutSoon = () => {
               눌러주세요!
             </span>
           </div>
+
           <button
             className="private10m-outsoon"
-            onClick={() => navigate("/login")}
+            onClick={goPrivateOutSoonCancel}
           >
             곧 나감
           </button>
@@ -72,4 +82,5 @@ const PrivateOutSoon = () => {
     </div>
   );
 };
+
 export default PrivateOutSoon;
