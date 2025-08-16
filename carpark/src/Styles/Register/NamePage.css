@@ -1,4 +1,4 @@
-.Wrapper {
+.name-Wrapper {
   background-color: rgba(255, 255, 255, 1);
   width: 24.375rem;
   min-height: 52.75rem;
@@ -7,8 +7,7 @@
   box-sizing: border-box;
   padding: 0 1.5rem;
 }
-
-.title {
+.name-title {
   color: #2f2f2f;
   font-family: "Pretendard", Helvetica;
   font-size: 1.5rem;
@@ -20,8 +19,7 @@
   white-space: nowrap;
   margin-top: 1.5rem;
 }
-
-.description {
+.name-description {
   color: rgba(118, 118, 118, 1);
   font-family: "Pretendard-Regular", Helvetica;
   font-size: 0.875rem;
@@ -32,8 +30,7 @@
   max-width: 19.4375rem;
   margin-top: 0.5rem;
 }
-
-.name {
+.name-name {
   display: block;
   color: #2f2f2f;
   font-family: "Pretendard-Regular", Helvetica;

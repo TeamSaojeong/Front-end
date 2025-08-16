@@ -14,9 +14,10 @@
   width: 390px;
   height: 56px;
   margin-top: 28px;
+  position: relative;
 }
 
-.back-arrow {
+.signup-header .back-arrow {
   position: absolute;
   left: 24px;
   top: 50%;

@@ -147,21 +147,21 @@ export default function Home() {
     });
     myLocOverlayRef.current.setMap(mapRef.current);
 
-    if (myAccCircleRef.current) myAccCircleRef.current.setMap(null);
-    if (typeof accuracy === "number" && accuracy > 0) {
-      myAccCircleRef.current = new kakao.maps.Circle({
-        center: new kakao.maps.LatLng(lat, lng),
-        radius: accuracy,
-        strokeWeight: 1,
-        strokeColor: "#3B82F6",
-        strokeOpacity: 0.5,
-        strokeStyle: "solid",
-        fillColor: "#3B82F6",
-        fillOpacity: 0.1,
-        zIndex: 9998,
-      });
-      myAccCircleRef.current.setMap(mapRef.current);
-    }
+    // if (myAccCircleRef.current) myAccCircleRef.current.setMap(null);
+    // if (typeof accuracy === "number" && accuracy > 0) {
+    //   myAccCircleRef.current = new kakao.maps.Circle({
+    //     center: new kakao.maps.LatLng(lat, lng),
+    //     radius: accuracy,
+    //     strokeWeight: 1,
+    //     strokeColor: "#3B82F6",
+    //     strokeOpacity: 0.5,
+    //     strokeStyle: "solid",
+    //     fillColor: "#3B82F6",
+    //     fillOpacity: 0.1,
+    //     zIndex: 9998,
+    //   });
+    //   myAccCircleRef.current.setMap(mapRef.current);
+    // }
   };
 
   // 주차장 말풍선
