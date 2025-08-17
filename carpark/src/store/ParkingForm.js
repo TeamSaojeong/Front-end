@@ -6,6 +6,7 @@ export const useParkingForm = create(
     (set) => ({
       name: "",
       address: "",
+      zipcode: "",
       content: "",
       operateTimes: [], // [{ start: "HH:MM", end: "HH:MM" }]
       charge: 0, // 10분당 요금(int)
@@ -16,6 +17,7 @@ export const useParkingForm = create(
         set({
           name: "",
           address: "",
+          zipcode: "",
           content: "",
           operateTimes: [],
           charge: 0,

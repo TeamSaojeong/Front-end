@@ -1,23 +1,23 @@
-.Wrapper {
-  background: #fff;
-  width: 390px;
-  min-height: 844px;
+.complete-wrapper {
+  background-color: rgba(255, 255, 255, 1);
+  width: 24.375rem;
+  min-height: 52.75rem;
   margin: 0 auto;
   position: relative;
+  box-sizing: border-box;
+  padding: 0 1.5rem;
 }
 
-.check {
+.complete-check {
   position: absolute !important;
-  top: 88px !important;
-  left: 24px !important;
+  margin-top: 32px;
   width: 40px;
   height: 40px;
 }
 
-.title {
+.complete-title {
   position: absolute;
-  top: 100px;
-  left: 24px;
+  margin-top: 84px;
   color: #2f2f2f;
   font-family: "Pretendard", Helvetica, Arial, sans-serif;
   font-size: 24px;
@@ -27,9 +27,9 @@
   white-space: nowrap;
 }
 
-.label-name,
-.label-time,
-.label-charge {
+.complete-label-name,
+.complete-label-time,
+.complete-label-charge {
   color: #767676;
   font-family: "Pretendard", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -40,9 +40,9 @@
   left: 24px;
 }
 
-.name,
-.time,
-.charge {
+.complete-name,
+.complete-time,
+.complete-charge {
   color: #2f2f2f;
   font-family: "Pretendard", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -53,35 +53,34 @@
   left: 24px;
 }
 
-.label-name {
-  top: 249px;
+.complete-label-name {
+  margin-top: 150px;
 }
-.name {
-  top: 273px;
+.complete-name {
+  margin-top: 174px;
 }
-.label-time {
-  top: 313px;
+.complete-label-time {
+  margin-top: 214px;
 }
-.time {
-  top: 337px;
+.complete-time {
+  margin-top: 238px;
 }
-.label-charge {
-  top: 377px;
+.complete-label-charge {
+  margin-top: 278px;
 }
-.charge {
-  top: 401px;
+.complete-charge {
+  margin-top: 302px;
 }
 
-.logo {
+.complete-logo {
   position: absolute;
-  top: 452px;
-  left: 152px;
+  margin-top: 352px;
+  margin-left: 134px;
   width: 238px;
   height: 270px;
 }
 
-.next-btn {
+.complete-next-btn {
   position: absolute;
-  top: 742px;
-  left: 24px;
+  margin-top: 214.3px;
 }

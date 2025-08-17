@@ -7,17 +7,8 @@
   background: #fff;
 }
 
-.back-arrow {
-  position: absolute;
-  top: 58px;
-  left: 24px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-}
-
 .parkingend-header {
-  margin-top: 124px;
+  margin-top: 90px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -41,7 +32,7 @@
 }
 
 .car-section {
-  margin-top: 56px;
+  margin-top: 38px;
   display: flex;
   justify-content: center;
 }
@@ -53,7 +44,7 @@
 
 .parkingend-button-section {
   display: flex;
-  margin: 1px 20px;
+  margin: 28px 20px;
   width: calc(100% - 48px);
 }
 

@@ -21,13 +21,6 @@ const PrivateOutSoon_cancel = () => {
 
   return (
     <div className="privatecancel-container">
-      <img
-        src={arrow}
-        alt="뒤로가기"
-        className="back-arrow"
-        onClick={() => navigate(-1)}
-      />
-
       <div className="privatecancel-header">
         <div className="privatecancel-text">
           콘하스 DDP 앞 주차장

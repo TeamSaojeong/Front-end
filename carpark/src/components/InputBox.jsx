@@ -1,4 +1,5 @@
 import React from "react";
+import "../Styles/Register/InputBox.css";
 
 const InputBox = ({
   className,
@@ -19,18 +20,20 @@ const InputBox = ({
   };
 
   return (
-    <input
-      className={className}
-      type={type}
-      value={value ?? ""} // uncontrolled 경고 방지
-      onChange={onChange}
-      onKeyDown={handleKeyDown}
-      placeholder={placeholder}
-      maxLength={maxLength}
-      name={name}
-      id={id}
-      autoFocus={autoFocus}
-    />
+    <div className="inputbox-wrapper">
+      <input
+        className={className || "inputbox"}
+        type={type}
+        value={value ?? ""} // uncontrolled 경고 방지
+        onChange={onChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        name={name}
+        id={id}
+        autoFocus={autoFocus}
+      />
+    </div>
   );
 };
 

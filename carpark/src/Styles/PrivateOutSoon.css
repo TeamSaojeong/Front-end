@@ -7,17 +7,8 @@
   background: #fff;
 }
 
-.back-arrow {
-  position: absolute;
-  top: 58px;
-  left: 24px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-}
-
 .private-header {
-  margin-top: 124px;
+  margin-top: 90px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -117,20 +108,20 @@
 }
 
 .private-car-section {
-  margin-top: 56px;
+  margin-top: 30px;
   display: flex;
   justify-content: center;
 }
 
 .private-car-section img {
-  width: 90%;
+  width: 100%;
   height: auto;
 }
 
 /*버튼 영역*/
 .private-button-section {
   display: flex;
-  margin: 46px 24px;
+  margin: 56px 24px;
   width: calc(100% - 48px);
 }
 
