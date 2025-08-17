@@ -21,12 +21,6 @@ const OutSoon_cancel = () => {
 
   return (
     <div className="outsoon-cancel-container">
-      <img
-        src={arrow}
-        alt="뒤로가기"
-        className="back-arrow"
-        onClick={() => navigate(-1)}
-      />
 
       <div className="outsoon-cancel-header">
         <div className="outsoon-cancel-text">

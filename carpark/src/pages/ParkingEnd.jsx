@@ -10,12 +10,6 @@ const ParkingEnd = () => {
 
   return (
     <div className="parkingend-container">
-      <img
-        src={arrow}
-        alt="뒤로가기"
-        className="back-arrow"
-        onClick={() => navigate(-1)}
-      />
 
       <div className="parkingend-header">
         <div className="parkingend-text">

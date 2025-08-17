@@ -7,17 +7,8 @@
   background: #fff;
 }
 
-.back-arrow {
-  position: absolute;
-  top: 58px;
-  left: 24px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-}
-
 .privatecancel-header {
-  margin-top: 124px;
+  margin-top: 90px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -118,19 +109,19 @@
 }
 
 .privatecancel-car-section {
-  margin-top: 56px;
+  margin-top: 30px;
   display: flex;
   justify-content: center;
 }
 
 .privatecancel-car-section img {
-  width: 90%;
+  width: 100%;
   height: auto;
 }
 
 .privatecancel-button-section {
   display: flex;
-  margin: 46px 24px;
+  margin: 56px 24px;
   width: calc(100% - 48px);
 }
 

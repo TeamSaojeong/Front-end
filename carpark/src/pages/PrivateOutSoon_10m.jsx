@@ -16,13 +16,6 @@ const PrivateOutSoon = () => {
 
   return (
     <div className="private10m-container">
-      <img
-        src={arrow}
-        alt="뒤로가기"
-        className="back-arrow"
-        onClick={() => navigate(-1)}
-      />
-
       <div className="private10m-header">
         <div className="private10m-text">
           콘하스 DDP 앞 주차장
