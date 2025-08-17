@@ -1,3 +1,4 @@
+// src/components/BottomSheet.jsx
 import React, { useRef } from "react";
 import useBottomSheet from "./useBottomSheet";
 import "../Styles/BottomSheet.css";
@@ -10,6 +11,7 @@ export default function BottomSheet({
   errorMsg = "",
   onRefresh,
   onRefreshHere,
+  onSelectPlace, // ✅ 추가
 }) {
   const sheetRef = useRef(null);
   const contentRef = useRef(null);
@@ -28,6 +30,7 @@ export default function BottomSheet({
           errorMsg={errorMsg}
           onRefresh={onRefresh}
           onRefreshHere={onRefreshHere}
+          onSelectPlace={onSelectPlace} // ✅ 전달
         />
       </div>
     </div>

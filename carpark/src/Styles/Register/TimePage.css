@@ -1,0 +1,32 @@
+.time-wrapper {
+  background-color: rgba(255, 255, 255, 1);
+  width: 24.375rem;
+  min-height: 52.75rem;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0 1.5rem;
+}
+
+.time-title {
+  color: #303030;
+  font-family: Pretendard;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 34px;
+  letter-spacing: -0.6px;
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.time-description {
+  color: #767676;
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.35px;
+  margin-top: 0;
+}

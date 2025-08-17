@@ -1,0 +1,46 @@
+.wheel-wrap {
+  position: relative;
+  height: 156px;
+  width: 35px;
+  overflow: hidden;
+}
+
+.wheel-inner {
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-padding-top: 52px;
+  scroll-padding-bottom: 52px;
+  padding: 52px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wheel-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel-item {
+  scroll-snap-align: center;
+
+  color: #999;
+  text-align: right;
+  font-family: Pretendard;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: -0.5px;
+  height: 28px;
+  padding: 12px 0;
+}
+
+.wheel-item[aria-selected="true"] {
+  color: #2e80ec;
+  text-align: right;
+  font-family: Pretendard;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: -0.5px;
+}

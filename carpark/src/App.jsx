@@ -19,6 +19,8 @@ import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
 import TimePage from "./pages/Register/TimePage";
 import CompletePage from "./pages/Register/CompletePage";
+import RegisterPayPage from "./pages/Register/RegisterPayPage";
+import ConfirmFilePage from "./pages/Register/ConfirmFilePage";
 
 /** 주차 진행/알림 */
 import OutSoon from "./pages/OutSoon";
@@ -59,10 +61,11 @@ function App() {
 
           {/* 등록 플로우 */}
           <Route path="/name" element={<NamePage />} />
+          <Route path="/confirm" element={<ConfirmFilePage />} />
           <Route path="/description" element={<DescriptionPage />} />
-          <Route path="/address" element={<Address />} />
           <Route path="/zipcode" element={<ZipCodePage />} />
           <Route path="/time" element={<TimePage />} />
+          <Route path="/registerpay" element={<RegisterPayPage />} />
           <Route path="/complete" element={<CompletePage />} />
 
           {/* 디테일 */}

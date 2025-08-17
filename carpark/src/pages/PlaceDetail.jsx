@@ -1,3 +1,4 @@
+// src/pages/PlaceDetail.jsx
 import React, { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../Styles/PlaceDetail.css";
@@ -11,7 +12,7 @@ export default function PlaceDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // (목) 세션에서 클릭된 주차장 정보 복원
+  // 세션에서 선택된 주차장 복원
   const place = useMemo(() => {
     try {
       const raw = sessionStorage.getItem("selectedPlace");
@@ -43,9 +44,23 @@ export default function PlaceDetail() {
     }
   };
 
+  // 경로 안내: MapRoute로 좌표 전달
   const openRoute = () => {
-    const q = encodeURIComponent(nearestAddress);
-    window.open(`https://map.kakao.com/?q=${q}`, "_blank");
+    const lat = place?.lat ?? place?.latitude ?? null;
+    const lng = place?.lng ?? place?.longitude ?? null;
+
+    if (lat == null || lng == null) {
+      alert("목적지 좌표가 없어 경로를 열 수 없습니다.");
+      return;
+    }
+
+    navigate("/maproute", {
+      state: {
+        dest: { lat, lng },
+        name: title,
+        address: nearestAddress,
+      },
+    });
   };
 
   const startUse = () => {
@@ -97,13 +112,14 @@ export default function PlaceDetail() {
 
       {/* 주소 */}
       <section className="pd-section">
-        <h2 className="pd-section-title">주차 장소과 가장 근접한 위치</h2>
+        <h2 className="pd-section-title">주차 장소와 가장 근접한 위치</h2>
         <div className="pd-address-row">
           <div className="pd-address">{nearestAddress}</div>
           <button
             className="pd-copy-btn"
             onClick={copyAddress}
             aria-label="주소 복사"
+            title="주소 복사"
           >
             <img src={copyIcon} alt="복사" />
           </button>

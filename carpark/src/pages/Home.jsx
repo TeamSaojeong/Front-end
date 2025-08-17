@@ -1,5 +1,6 @@
 // src/pages/Home.jsx
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BottomSheet from "../components/BottomSheet";
 import "../Styles/app-frame.css";
 import Mapmenu from "../components/Mapmenu";
@@ -21,6 +22,7 @@ const MOCK_PLACES = [
     distanceKm: 0.4,
     etaMin: 3,
     price: 0,
+    address: "서울특별시 중구 세종대로 110",
   },
   {
     id: 2,
@@ -30,6 +32,7 @@ const MOCK_PLACES = [
     distanceKm: 0.6,
     etaMin: 5,
     price: 1000,
+    address: "서울특별시 중구 태평로1가",
   },
 ];
 
@@ -53,6 +56,16 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 }); // 기본 서울시청
   const [showRequery, setShowRequery] = useState(false);
+
+  const navigate = useNavigate();
+
+  // 선택된 주차장 → 세션 저장 → 디테일 이동
+  const onSelectPlace = (p) => {
+    try {
+      sessionStorage.setItem("selectedPlace", JSON.stringify(p));
+    } catch {}
+    navigate(`/place/${p.id}`);
+  };
 
   // Kakao Map init
   useEffect(() => {
@@ -146,22 +159,6 @@ export default function Home() {
       clickable: false,
     });
     myLocOverlayRef.current.setMap(mapRef.current);
-
-    // if (myAccCircleRef.current) myAccCircleRef.current.setMap(null);
-    // if (typeof accuracy === "number" && accuracy > 0) {
-    //   myAccCircleRef.current = new kakao.maps.Circle({
-    //     center: new kakao.maps.LatLng(lat, lng),
-    //     radius: accuracy,
-    //     strokeWeight: 1,
-    //     strokeColor: "#3B82F6",
-    //     strokeOpacity: 0.5,
-    //     strokeStyle: "solid",
-    //     fillColor: "#3B82F6",
-    //     fillOpacity: 0.1,
-    //     zIndex: 9998,
-    //   });
-    //   myAccCircleRef.current.setMap(mapRef.current);
-    // }
   };
 
   // 주차장 말풍선
@@ -182,6 +179,9 @@ export default function Home() {
           ).toLocaleString()}원</div>
         </div>
       `;
+
+      // ✅ 말풍선 클릭 시 디테일로 이동 + 세션 저장
+      el.addEventListener("click", () => onSelectPlace(p));
 
       const overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(p.lat, p.lng),
@@ -235,7 +235,17 @@ export default function Home() {
             it.distanceKm ?? it.distance_km ?? it.distance ?? null;
           const etaMin = it.etaMin ?? it.eta_min ?? null;
           const price = it.price ?? it.fee ?? 0;
-          return { id, name, lat: latV, lng: lngV, distanceKm, etaMin, price };
+          const address = it.address ?? it.road_address ?? it.addr ?? "";
+          return {
+            id,
+            name,
+            lat: latV,
+            lng: lngV,
+            distanceKm,
+            etaMin,
+            price,
+            address,
+          };
         }
       );
 
@@ -325,6 +335,7 @@ export default function Home() {
         isLoading={isLoading}
         errorMsg={errorMsg}
         onRefreshHere={refreshFromCurrentPosition}
+        onSelectPlace={onSelectPlace}
       />
     </div>
   );
