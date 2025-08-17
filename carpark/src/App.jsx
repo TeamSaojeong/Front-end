@@ -58,7 +58,6 @@ function App() {
           {/* DescriptionPage 파일이 아직 주석/에러라면 아래 라우트 한 줄을 주석 처리하세요 */}
           <Route path="/confirm" element={<ConfirmFilePage/>}/>
           <Route path="/description" element={<DescriptionPage />} />
-          <Route path="/address" element={<Address />} />
           <Route path="/zipcode" element={<ZipCodePage />} />
           <Route path="/time" element={<TimePage />} />
           <Route path="/registerpay" element={<RegisterPayPage/>}/>
