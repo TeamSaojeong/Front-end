@@ -12,12 +12,6 @@ const OutSoon = () => {
 
   return (
     <div className="outsoon-container">
-      <img
-        src={arrow}
-        alt="뒤로가기"
-        className="back-arrow"
-        onClick={() => navigate(-1)}
-      />
       <div className="outsoon-header">
         <div className="outsoon-text">
           콘하스 DDP 앞 주차장

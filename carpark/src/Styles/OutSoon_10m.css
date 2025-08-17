@@ -7,30 +7,20 @@
   background: #fff;
 }
 
-
-
-.back-arrow {
-  position: absolute;
-  top: 58px;
-  left: 24px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-}
-
 .outsoon-10m-header {
-  margin-top: 124px;
+  margin-top: 90px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  padding: 0 24px;
 }
 
 .outsoon-10m-header .outsoon-10m-text {
   font-size: 24px;
   font-weight: 600;
   color: #303030;
-  text-align: center;
   line-height: 1.4;
+  text-align: left;
 }
 
 .outsoon-10m-container .outsoon-10m-time-box {
@@ -120,20 +110,20 @@
 }
 
 .outsoon-10m-car-section {
-  margin-top: 56px;
+  margin-top: 30px;
   display: flex;
   justify-content: center;
 }
 
 .outsoon-10m-car-section img {
-  width: 90%;
+  width: 100%;
   height: auto;
 }
 
 .outsoon-10m-button-section {
   display: flex;
   gap: 8px;
-  margin: 46px 24px;
+  margin: 53px 24px;
 }
 
 .outsoon-10m-extend,

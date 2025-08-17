@@ -10,53 +10,52 @@
 
 .ds-title {
   color: #303030;
-font-family: Pretendard;
-font-size: 24px;
-font-style: normal;
-font-weight: 600;
-line-height: 34px;
-letter-spacing: -0.6px;
+  font-family: Pretendard;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 34px;
+  letter-spacing: -0.6px;
   margin-top: 24px;
 }
 
 .ds-content {
   color: #767676;
-font-family: Pretendard;
-font-size: 14px;
-font-style: normal;
-font-weight: 400;
-line-height: 20px;
-letter-spacing: -0.35px;
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.35px;
   margin-top: 8px;
 }
-.ds-address-title{
+.ds-address-title {
   color: #303030;
   margin-top: 24px;
   margin-bottom: 8px !important;
   font-family: Pretendard;
-font-size: 14px;
-font-style: normal;
-font-weight: 400;
-line-height: 20px;
-letter-spacing: -0.35px;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.35px;
 }
 
-.ds-img-title{
+.ds-img-title {
   margin-top: 24px;
   margin-bottom: 8px !important;
   color: #303030;
-font-family: Pretendard;
-font-size: 14px;
-font-style: normal;
-font-weight: 400;
-line-height: 20px;
-letter-spacing: -0.35px;
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.35px;
 }
 
-.ds-input{
-  margin-top:8px;
+.ds-input {
+  margin-top: 8px;
 }
-
 
 .ds-input-wrapper .input {
   .Wrapper {
@@ -87,6 +86,6 @@ letter-spacing: -0.35px;
   margin-top: 1.5rem;
 }
 
-.ds-nextBtn{
+.ds-nextBtn {
   margin-top: 80px !important;
 }

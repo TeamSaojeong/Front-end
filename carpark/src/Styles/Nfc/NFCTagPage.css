@@ -1,4 +1,4 @@
-.paycomplete-container {
+.nfc-container {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -7,15 +7,26 @@
   background: #fff;
 }
 
-.paycomplete-header {
-  margin-top: 90px;
+/* 헤더 */
+.nfc-header {
+  margin-top: 100px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 0 24px;
 }
 
-.paycomplete-header .paycomplete-text {
+.back-arrow {
+  position: absolute;
+  top: 40px;
+  left: 24px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.nfc-header .nfc-text {
   font-size: 24px;
   font-weight: 600;
   color: #303030;
@@ -23,28 +34,41 @@
   text-align: left;
 }
 
-.paycomplete-header .paycomplete-text p {
+.nfc-header .nfc-text p {
   font-size: 14px;
   color: #767676;
   font-weight: 400;
   line-height: 20px;
 }
 
-.paycomplete-container .paycomplete-time-box {
+.nfc-section {
+  order: 1;
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.nfc-section img {
+  width: 57%;
+  height: auto;
+}
+
+.nfc-container .nfc-time-box {
+  order: 2;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 342px;
-  height: 60px;
+  height: 32px;
   padding: 16px 39px;
-  margin: 0px auto 0;
+  margin: 40px auto 0;
   box-sizing: border-box;
   border-radius: 6px;
   border: 1px solid #eaeaea;
   background: #f1f1f5;
 }
 
-.paycomplete-time-inner {
+.nfc-time-inner {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -54,7 +78,7 @@
   white-space: nowrap;
 }
 
-.clock-icon {
+.pin-icon {
   width: 20px;
   height: 20px;
   flex: 0 0 20px;
@@ -62,32 +86,22 @@
   display: block;
 }
 
-.paycomplete-time-text {
-  font-size: 20px;
-  line-height: 28px;
-  font-weight: 500;
+.nfc-time-text {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
   color: #5c5c5c;
 }
 
-.paycomplete-car-section {
-  margin-top: 30px;
+/* 버튼 섹션 */
+.nfc-button-section {
+  order: 3;
   display: flex;
-  justify-content: center;
-}
-
-.paycomplete-car-section img {
-  width: 100%;
-  height: auto;
-}
-
-/*버튼 영역*/
-.paycomplete-button-section {
-  display: flex;
-  margin: 40px 24px;
+  margin: 12px 24px 20px;
   width: calc(100% - 48px);
 }
 
-.paycomplete-outsoon {
+.nfc-outsoon {
   width: 342px;
   height: 56px;
   display: flex;

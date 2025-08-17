@@ -6,23 +6,17 @@ import arrow from "../../Assets/arrow.png";
 import car_icon from "../../Assets/paycomplete.svg";
 import clock_icon from "../../Assets/clock.svg";
 
-
 const PayComplete = () => {
   const navigate = useNavigate();
 
   return (
     <div className="paycomplete-container">
-      <img
-        src={arrow}
-        alt="뒤로가기"
-        className="back-arrow"
-        onClick={() => navigate(-1)}
-      />
       <div className="paycomplete-header">
         <div className="paycomplete-text">
           결제완료
           <br />
-          <p>정상적으로 결제가 완료되었습니다.
+          <p>
+            정상적으로 결제가 완료되었습니다.
             <br />
             자동으로 화면이 넘어갈 예정입니다.
           </p>
@@ -32,7 +26,9 @@ const PayComplete = () => {
       <div className="paycomplete-time-box">
         <div className="paycomplete-time-inner">
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
-          <span className="paycomplete-time-text">00:00 ~ 00:00 (3시간 20분)</span>
+          <span className="paycomplete-time-text">
+            00:00 ~ 00:00 (3시간 20분)
+          </span>
         </div>
       </div>
 
@@ -41,14 +37,14 @@ const PayComplete = () => {
       </div>
 
       <div className="paycomplete-button-section">
-          <button
-            className="paycomplete-outsoon"
-            onClick={() => navigate("/login")}
-          >
-            주차를 해주세요!
-          </button>
-        </div>
+        <button
+          className="paycomplete-outsoon"
+          onClick={() => navigate("/login")}
+        >
+          주차를 해주세요!
+        </button>
       </div>
+    </div>
   );
 };
 export default PayComplete;

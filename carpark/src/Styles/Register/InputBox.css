@@ -1,4 +1,6 @@
-.inputbox-wrapper { width: 100%; }
+.inputbox-wrapper {
+  width: 100%;
+}
 
 .inputbox-wrapper input,
 .inputbox-wrapper textarea,

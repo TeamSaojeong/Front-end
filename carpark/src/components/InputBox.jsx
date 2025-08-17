@@ -21,18 +21,18 @@ const InputBox = ({
 
   return (
     <div className="inputbox-wrapper">
-    <input
-      className={className || "inputbox"}
-      type={type}
-      value={value ?? ""} // uncontrolled 경고 방지
-      onChange={onChange}
-      onKeyDown={handleKeyDown}
-      placeholder={placeholder}
-      maxLength={maxLength}
-      name={name}
-      id={id}
-      autoFocus={autoFocus}
-    />
+      <input
+        className={className || "inputbox"}
+        type={type}
+        value={value ?? ""} // uncontrolled 경고 방지
+        onChange={onChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        name={name}
+        id={id}
+        autoFocus={autoFocus}
+      />
     </div>
   );
 };

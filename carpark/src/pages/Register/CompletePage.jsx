@@ -10,7 +10,7 @@ const CompletePage = () => {
   const { name, charge, operateTimes } = useParkingForm();
   const start = operateTimes[0]?.start || "";
   const end = operateTimes[0]?.end || "";
-  const isActive =true;
+  const isActive = true;
   const navigate = useNavigate();
 
   return (
@@ -24,10 +24,7 @@ const CompletePage = () => {
       </div>
 
       <div>
-        <h1
-          className="complete-title">
-          주차 장소 등록 완료
-        </h1>
+        <h1 className="complete-title">주차 장소 등록 완료</h1>
       </div>
 
       <div>
@@ -48,14 +45,18 @@ const CompletePage = () => {
           <p className="complete-charge">{charge}원 (10분당 비용)</p>
         </div>
 
-      <div className="complete-logo">
-        <img src={complete_logo} />
-      </div>
+        <div className="complete-logo">
+          <img src={complete_logo} />
+        </div>
 
-      <div className="complete-next-btn">
-        <NextBtn label="홈으로 가기" isActive={isActive} onClick={()=>navigate("/home")} />
+        <div className="complete-next-btn">
+          <NextBtn
+            label="홈으로 가기"
+            isActive={isActive}
+            onClick={() => navigate("/home")}
+          />
+        </div>
       </div>
-    </div>
     </div>
   );
 };

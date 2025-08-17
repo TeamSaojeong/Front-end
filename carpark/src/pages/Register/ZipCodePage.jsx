@@ -36,7 +36,7 @@ const ZipCodePage = () => {
             <PreviousBtn onClick={() => navigate(-1)} />
           </Backinner>
         </Back>
-        <div style={{ maxWidth: 720, margin: "26px auto"}}>
+        <div style={{ maxWidth: 720, margin: "26px auto" }}>
           <DaumPostcodeEmbed
             onComplete={handleComplete}
             style={{ width: "342px", height: "597px" }}
@@ -75,7 +75,6 @@ const Back = styled.div`
   width: 100%;
   position: sticky;
   z-index: 1000;
-  
 `;
 
 const Backinner = styled.div`

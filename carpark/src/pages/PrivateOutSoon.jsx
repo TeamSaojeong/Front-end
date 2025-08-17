@@ -12,12 +12,6 @@ const PrivateOutSoon = () => {
 
   return (
     <div className="private-container">
-      <img
-        src={arrow}
-        alt="뒤로가기"
-        className="back-arrow"
-        onClick={() => navigate(-1)}
-      />
       <div className="private-header">
         <div className="private-text">
           콘하스 DDP 앞 주차장
@@ -44,7 +38,9 @@ const PrivateOutSoon = () => {
             <p className="private-info-text1">
               출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
             </p>
-            <p className="private-info-text2">곧 나감 누르시고, 포인트 받아가세요!</p>
+            <p className="private-info-text2">
+              곧 나감 누르시고, 포인트 받아가세요!
+            </p>
           </div>
         </div>
       </div>

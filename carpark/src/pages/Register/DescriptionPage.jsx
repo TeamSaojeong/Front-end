@@ -11,9 +11,15 @@ const DescriptionPage = () => {
   const navigate = useNavigate();
   const { name, address, content, image, setField, reset } = useParkingForm();
 
-  const hasAddress = typeof address === "string" ? !!address.trim() : !!address?.zip || !!address?.zonecode || !!address.roa || !!address?.roadAddress;
+  const hasAddress =
+    typeof address === "string"
+      ? !!address.trim()
+      : !!address?.zip ||
+        !!address?.zonecode ||
+        !!address.roa ||
+        !!address?.roadAddress;
   const hasContent = !!content?.trim();
-  const hasImage = (image instanceof File) || (!!image && !!image.name);
+  const hasImage = image instanceof File || (!!image && !!image.name);
   const isActive = hasAddress && hasContent && hasImage;
 
   const handleNext = () => {
@@ -36,15 +42,15 @@ const DescriptionPage = () => {
 
       <div>
         <p className="ds-address-title">주차 장소과 가장 근접한 위치</p>
-        <Address onchange={(addr) =>setField("address", addr)}/>
+        <Address onchange={(addr) => setField("address", addr)} />
       </div>
 
       <div>
         <div>
-        <p className="ds-img-title">주차 장소 사진&설명</p>
+          <p className="ds-img-title">주차 장소 사진&설명</p>
         </div>
         <div className="ds-img_upload">
-        <AddImg onChange={(file) => setField("image", file)} />
+          <AddImg onChange={(file) => setField("image", file)} />
         </div>
       </div>
 
@@ -58,7 +64,11 @@ const DescriptionPage = () => {
         />
       </div>
 
-      <NextBtn disabled={!isActive} onClick={handleNext} className="ds-nextBtn"/>
+      <NextBtn
+        disabled={!isActive}
+        onClick={handleNext}
+        className="ds-nextBtn"
+      />
     </div>
   );
 };

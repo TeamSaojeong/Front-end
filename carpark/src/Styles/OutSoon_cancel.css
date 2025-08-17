@@ -7,28 +7,20 @@
   background: #fff;
 }
 
-.back-arrow {
-  position: absolute;
-  top: 58px;
-  left: 24px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-}
-
 .outsoon-cancel-header {
-  margin-top: 124px;
+  margin-top: 90px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  padding: 0 24px;
 }
 
 .outsoon-cancel-header .outsoon-cancel-text {
   font-size: 24px;
   font-weight: 600;
   color: #303030;
-  text-align: center;
   line-height: 1.4;
+  text-align: left;
 }
 
 .outsoon-cancel-container .outsoon-cancel-time-box {
@@ -40,7 +32,6 @@
   padding: 16px 39px;
   margin: 16px auto 0;
   box-sizing: border-box;
-
   border-radius: 6px;
   border: 1px solid #eaeaea;
   background: #f1f1f5;
@@ -118,20 +109,20 @@
 }
 
 .outsoon-cancel-car-section {
-  margin-top: 56px;
+  margin-top: 30px;
   display: flex;
   justify-content: center;
 }
 
 .outsoon-cancel-car-section img {
-  width: 90%;
+  width: 100%;
   height: auto;
 }
 
 .outsoon-cancel-button-section {
   display: flex;
   gap: 8px;
-  margin: 46px 24px;
+  margin: 53px 24px;
 }
 
 .outsoon-cancel-extend,

@@ -9,7 +9,11 @@ const Address = () => {
   const location = useLocation();
 
   // 전역 상태와 동기화할 필드 (zustand)
-  const { address: storeAddress, zipcode: storeZipcode, setField } = useParkingForm();
+  const {
+    address: storeAddress,
+    zipcode: storeZipcode,
+    setField,
+  } = useParkingForm();
 
   // 화면 표시용 로컬 상태 (초기값은 전역 상태에서)
   const [zip, setZip] = useState(storeZipcode || "");
@@ -58,7 +62,7 @@ const Address = () => {
           type="text"
           placeholder="우편번호"
           value={zip}
-          onChange={handleZip}    /* readOnly 원하면 이 줄 지우고 readOnly 추가 */
+          onChange={handleZip} /* readOnly 원하면 이 줄 지우고 readOnly 추가 */
         />
         <button className="address-btn" type="button" onClick={goSearch}>
           주소 검색
@@ -70,7 +74,7 @@ const Address = () => {
         type="text"
         placeholder="주소"
         value={road}
-        onChange={handleRoad}     /* readOnly 원하면 이 줄 지우고 readOnly 추가 */
+        onChange={handleRoad} /* readOnly 원하면 이 줄 지우고 readOnly 추가 */
       />
     </div>
   );

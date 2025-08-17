@@ -23,9 +23,13 @@ const AddImg = ({ onChange }) => {
         className="add_img_file-label"
         style={{ display: "block", cursor: "pointer" }}
       >
-        <div className="add_img_upload" role="button" aria-label="이미지 업로드">
+        <div
+          className="add_img_upload"
+          role="button"
+          aria-label="이미지 업로드"
+        >
           {imageSrc ? (
-            <img src={imageSrc} alt="업로드 이미지" className="preview-img"/>
+            <img src={imageSrc} alt="업로드 이미지" className="preview-img" />
           ) : (
             <img
               src={Upload_Img} // 아이콘 경로

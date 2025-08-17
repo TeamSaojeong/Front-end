@@ -14,7 +14,7 @@ import Home from "./pages/Home";
 
 /** 등록 플로우 */
 import NamePage from "./pages/Register/NamePage";
-import DescriptionPage from "./pages/Register/DescriptionPage"; // ← 이 파일이 아직 주석/에러면 이 import와 아래 라우트 주석 처리
+import DescriptionPage from "./pages/Register/DescriptionPage";
 import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
 import TimePage from "./pages/Register/TimePage";
@@ -31,7 +31,13 @@ import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
 
+// 디테일
+import PlaceDetail from "./pages/PlaceDetail";
+
 /** 결제 */
+
+import NFCTagPage from "./pages/Nfc/NFCTagPage";
+import MapRoute from "./pages/Nfc/MapRoute";
 import PayPage from "./pages/Pay/PayPage";
 import PayLoading from "./pages/Pay/PayLoading";
 import PayComplete from "./pages/Pay/PayComplete";
@@ -63,6 +69,9 @@ function App() {
           <Route path="/registerpay" element={<RegisterPayPage/>}/>
           <Route path="/complete" element={<CompletePage />} />
 
+          {/* 디테일 */}
+          <Route path="/place/:id" element={<PlaceDetail />} />
+
           {/* 주차 진행/알림 */}
           <Route path="/outsoon" element={<OutSoon />} />
           <Route path="/outsoon_10m" element={<OutSoon_10m />} />
@@ -75,6 +84,8 @@ function App() {
           />
           <Route path="/parkingend" element={<ParkingEnd />} />
           {/** 결제 */}
+          <Route path="/nfc" element={<NFCTagPage />} />
+          <Route path="/MapRoute" element={<MapRoute />} />
           <Route path="/paypage" element={<PayPage />} />
           <Route path="/payloading" element={<PayLoading />} />
           <Route path="/paycomplete" element={<PayComplete />} />
