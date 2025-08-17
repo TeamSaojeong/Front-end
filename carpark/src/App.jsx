@@ -19,6 +19,7 @@ import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
 import TimePage from "./pages/Register/TimePage";
 import CompletePage from "./pages/Register/CompletePage";
+import RegisterPayPage from "./pages/Register/RegisterPayPage";
 
 /** 주차 진행/알림 */
 import OutSoon from "./pages/OutSoon";
@@ -58,6 +59,7 @@ function App() {
           <Route path="/address" element={<Address />} />
           <Route path="/zipcode" element={<ZipCodePage />} />
           <Route path="/time" element={<TimePage />} />
+          <Route path="/registerpay" element={<RegisterPayPage/>}/>
           <Route path="/complete" element={<CompletePage />} />
 
           {/* 주차 진행/알림 */}
