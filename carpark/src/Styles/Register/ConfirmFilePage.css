@@ -51,12 +51,13 @@
   margin-top: 24px;
   display: flex;
   height: 20px;
-  width: 120px;
+  width: 110px;
   padding: 14px 115.5px 14px 116.5px;
   justify-content: center;
   align-items: center;
   border-radius: 6px;
   background: #f5f5f5;
+  white-space: nowrap;
 
   color: #303030;
 

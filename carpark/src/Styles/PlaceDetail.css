@@ -33,7 +33,19 @@
   border: 0;
   cursor: pointer;
 }
+
+.pd-alarm {
+  position: absolute;
+  top: 40px;
+  right: 36px;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
 .pd-bell img,
+.pd-alarm img,
 .pd-chip-icon img,
 .pd-copy-btn img {
   width: 20px;

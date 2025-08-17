@@ -7,6 +7,7 @@ import reportIcon from "../Assets/report.svg";
 import pinIcon from "../Assets/emptypin.svg";
 import moneyIcon from "../Assets/money.svg";
 import copyIcon from "../Assets/copy.svg";
+import alarmIcon from "../Assets/alarm.svg";
 
 export default function PlaceDetail() {
   const navigate = useNavigate();
@@ -73,6 +74,13 @@ export default function PlaceDetail() {
       <div className="pd-topbar">
         <button className="pd-close" onClick={goBack} aria-label="닫기">
           ✕
+        </button>
+        <button
+          className="pd-alarm"
+          onClick={() => alert("알림 설정 준비 중")}
+          aria-label="알림"
+        >
+          <img src={alarmIcon} alt="알림" />
         </button>
         <button
           className="pd-bell"
