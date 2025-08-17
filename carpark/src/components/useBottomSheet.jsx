@@ -17,19 +17,22 @@ export default function useBottomSheet({ hostRef, sheetRef, contentRef }) {
 
     const H = host.clientHeight;
     const MIN_Y = 60; // 완전 펼쳤을 때 상단 여백
-    const PEEK = 90; // 접힌 상태에서 보이는 높이
+    const PEEK = 380; // 접힌 상태에서 보이는 높이
     const MAX_Y = H - PEEK; // 접혀 있을 때의 sheet top
     m.current.bounds = { MIN_Y, MAX_Y };
 
     const open = () => {
       sheet.style.transform = `translateY(${MIN_Y - MAX_Y}px)`;
+      sheet.dataset.open = "1";
       m.current.isOpen = true;
     };
     const close = () => {
       sheet.style.transform = `translateY(0)`;
+      sheet.dataset.open = "0";
       m.current.isOpen = false;
     };
 
+    sheet.dataset.open = "0";
     const canMove = () => {
       if (!m.current.isContentTouched) return true;
       if (sheet.getBoundingClientRect().y !== MIN_Y) return true;

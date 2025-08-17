@@ -29,6 +29,9 @@ import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
 
+// 디테일
+import PlaceDetail from "./pages/PlaceDetail";
+
 /** 결제 */
 
 import NFCTagPage from "./pages/Nfc/NFCTagPage";
@@ -61,6 +64,9 @@ function App() {
           <Route path="/zipcode" element={<ZipCodePage />} />
           <Route path="/time" element={<TimePage />} />
           <Route path="/complete" element={<CompletePage />} />
+
+          {/* 디테일 */}
+          <Route path="/place/:id" element={<PlaceDetail />} />
 
           {/* 주차 진행/알림 */}
           <Route path="/outsoon" element={<OutSoon />} />
