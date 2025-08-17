@@ -20,6 +20,7 @@ import ZipCodePage from "./pages/Register/ZipCodePage";
 import TimePage from "./pages/Register/TimePage";
 import CompletePage from "./pages/Register/CompletePage";
 import RegisterPayPage from "./pages/Register/RegisterPayPage";
+import ConfirmFilePage from "./pages/Register/ConfirmFilePage";
 
 /** 주차 진행/알림 */
 import OutSoon from "./pages/OutSoon";
@@ -55,6 +56,7 @@ function App() {
           {/* 등록 플로우 */}
           <Route path="/name" element={<NamePage />} />
           {/* DescriptionPage 파일이 아직 주석/에러라면 아래 라우트 한 줄을 주석 처리하세요 */}
+          <Route path="/confirm" element={<ConfirmFilePage/>}/>
           <Route path="/description" element={<DescriptionPage />} />
           <Route path="/address" element={<Address />} />
           <Route path="/zipcode" element={<ZipCodePage />} />
