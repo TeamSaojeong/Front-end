@@ -140,3 +140,13 @@
   background: #ededed;
   color: #5c5c5c;
 }
+
+/* '곧 나감' 완전 비활성 스타일 + 클릭 차단 */
+.privatecancel-outsoon.is-disabled,
+.privatecancel-outsoon:disabled {
+  background: #e9e9e9; /* 더 연한 회색 */
+  color: #b5b5b5;
+  border: 1px solid #e1e1e1;
+  cursor: not-allowed;
+  pointer-events: none; /* 마우스/터치 차단 */
+}
