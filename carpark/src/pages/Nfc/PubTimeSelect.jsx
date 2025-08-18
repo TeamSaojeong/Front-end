@@ -1,31 +1,33 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../../Styles/Nfc/TimeSelect.css";
+import "../../Styles/Nfc/PubTimeSelect.css";
 
 import backIcon from "../../Assets/arrow.png";
 import clockIcon from "../../Assets/clock.svg";
 
-const ITEM_H = 44; // CSS의 tp-item 높이와 동일하게 유지
+const ITEM_H = 44; // CSS의 .pub-item 높이와 반드시 동일
 
-export default function TimeSelect() {
+export default function PubTimeSelect() {
   const navigate = useNavigate();
   const { state, search } = useLocation() || {};
   const qs = new URLSearchParams(search || "");
-  // NFC URL 진입 시 ?placeId=xxx 지원
-  const placeId = state?.placeId ?? qs.get("placeId") ?? 999; // 데모 기본값
 
-  // ------- 백엔드에서 받아올 값들 -------
+  // Home/상세/NFC에서 전달되는 placeId (없으면 null)
+  const placeId = state?.placeId ?? qs.get("placeId") ?? null;
+
+  // ------- (공영/민영) 백엔드에서 받아올 값들 -------
   const [loading, setLoading] = useState(!state?.prefetched);
   const [error, setError] = useState(null);
   const [placeName, setPlaceName] = useState(state?.placeName ?? "—");
   const [openRangesText, setOpenRangesText] = useState(
     state?.openRangesText ?? "—"
   );
-  const [pricePer10Min, setPricePer10Min] = useState(state?.pricePer10Min ?? 0);
-  // ------------------------------------
+  // --------------------------------------------------
 
+  // 데이터 로딩 (prefetched면 스킵)
   useEffect(() => {
     if (!placeId || state?.prefetched) return;
+
     let aborted = false;
     (async () => {
       try {
@@ -33,59 +35,54 @@ export default function TimeSelect() {
         setError(null);
 
         // TODO: 실제 API로 교체
-        // const res = await fetch(`/api/parking/places/${placeId}`);
+        // const res = await fetch(`/api/public-places/${placeId}`);
         // const data = await res.json();
 
-        // mock
+        // ----- mock (삭제 가능) -----
         await new Promise((r) => setTimeout(r, 200));
         const data = {
           placeName: "르메르시 DDP 앞 주차장",
-          openRangesText: "00:00 ~ 00:00 | 00:00 ~ 00:00",
-          pricePer10Min: 1000,
+          openRangesText: "00:00 ~ 00:00",
         };
+        // ---------------------------
 
         if (aborted) return;
         setPlaceName(data.placeName);
         setOpenRangesText(data.openRangesText);
-        setPricePer10Min(data.pricePer10Min);
       } catch (e) {
         if (!aborted) setError("정보를 불러오지 못했어요.");
       } finally {
         if (!aborted) setLoading(false);
       }
     })();
+
     return () => {
       aborted = true;
     };
   }, [placeId, state?.prefetched]);
 
-  // 휠 데이터
+  // ===== 시간/분 (10분 단위) =====
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
   const minutes = [0, 10, 20, 30, 40, 50];
 
-  // 선택값
   const [h, setH] = useState(0);
   const [m, setM] = useState(10);
 
   const totalMinutes = h * 60 + m;
-  const isDisabled = totalMinutes === 0;
-
-  // 비용 계산 (10분 단위 올림)
-  const blocks = Math.ceil(totalMinutes / 10);
-  const estimatedCost = totalMinutes === 0 ? 0 : blocks * (pricePer10Min || 0);
+  const isDisabled = totalMinutes === 0 || loading || !!error;
 
   const fmt2 = (n) => (n < 10 ? `0${n}` : String(n)).slice(-2);
   const durationText = `${fmt2(Math.floor(totalMinutes / 60))}시간 ${fmt2(
     totalMinutes % 60
   )}분`;
 
-  // wheel refs
+  // ===== 휠 스냅 =====
   const wheelHRef = useRef(null);
   const wheelMRef = useRef(null);
   const scrollTimerH = useRef(null);
   const scrollTimerM = useRef(null);
 
-  // 초기 위치 스크롤
+  // 초기 위치
   useEffect(() => {
     const wh = wheelHRef.current;
     const wm = wheelMRef.current;
@@ -95,14 +92,11 @@ export default function TimeSelect() {
         (minutes.indexOf(m) >= 0 ? minutes.indexOf(m) : 0) * ITEM_H;
   }, []); // mount only
 
-  // 공통 스냅
-  const snapToIndex = (el, index) => {
+  const snapToIndex = (el, idx) => {
     if (!el) return;
-    const top = index * ITEM_H;
-    el.scrollTo({ top, behavior: "smooth" });
+    el.scrollTo({ top: idx * ITEM_H, behavior: "smooth" });
   };
 
-  // onScroll → 멈추면 가장 가까운 인덱스로 스냅 + 상태 반영
   const handleScroll = (type) => (e) => {
     const el = e.currentTarget;
     const rawIdx = el.scrollTop / ITEM_H;
@@ -111,134 +105,125 @@ export default function TimeSelect() {
     if (type === "h") {
       if (scrollTimerH.current) clearTimeout(scrollTimerH.current);
       scrollTimerH.current = setTimeout(() => {
-        snapToIndex(el, idx);
-        const val = hours[Math.min(Math.max(idx, 0), hours.length - 1)];
-        setH(val);
+        const safe = Math.min(Math.max(idx, 0), hours.length - 1);
+        snapToIndex(el, safe);
+        setH(hours[safe]);
       }, 100);
     } else {
       if (scrollTimerM.current) clearTimeout(scrollTimerM.current);
       scrollTimerM.current = setTimeout(() => {
-        snapToIndex(el, idx);
-        const safeIdx = Math.min(Math.max(idx, 0), minutes.length - 1);
-        setM(minutes[safeIdx]);
+        const safe = Math.min(Math.max(idx, 0), minutes.length - 1);
+        snapToIndex(el, safe);
+        setM(minutes[safe]);
       }, 100);
     }
   };
 
-  // ✅ 데모 값으로 PayPage로 이동 (금액은 PayPage에서 계산/표시)
-  const handlePay = () => {
-    if (isDisabled || loading || error) return;
+  // 시작(결제/입차) — 현재는 PayPage로 연결 (데모 플래그)
+  const handleStart = () => {
+    if (isDisabled) return;
 
     const now = new Date();
     const end = new Date(now.getTime() + totalMinutes * 60000);
 
     navigate("/PayPage", {
       state: {
-        demo: true, // 데모 플래그 (PayPage에서 API 생략)
-        lotId: placeId || 999, // 임의 ID
+        demo: true, // PayPage에서 API 생략
+        lotId: placeId ?? 0,
         startAt: now.toISOString(),
         endAt: end.toISOString(),
-        // 참고용으로 아래 값들도 넘길 수 있음(선택)
-        // durationMin: totalMinutes,
-        // estimatedCost,
+        lotName: placeName,
       },
     });
   };
 
   return (
-    <div className="tp-container">
+    <div className="pub-container">
+      {/* 뒤로가기 */}
       <img
         src={backIcon}
         alt="뒤로가기"
-        className="tp-back"
+        className="pub-back"
         onClick={() => navigate(-1)}
       />
 
-      <div className="tp-header">
-        <div className="tp-title">주차 이용 시간을{"\n"}선택해 주세요</div>
+      {/* 헤더 */}
+      <div className="pub-header">
+        <div className="pub-title">
+          예상 주차 이용 시간을{"\n"}선택해 주세요
+        </div>
 
-        <div className="tp-meta">
-          <div className="tp-row">
-            <span className="tp-label">주차 장소 이름</span>
-            <span className="tp-value">
+        <div className="pub-meta">
+          <div className="pub-row">
+            <span className="pub-label">주차 장소 이름</span>
+            <span className="pub-value">
               {loading ? "불러오는 중..." : error ? "—" : placeName}
             </span>
           </div>
-          <div className="tp-row">
-            <span className="tp-label">주차 가능 시간</span>
-            <span className="tp-value">
+          <div className="pub-row">
+            <span className="pub-label">주차 가능 시간</span>
+            <span className="pub-value">
               {loading ? "불러오는 중..." : error ? "—" : openRangesText}
-            </span>
-          </div>
-          <div className="tp-row">
-            <span className="tp-label">10분당 주차 비용</span>
-            <span className="tp-value">
-              {loading
-                ? "…"
-                : error
-                ? "—"
-                : `${pricePer10Min.toLocaleString()}원`}
             </span>
           </div>
         </div>
 
-        {/* 아이콘 + 선택 시간 */}
-        <div className="tp-chip">
-          <img src={clockIcon} alt="" className="tp-chip-icon" />
+        {/* 선택 시간 표시 칩 (풀폭) */}
+        <div className="pub-chip">
+          <img src={clockIcon} alt="" className="pub-chip-icon" />
           <span>{durationText}</span>
         </div>
       </div>
 
-      {/* Wheel Picker (박스 없이 두 줄 가이드만) */}
-      <div className="tp-wheel-wrap">
+      {/* 휠 (두 줄 가이드, 2e80ec) */}
+      <div className="pub-wheel-wrap">
         <div
-          className="tp-wheel"
+          className="pub-wheel"
           ref={wheelHRef}
           onScroll={handleScroll("h")}
           aria-label="시간 선택 휠"
         >
-          <div className="tp-spacer" />
+          <div className="pub-spacer" />
           {hours.map((hh) => (
-            <div className={`tp-item ${h === hh ? "active" : ""}`} key={hh}>
+            <div className={`pub-item ${h === hh ? "active" : ""}`} key={hh}>
               {hh}
             </div>
           ))}
-          <div className="tp-spacer" />
+          <div className="pub-spacer" />
         </div>
 
-        <div className="tp-col-suffix">:</div>
+        <div className="pub-col-suffix">:</div>
 
         <div
-          className="tp-wheel"
+          className="pub-wheel"
           ref={wheelMRef}
           onScroll={handleScroll("m")}
           aria-label="분 선택 휠"
         >
-          <div className="tp-spacer" />
+          <div className="pub-spacer" />
           {minutes.map((mm) => (
-            <div className={`tp-item ${m === mm ? "active" : ""}`} key={mm}>
+            <div className={`pub-item ${m === mm ? "active" : ""}`} key={mm}>
               {fmt2(mm)}
             </div>
           ))}
-          <div className="tp-spacer" />
+          <div className="pub-spacer" />
         </div>
 
         {/* 가운데 가이드 라인 */}
-        <div className="tp-guide-line tp-guide-top" />
-        <div className="tp-guide-line tp-guide-bot" />
+        <div className="pub-guide-line pub-guide-top" />
+        <div className="pub-guide-line pub-guide-bot" />
       </div>
 
-      <div className="tp-bottom">
+      {/* 하단 버튼 */}
+      <div className="pub-bottom">
         <button
-          className={`tp-pay ${
-            isDisabled || loading || error ? "disabled" : ""
-          }`}
-          onClick={handlePay}
-          disabled={isDisabled || loading || !!error}
+          className={`pub-pay ${isDisabled ? "disabled" : ""}`}
+          onClick={handleStart}
+          disabled={isDisabled}
         >
-          결제하기
+          주차장 이용 시작
         </button>
-        {error && <div className="tp-error">{error}</div>}
+        {error && <div className="pub-error">{error}</div>}
       </div>
     </div>
   );

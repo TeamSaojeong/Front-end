@@ -31,13 +31,14 @@ import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
 
-// 디테일
-import PlaceDetail from "./pages/PlaceDetail";
+/** 디테일 (개인 / 공영·민영 분리) */
+import PvPlaceDetail from "./pages/Place/PvPlaceDetail";
+import PlaceDetail from "./pages/Place/PlaceDetail";
 
-/** 결제 */
-
+/** 결제 & NFC */
 import NFCTagPage from "./pages/Nfc/NFCTagPage";
-import TimeSelect from "./pages/Nfc/TimeSelect";
+import PvTimeSelect from "./pages/Nfc/PvTimeSelect";
+import PubTimeSelect from "./pages/Nfc/PubTimeSelect";
 import MapRoute from "./pages/Nfc/MapRoute";
 import PayPage from "./pages/Pay/PayPage";
 import PayLoading from "./pages/Pay/PayLoading";
@@ -69,8 +70,9 @@ function App() {
           <Route path="/registerpay" element={<RegisterPayPage />} />
           <Route path="/complete" element={<CompletePage />} />
 
-          {/* 디테일 */}
-          <Route path="/place/:id" element={<PlaceDetail />} />
+          {/* 디테일 (분기) */}
+          <Route path="/pv/place/:placeId" element={<PvPlaceDetail />} />
+          <Route path="/place/:placeId" element={<PlaceDetail />} />
 
           {/* 주차 진행/알림 */}
           <Route path="/outsoon" element={<OutSoon />} />
@@ -83,10 +85,18 @@ function App() {
             element={<PrivateOutSoon_cancel />}
           />
           <Route path="/parkingend" element={<ParkingEnd />} />
-          {/** 결제 */}
+
+          {/* NFC / 개인용 타임선택 */}
           <Route path="/nfc" element={<NFCTagPage />} />
-          <Route path="/TimeSelect" element={<TimeSelect />} />
+          <Route path="/pv/time-select" element={<PvTimeSelect />} />
+          <Route path="/pub/time-select" element={<PubTimeSelect />} />
+
+          {/* 길 안내 */}
           <Route path="/MapRoute" element={<MapRoute />} />
+          {/* 필요하면 호환: <Route path="/map-route" element={<MapRoute />} /> */}
+
+          {/* 결제 플로우 (대소문자 호환) */}
+          <Route path="/PayPage" element={<PayPage />} />
           <Route path="/paypage" element={<PayPage />} />
           <Route path="/payloading" element={<PayLoading />} />
           <Route path="/paycomplete" element={<PayComplete />} />

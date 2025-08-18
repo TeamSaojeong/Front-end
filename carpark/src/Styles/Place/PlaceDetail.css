@@ -6,7 +6,9 @@
   position: relative;
   box-sizing: border-box;
   padding: 0 24px 24px;
-} /* Top bar */
+}
+
+/* Top bar */
 .pd-topbar {
   position: relative;
   height: 56px;
@@ -23,26 +25,21 @@
   border: 0;
   cursor: pointer;
 }
-.pd-bell {
+.pd-bell,
+.pd-alarm {
   position: absolute;
   top: 40px;
-  right: 0;
   width: 28px;
   height: 28px;
   background: transparent;
   border: 0;
   cursor: pointer;
 }
-
+.pd-bell {
+  right: 0;
+}
 .pd-alarm {
-  position: absolute;
-  top: 40px;
   right: 36px;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
 }
 .pd-bell img,
 .pd-alarm img,
@@ -51,7 +48,9 @@
   width: 20px;
   height: 20px;
   display: block;
-} /* Title */
+}
+
+/* Title */
 .pd-title {
   color: #303030;
   font-family: Pretendard, system-ui, -apple-system, "Segoe UI", Roboto,
@@ -61,30 +60,70 @@
   line-height: 34px;
   letter-spacing: -0.6px;
   margin: 35px 0 12px;
-} /* Chips */
+}
+
+/* Soon notice */
+.pd-soon-notice {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f5f8ff;
+  color: #2448d8;
+  font-size: 14px;
+  line-height: 20px;
+}
+.pd-soon-notice strong {
+  font-weight: 700;
+}
+
+/* Chips: 정확히 169x68 */
 .pd-chips {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+  grid-template-columns: 169px 169px;
+  gap: 8px;
+  margin: 12px 0 20px;
 }
 .pd-chip {
+  width: 169px;
+  height: 68px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 10px 12px;
   border: 1px solid #eaeaea;
   border-radius: 12px;
-  background: #eaeaea;
+  background: #fff;
+  box-sizing: border-box;
 }
-.pd-chip-text strong {
+.pd-chip-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+}
+.pd-chip-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.pd-chip-value {
+  font-size: 15px;
+  line-height: 20px;
   color: #303030;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pd-chip-sub {
-  font-size: 12px;
-  color: #767676;
   margin-top: 2px;
-} /* Section */
+  font-size: 12px;
+  line-height: 16px;
+  color: #767676;
+  white-space: nowrap;
+}
+
+/* Section */
 .pd-section {
   margin-top: 16px;
 }
@@ -94,7 +133,9 @@
   font-weight: 600;
   line-height: 20px;
   margin-bottom: 8px;
-} /* Address */
+}
+
+/* Address */
 .pd-address-row {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -111,21 +152,22 @@
   width: 32px;
   height: 32px;
   padding: 0;
-  margin-right: 80px;
   background: transparent;
   border: 0;
-  border-radius: 0;
-  outline: none;
   cursor: pointer;
-} /* Time */
+}
+
+/* Time */
 .pd-times {
   font-size: 14px;
   color: #303030;
-} /* Photo */
+}
+
+/* Photo */
 .pd-photo-box {
   width: 100%;
   height: 220px;
-  background: #eaeaea;
+  background: #f1f1f5;
   border: 1px solid #eaeaea;
   border-radius: 12px;
   display: grid;
@@ -134,67 +176,47 @@
 }
 .pd-photo-placeholder {
   font-size: 28px;
-  opacity: 0.6;
+  opacity: 0.55;
 }
+
 /* Note */
 .pd-note {
   color: #303030;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
-
   white-space: pre-wrap;
-} /* Bottom buttons */
+}
+
+/* Bottom buttons */
 .pd-actions {
   position: sticky;
   bottom: 0;
   background: #fff;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 24px;
   gap: 12px;
   padding: 20px 0 0;
   margin-top: 35px;
 }
 .pd-btn {
-  height: 52px;
-  border-radius: 10px;
+  height: 56px;
+  border-radius: 6px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
 }
 .pd-btn-outline {
-  width: 167px;
-  height: 56px;
   border: 1px solid #e1e1e1;
-  border-radius: 6px;
   background: #fff;
   color: #303030;
 }
 .pd-btn-primary {
-  width: 167px;
-  height: 56px;
   border: none;
-  border-radius: 6px;
   background: #3b82f6;
   color: #fff;
 }
 .pd-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.pd-soon-notice {
-  margin-top: 8px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #f5f8ff;
-  color: #2448d8;
-  font-size: 14px;
-  line-height: 20px;
-}
-.pd-soon-notice strong {
-  font-weight: 700;
 }

@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomSheet from "../components/BottomSheet";
@@ -13,6 +12,7 @@ const SDK_SRC =
 const useMock =
   import.meta?.env?.VITE_USE_MOCK === "1" ||
   process.env.REACT_APP_USE_MOCK === "1";
+
 const MOCK_PLACES = [
   {
     id: 1,
@@ -23,6 +23,7 @@ const MOCK_PLACES = [
     etaMin: 3,
     price: 0,
     address: "서울특별시 중구 세종대로 110",
+    type: "PRIVATE", // ✅ 개인
   },
   {
     id: 2,
@@ -33,6 +34,7 @@ const MOCK_PLACES = [
     etaMin: 5,
     price: 1000,
     address: "서울특별시 중구 태평로1가",
+    type: "PUBLIC", // ✅ 공영/민영
   },
 ];
 
@@ -59,12 +61,19 @@ export default function Home() {
 
   const navigate = useNavigate();
 
-  // 선택된 주차장 → 세션 저장 → 디테일 이동
+  const isPrivate = (place) =>
+    String(place?.type || "").toUpperCase() === "PRIVATE";
+
+  // 선택된 주차장 → 세션 저장 → 타입에 따라 상세로 이동
   const onSelectPlace = (p) => {
     try {
       sessionStorage.setItem("selectedPlace", JSON.stringify(p));
     } catch {}
-    navigate(`/place/${p.id}`);
+    if (isPrivate(p)) {
+      navigate(`/pv/place/${p.id}`, { state: { place: p } });
+    } else {
+      navigate(`/place/${p.id}`, { state: { place: p } });
+    }
   };
 
   // Kakao Map init
@@ -180,7 +189,7 @@ export default function Home() {
         </div>
       `;
 
-      // ✅ 말풍선 클릭 시 디테일로 이동 + 세션 저장
+      // ✅ 말풍선 클릭 → 타입별 상세 이동
       el.addEventListener("click", () => onSelectPlace(p));
 
       const overlay = new kakao.maps.CustomOverlay({
@@ -225,6 +234,8 @@ export default function Home() {
       if (!resp.ok) throw new Error(`API ${resp.status}`);
 
       const json = await resp.json();
+
+      // ✅ 백엔드 필드 맵핑 시 type 포함
       const rows = (json?.data ?? json?.results ?? json ?? []).map(
         (it, idx) => {
           const id = it.id ?? it.parkingId ?? idx + 1;
@@ -236,6 +247,10 @@ export default function Home() {
           const etaMin = it.etaMin ?? it.eta_min ?? null;
           const price = it.price ?? it.fee ?? 0;
           const address = it.address ?? it.road_address ?? it.addr ?? "";
+
+          // 예시: backend가 'type' / 'category' / 'kind' 중 하나로 줄 수 있음
+          const type = it.type ?? it.category ?? it.kind ?? null; // "PRIVATE" | "PUBLIC" | "COMMERCIAL" 등
+
           return {
             id,
             name,
@@ -245,6 +260,7 @@ export default function Home() {
             etaMin,
             price,
             address,
+            type, // ✅ 포함
           };
         }
       );
