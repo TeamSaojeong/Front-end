@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Signup.css";
 import arrow from "../Assets/arrow.png";
-import client from "../apis/client";
+import { client } from "../apis/client";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -87,7 +87,7 @@ const SignupPage = () => {
     if (_idErr || _pwErr || _carErr || _nameEmpty) return;
 
     try {
-      const res = await client.post("/signup", {
+      const res = await client.post("/api/signup", {
         memberId: id.trim(),
         password: pw,
         carnumber: normalizeCar(car),

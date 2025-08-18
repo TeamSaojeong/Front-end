@@ -4,12 +4,21 @@ import BottomSheet from "../components/BottomSheet";
 import "../Styles/app-frame.css";
 import Mapmenu from "../components/Mapmenu";
 import Aiforecast from "../components/Aiforecast";
+import greenFire from "../Assets/greenfire.svg";
+import "../Styles/map-poi.css";
 
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
 
 // ===== (옵션) 목데이터 스위치: Vite or CRA =====
+// const useMock =
+//   import.meta?.env?.VITE_USE_MOCK === import greenFire from "../Assets/greenfire.svg";"1" ||
+//   process.env.REACT_APP_USE_MOCK === "1";
+
+//임시 확인 데이터
+const params = new URLSearchParams(window.location.search);
 const useMock =
+  params.get("mock") === "1" || // ← ?mock=1 이면 목 모드
   import.meta?.env?.VITE_USE_MOCK === "1" ||
   process.env.REACT_APP_USE_MOCK === "1";
 
@@ -23,7 +32,8 @@ const MOCK_PLACES = [
     etaMin: 3,
     price: 0,
     address: "서울특별시 중구 세종대로 110",
-    type: "PRIVATE", // ✅ 개인
+    type: "PRIVATE",
+    leavingSoon: true, // ✅ 연두색
   },
   {
     id: 2,
@@ -34,7 +44,8 @@ const MOCK_PLACES = [
     etaMin: 5,
     price: 1000,
     address: "서울특별시 중구 태평로1가",
-    type: "PUBLIC", // ✅ 공영/민영
+    type: "PUBLIC",
+    leavingSoon: false,
   },
 ];
 
@@ -45,12 +56,11 @@ export default function Home() {
   const mapRef = useRef(null);
   const abortRef = useRef(null);
   const markersRef = useRef([]);
-  const overlaysRef = useRef([]);
+  const overlaysRef = useRef([]); // [{ id, el, overlay, place }]
   const loadingRef = useRef(false);
 
   // 내 위치 표시용
   const myLocOverlayRef = useRef(null);
-  const myAccCircleRef = useRef(null);
 
   // State
   const [places, setPlaces] = useState([]);
@@ -58,6 +68,7 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 }); // 기본 서울시청
   const [showRequery, setShowRequery] = useState(false);
+  const [selectedId, setSelectedId] = useState(null); // ✅ 클릭 선택 상태
 
   const navigate = useNavigate();
 
@@ -69,11 +80,17 @@ export default function Home() {
     try {
       sessionStorage.setItem("selectedPlace", JSON.stringify(p));
     } catch {}
-    if (isPrivate(p)) {
-      navigate(`/pv/place/${p.id}`, { state: { place: p } });
-    } else {
-      navigate(`/place/${p.id}`, { state: { place: p } });
-    }
+    // ① 지도 말풍선 선택 하이라이트
+    setSelectedId(p.id);
+    updateBubbleStyles(p.id);
+
+    // ② 선택 컬러가 잠깐 보이도록 딜레이 후 이동
+    const go = () =>
+      isPrivate(p)
+        ? navigate(`/pv/place/${p.id}`, { state: { place: p } })
+        : navigate(`/place/${p.id}`, { state: { place: p } });
+
+    setTimeout(go, 120);
   };
 
   // Kakao Map init
@@ -128,7 +145,7 @@ export default function Home() {
         const lng = pos.coords.longitude;
         setCenter({ lat, lng });
         recenterMap(lat, lng);
-        showMyLocation(lat, lng, pos.coords.accuracy);
+        showMyLocation(lat, lng);
         fetchNearby(lat, lng);
       },
       () => fetchNearby(center.lat, center.lng),
@@ -143,16 +160,18 @@ export default function Home() {
   };
 
   const clearMarkers = () => {
-    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current.forEach((m) => m?.setMap?.(null));
     markersRef.current = [];
   };
   const clearOverlays = () => {
-    overlaysRef.current.forEach((o) => o.setMap(null));
+    overlaysRef.current.forEach((item) =>
+      item?.overlay?.setMap ? item.overlay.setMap(null) : item?.setMap?.(null)
+    );
     overlaysRef.current = [];
   };
 
-  // 내 위치(파란 점 + 정확도 원)
-  const showMyLocation = (lat, lng, accuracy) => {
+  // 내 위치(파란 점)
+  const showMyLocation = (lat, lng) => {
     const kakao = window.kakao;
     if (!mapRef.current || !kakao?.maps) return;
 
@@ -178,29 +197,61 @@ export default function Home() {
     rows.forEach((p) => {
       if (!p.lat || !p.lng) return;
 
-      const el = document.createElement("div");
-      el.className = "poi-bubble";
-      el.innerHTML = `
-        <div class="poi-bubble__inner">
-          <div class="poi-bubble__name">${p.name ?? ""}</div>
-          <div class="poi-bubble__price">₩ ${(
-            p.price ?? 0
-          ).toLocaleString()}원</div>
-        </div>
-      `;
+      // ① 가격만 보이는 칩
+      const chip = document.createElement("div");
+      chip.className = "poi-chip";
+      if (p.id === selectedId) chip.classList.add("poi-chip--selected");
+      chip.textContent = `₩ ${(p.price ?? 0).toLocaleString()}원`;
+      chip.addEventListener("click", () => onSelectPlace(p));
 
-      // ✅ 말풍선 클릭 → 타입별 상세 이동
-      el.addEventListener("click", () => onSelectPlace(p));
-
-      const overlay = new kakao.maps.CustomOverlay({
+      const chipOv = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(p.lat, p.lng),
-        content: el,
+        content: chip,
         yAnchor: 1.1,
         zIndex: 5,
         clickable: true,
       });
-      overlay.setMap(mapRef.current);
-      overlaysRef.current.push(overlay);
+      chipOv.setMap(mapRef.current);
+      overlaysRef.current.push({
+        id: p.id,
+        el: chip,
+        overlay: chipOv,
+        place: p,
+      });
+
+      // ② '곧 나감'인 경우 추가 뱃지(파란 말풍선)
+      if (p.leavingSoon) {
+        const badge = document.createElement("div");
+        badge.className = "poi-leaving-badge";
+        badge.innerHTML = `
+        <img src="${greenFire}" alt="" class="poi-leaving-badge__icon" />
+        <span class="poi-leaving-badge__text">곧 나감</span>
+      `;
+        badge.addEventListener("click", () => onSelectPlace(p));
+
+        const badgeOv = new kakao.maps.CustomOverlay({
+          position: new kakao.maps.LatLng(p.lat, p.lng),
+          content: badge,
+          yAnchor: 1.55, // 칩 위에 뜨도록
+          zIndex: 6,
+          clickable: true,
+        });
+        badgeOv.setMap(mapRef.current);
+        overlaysRef.current.push({
+          id: `${p.id}-badge`,
+          el: badge,
+          overlay: badgeOv,
+          place: p,
+        });
+      }
+    });
+  };
+
+  // 선택 클래스 토글
+  const updateBubbleStyles = (selId = selectedId) => {
+    overlaysRef.current.forEach(({ id, el }) => {
+      if (!el) return;
+      el.classList.toggle("poi-chip--selected", id === selId); // ✅ 변경
     });
   };
 
@@ -210,6 +261,7 @@ export default function Home() {
     loadingRef.current = true;
     setIsLoading(true);
     setErrorMsg("");
+    setSelectedId(null); // ✅ 새 조회 시 선택 초기화
     clearMarkers();
     clearOverlays();
 
@@ -235,7 +287,7 @@ export default function Home() {
 
       const json = await resp.json();
 
-      // ✅ 백엔드 필드 맵핑 시 type 포함
+      // ✅ 백엔드 필드 맵핑 (type + leavingSoon 포함)
       const rows = (json?.data ?? json?.results ?? json ?? []).map(
         (it, idx) => {
           const id = it.id ?? it.parkingId ?? idx + 1;
@@ -248,8 +300,14 @@ export default function Home() {
           const price = it.price ?? it.fee ?? 0;
           const address = it.address ?? it.road_address ?? it.addr ?? "";
 
-          // 예시: backend가 'type' / 'category' / 'kind' 중 하나로 줄 수 있음
-          const type = it.type ?? it.category ?? it.kind ?? null; // "PRIVATE" | "PUBLIC" | "COMMERCIAL" 등
+          const type = it.type ?? it.category ?? it.kind ?? null;
+
+          // 다양한 키 대응
+          const leavingSoon =
+            it.leavingSoon ??
+            it.queueOpen ??
+            it.isLeavingSoon ??
+            typeof it.leaving_eta_min === "number";
 
           return {
             id,
@@ -260,7 +318,8 @@ export default function Home() {
             etaMin,
             price,
             address,
-            type, // ✅ 포함
+            type,
+            leavingSoon,
           };
         }
       );
@@ -298,7 +357,7 @@ export default function Home() {
         const lng = pos.coords.longitude;
         setCenter({ lat, lng });
         recenterMap(lat, lng);
-        showMyLocation(lat, lng, pos.coords.accuracy); // 파란 점
+        showMyLocation(lat, lng); // 파란 점
         fetchNearby(lat, lng);
       },
       () => {

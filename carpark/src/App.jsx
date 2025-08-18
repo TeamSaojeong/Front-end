@@ -17,7 +17,7 @@ import NamePage from "./pages/Register/NamePage";
 import DescriptionPage from "./pages/Register/DescriptionPage";
 import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
-import TimePage from "./pages/Register/TimePage";
+import TimePage from "./pages/TimeProvider";
 import CompletePage from "./pages/Register/CompletePage";
 import RegisterPayPage from "./pages/Register/RegisterPayPage";
 import ConfirmFilePage from "./pages/Register/ConfirmFilePage";

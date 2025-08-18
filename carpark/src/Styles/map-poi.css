@@ -1,0 +1,114 @@
+/* 지도 말풍선 (카카오 커스텀 오버레이용) */
+.map-wrap .poi-bubble {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+  font-size: 12px;
+  color: #111827;
+  user-select: none;
+}
+.map-wrap .poi-bubble__name {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.map-wrap .poi-bubble__price {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* 곧 나감(연두) */
+.map-wrap .poi-bubble--leaving {
+  background: #ecf9e6;
+  border-color: #cfeec0;
+  color: #1f3d13;
+}
+.map-wrap .poi-bubble--leaving .poi-bubble__price {
+  color: #1f3d13;
+}
+
+/* 선택됨(진파랑) — 최우선 */
+.map-wrap .poi-bubble--selected {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+.map-wrap .poi-bubble--selected .poi-bubble__price {
+  color: #fff;
+}
+
+/* 바텀시트 카드용 '곧 나감' 배지 */
+.bs-badge {
+  margin-left: 6px;
+  padding: 2px 6px;
+  background: #ecf9e6;
+  color: #1f3d13;
+  border: 1px solid #cfeec0;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ========== '곧 나감' 작은 뱃지 ========== */
+.poi-leaving-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: #eef6ff; /* 아주 연한 파랑 배경 */
+  border: 2px solid #9ec5ff; /* 파랑 테두리 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  font-weight: 800;
+  font-size: 14px;
+  color: #1e40af; /* 텍스트 진파랑 */
+  white-space: nowrap;
+}
+
+.poi-leaving-badge__icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.poi-leaving-badge::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 7px 7px 0 7px;
+  border-style: solid;
+  border-color: #9ec5ff transparent transparent transparent; /* 테두리 삼각형 */
+}
+.poi-leaving-badge::after {
+  content: "";
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0 6px;
+  border-style: solid;
+  border-color: #eef6ff transparent transparent transparent; /* 내부 삼각형 */
+}
+
+.map-wrap .poi-chip {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+  font-size: 12px;
+  color: #111827;
+  user-select: none;
+  font-weight: 700;
+}
+.map-wrap .poi-chip--selected {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
