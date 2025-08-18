@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import client from "../../apis/client";
+import { client } from "../../apis/client";
 import "../../Styles/Pay/PayPage.css";
 
 import arrow from "../../Assets/arrow.png";

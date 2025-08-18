@@ -21,12 +21,12 @@
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
 }
 
-/* 상단 뒤로가기 버튼 */
+/* 상단 뒤로가기 버튼 (옵션) */
 .map-top-back {
   position: absolute;
   top: 12px;
   left: 12px;
-  z-index: 1000;
+  z-index: 30;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -39,10 +39,99 @@
   background: #f3f4f6;
 }
 
+/* 상단 정보 카드 */
+.route-topcard {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 40;
+  width: 342px;
+  height: 64px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.route-left {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+.route-pin {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+.route-texts {
+  display: flex;
+  flex-direction: column;
+}
+.route-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+.route-sub {
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #4b5563;
+}
+.route-sub-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+.route-chevron {
+  font-size: 22px;
+  color: #9ca3af;
+}
+
+/* 하단 종료 바 */
+.route-endbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  pointer-events: none; /* 영역 클릭 방해 X */
+}
+.route-endbtn {
+  pointer-events: auto;
+  width: 112px;
+  height: 44px;
+  box-sizing: border-box; /* padding+border 포함해 112px 유지 */
+  padding: 0 12px; /* 필요하면 값 조절 */
+  border-radius: 22px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #5c5c5c;
+  font-weight: 700;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  min-width: 0; /* 또는 제거 */
+}
+
+.route-endbtn:active {
+  transform: translateY(1px);
+}
+
 /* 상태 표시 */
 .map-toast {
   position: absolute;
-  bottom: 16px;
+  bottom: 72px;
   left: 50%;
   transform: translateX(-50%);
   background: #111827;
@@ -50,7 +139,7 @@
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 13px;
-  z-index: 1000;
+  z-index: 50;
   opacity: 0.9;
 }
 .map-toast.error {

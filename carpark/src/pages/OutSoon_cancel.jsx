@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/OutSoon_cancel.css";
 
-import arrow from "../Assets/arrow.png";
 import car_icon from "../Assets/car.png";
 import clock_icon from "../Assets/clock.svg";
 import info_icon from "../Assets/info.svg";
@@ -21,7 +20,6 @@ const OutSoon_cancel = () => {
 
   return (
     <div className="outsoon-cancel-container">
-
       <div className="outsoon-cancel-header">
         <div className="outsoon-cancel-text">
           콘하스 DDP 앞 주차장
@@ -65,16 +63,14 @@ const OutSoon_cancel = () => {
           연장하기
         </button>
 
-        <div className="outsoon-cancel-bubble-container">
-          <div className="outsoon-cancel-bubble-box"></div>
-
-          <button
-            className="outsoon-cancel-outsoon-cancel"
-            onClick={() => navigate("/login")}
-          >
-            곧 나감
-          </button>
-        </div>
+        <button
+          className="outsoon-cancel-outsoon-cancel is-disabled"
+          disabled
+          aria-disabled="true"
+          tabIndex={-1}
+        >
+          곧 나감
+        </button>
       </div>
 
       <PointModal open={open} onClose={() => setOpen(false)} />

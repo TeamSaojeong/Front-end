@@ -1,4 +1,3 @@
-// src/components/Content.jsx
 import React from "react";
 import searchIcon from "../Assets/glasses.png";
 
@@ -8,7 +7,7 @@ export default function Content({
   isLoading = false,
   errorMsg = "",
   onRefreshHere,
-  onSelectPlace, // ✅ 추가
+  onSelectPlace,
 }) {
   return (
     <div className="bs-body">
@@ -40,11 +39,14 @@ export default function Content({
             className="bs-card"
             key={p.id}
             role="button"
-            onClick={() => onSelectPlace?.(p)} // ✅ 카드 클릭도 이동
+            onClick={() => onSelectPlace?.(p)}
           >
             <div className="bs-card-image" aria-hidden="true" />
             <div className="bs-info">
-              <div className="bs-name">{p.name}</div>
+              <div className="bs-name">
+                {p.name}
+                {p.leavingSoon && <span className="bs-badge">곧 나감</span>}
+              </div>
               <div className="bs-card-details">
                 <span>{p.distanceKm ?? "—"}km</span>
                 <span>|</span>
