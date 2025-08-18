@@ -7,11 +7,13 @@ import pinIcon from "../../Assets/emptypin.svg";
 import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
-import out5m from "../../Assets/out5m.svg"; // ← 말풍선 아이콘
+import alarmIconOn from "../../Assets/alarm1.svg";
+import out5m from "../../Assets/out5m.svg";
 
 export default function PvPlaceDetail() {
   const navigate = useNavigate();
   const params = useParams();
+  const [alarmOn, setAlarmOn] = useState(false);
 
   // 어떤 키로 오든 첫 번째 파라미터 사용
   const idFromParam =
@@ -138,10 +140,12 @@ export default function PvPlaceDetail() {
 
         <button
           className="pd-alarm"
-          onClick={() => alert("알림 설정 준비 중")}
-          aria-label="알림"
+          onClick={() => setAlarmOn((v) => !v)}
+          aria-pressed={alarmOn}
+          aria-label={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
+          title={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
         >
-          <img src={alarmIcon} alt="알림" />
+          <img src={alarmOn ? alarmIconOn : alarmIcon} alt="" />
         </button>
         <button
           className="pd-bell"
