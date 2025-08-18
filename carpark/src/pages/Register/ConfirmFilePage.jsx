@@ -4,6 +4,7 @@ import "../../Styles/Register/ConfirmFilePage.css";
 import cf_plus from "../../Assets/cf-plus.svg";
 import folder from "../../Assets/folder.svg";
 import { useState } from "react";
+import {useNavigate} from "react-router-dom";
 
 const ConfirmFilePage = ({onNext}) => {
     const [files, setFiles] = useState([]);
@@ -12,9 +13,13 @@ const ConfirmFilePage = ({onNext}) => {
         setFiles((prev) => [...prev, ...newFiles]);
     }
 
-    const handleNext = ()=>{
+    const navigate = useNavigate();
+
+
+    const handleNext = async()=>{
         if(files.length > 0){
             onNext?.(files);
+            navigate("/name");
         }
     };
 

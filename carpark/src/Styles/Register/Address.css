@@ -45,7 +45,7 @@
   border-radius: 6px !important;
   background: #dde4ff !important;
   border: none;
-
+  white-space: nowrap;
   overflow: hidden;
   color: #1f3fb1;
   text-overflow: ellipsis;
@@ -57,6 +57,7 @@
   font-weight: 600;
   line-height: 20px;
   letter-spacing: -0.35px;
+
 }
 
 .address-text-btn {

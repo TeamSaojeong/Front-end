@@ -48,27 +48,29 @@ letter-spacing: -0.35px;
 }
 
 .cf-upload-btn{
-  margin-top: 24px;
+margin-top: 24px;
   display: flex;
   height: 20px;
-width: 110px;
-padding: 14px 115.5px 14px 116.5px;
-justify-content: center;
-align-items: center;
-border-radius: 6px;
-background: #F5F5F5;
+  width: 110px;
+  padding: 14px 115.5px 14px 116.5px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  background: #f5f5f5;
+  white-space: nowrap;
 
-color: #303030;
+  color: #303030;
 
-/* MO/Body/KR/B2_KR_Rg */
-font-family: Pretendard;
-font-size: 14px;
-font-style: normal;
-font-weight: 400;
-line-height: 20px; /* 142.857% */
-letter-spacing: -0.35px;
+  /* MO/Body/KR/B2_KR_Rg */
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px; /* 142.857% */
+  letter-spacing: -0.35px;
 
-gap: 8px;
+  gap: 8px;
+
 
 }
 

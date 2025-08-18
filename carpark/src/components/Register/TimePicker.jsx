@@ -324,74 +324,74 @@ export default TimePicker;
 /* ---------- 스타일 (기존과 동일) ---------- */
 
 
-const PickerGrid = styled.div`
-  margin-top: 6px;
-  display: grid;
-  grid-template-columns: 1.1fr 1fr auto 1fr;
-  align-items: stretch;
-  gap: 22px;
-  position: relative;
-  &::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 0;
-    top: calc(50% - 1px);
-    border-top: 2px solid #dfe3eb;
-    pointer-events: none;
-  }
-`;
-// const WheelWrap = styled.div`
+// const PickerGrid = styled.div`
+//   margin-top: 6px;
+//   display: grid;
+//   grid-template-columns: 1.1fr 1fr auto 1fr;
+//   align-items: stretch;
+//   gap: 22px;
 //   position: relative;
-//   height: ${ITEM_HEIGHT * 3}px;
-//   overflow: hidden;
-//   border-bottom: 1px solid #e8ecf3;
-// `;
-// const WheelInner = styled.div`
-//   height: 100%;
-//   overflow-y: auto;
-//   scroll-snap-type: y mandatory;
-//   padding: ${ITEM_HEIGHT}px 0;
-//   -webkit-overflow-scrolling: touch;
-//   &::-webkit-scrollbar {
-//     display: none;
+//   &::after {
+//     content: "";
+//     position: absolute;
+//     left: 0;
+//     right: 0;
+//     height: 0;
+//     top: calc(50% - 1px);
+//     border-top: 2px solid #dfe3eb;
+//     pointer-events: none;
 //   }
 // `;
-// const WheelItem = styled.div`
-//   height: ${ITEM_HEIGHT}px;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   scroll-snap-align: center;
+// // const WheelWrap = styled.div`
+// //   position: relative;
+// //   height: ${ITEM_HEIGHT * 3}px;
+// //   overflow: hidden;
+// //   border-bottom: 1px solid #e8ecf3;
+// // `;
+// // const WheelInner = styled.div`
+// //   height: 100%;
+// //   overflow-y: auto;
+// //   scroll-snap-type: y mandatory;
+// //   padding: ${ITEM_HEIGHT}px 0;
+// //   -webkit-overflow-scrolling: touch;
+// //   &::-webkit-scrollbar {
+// //     display: none;
+// //   }
+// // `;
+// // const WheelItem = styled.div`
+// //   height: ${ITEM_HEIGHT}px;
+// //   display: flex;
+// //   align-items: center;
+// //   justify-content: center;
+// //   scroll-snap-align: center;
+// //   font-size: 22px;
+// //   user-select: none;
+// //   cursor: pointer;
+// //   color: #9aa3af;
+// //   &[aria-selected="true"] {
+// //     font-weight: 700;
+// //     color: #111;
+// //     transform: translateZ(0);
+// //   }
+// //   .dim {
+// //     font-size: 20px;
+// //   }
+// // `;
+// // const CenterGuide = styled.div`
+// //   pointer-events: none;
+// //   position: absolute;
+// //   left: 0;
+// //   right: 0;
+// //   top: calc(50% - ${ITEM_HEIGHT / 2}px);
+// //   height: ${ITEM_HEIGHT}px;
+// //   border-top: 0.5px solid #2E80EC;
+// //   border-bottom: 0.5px solid #2E80EC
+// // `;
+// const Colon = styled.div`
 //   font-size: 22px;
-//   user-select: none;
-//   cursor: pointer;
+//   font-weight: 700;
+//   display: grid;
+//   place-items: center;
 //   color: #9aa3af;
-//   &[aria-selected="true"] {
-//     font-weight: 700;
-//     color: #111;
-//     transform: translateZ(0);
-//   }
-//   .dim {
-//     font-size: 20px;
-//   }
+//   transform: translateY(0.5px);
 // `;
-// const CenterGuide = styled.div`
-//   pointer-events: none;
-//   position: absolute;
-//   left: 0;
-//   right: 0;
-//   top: calc(50% - ${ITEM_HEIGHT / 2}px);
-//   height: ${ITEM_HEIGHT}px;
-//   border-top: 0.5px solid #2E80EC;
-//   border-bottom: 0.5px solid #2E80EC
-// `;
-const Colon = styled.div`
-  font-size: 22px;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
-  color: #9aa3af;
-  transform: translateY(0.5px);
-`;

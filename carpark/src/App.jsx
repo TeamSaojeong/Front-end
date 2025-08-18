@@ -15,7 +15,6 @@ import Home from "./pages/Home";
 /** 등록 플로우 */
 import NamePage from "./pages/Register/NamePage";
 import DescriptionPage from "./pages/Register/DescriptionPage";
-import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
 import TimePage from "./pages/Register/TimePage";
 import CompletePage from "./pages/Register/CompletePage";
@@ -33,6 +32,13 @@ import ParkingEnd from "./pages/ParkingEnd";
 
 // 디테일
 import PlaceDetail from "./pages/PlaceDetail";
+
+//ai 주차 예측
+import AIPredict from "./pages/AIPredict";
+import AIResult from "./pages/AIResult";
+
+// 신고 flow
+import ReportPage from "./pages/ReportPage";
 
 /** 결제 */
 
@@ -71,6 +77,13 @@ function App() {
 
           {/* 디테일 */}
           <Route path="/place/:id" element={<PlaceDetail />} />
+
+          {/*AI 주차 예측*/}
+          <Route path="/aipredict" element={<AIPredict />}/>
+          <Route path="/airesult" element={<AIResult />}/>
+
+          {/*신고하기 flow */}
+          <Route path="/report" element={<ReportPage/>}/>
 
           {/* 주차 진행/알림 */}
           <Route path="/outsoon" element={<OutSoon />} />

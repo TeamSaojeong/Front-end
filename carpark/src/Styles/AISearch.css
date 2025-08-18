@@ -1,0 +1,19 @@
+
+
+.s-img{
+    width:24px;
+    height:24px;
+}
+.s-input-wrap{
+    padding: 14px 20px;
+    display: flex;
+width: 302px;
+height: 24px;
+padding: 14px 20px;
+justify-content: center;
+align-items: center;
+gap: 4px;
+flex-shrink: 0;
+border-radius: 100px;
+background: #F7F7F7;
+}
