@@ -16,22 +16,23 @@ import Home from "./pages/Home";
 import NamePage from "./pages/Register/NamePage";
 import DescriptionPage from "./pages/Register/DescriptionPage";
 import ZipCodePage from "./pages/Register/ZipCodePage";
-import TimePage from "./pages/Register/TimePage";
+import TimePage from "./pages/TimeProvider";
 import CompletePage from "./pages/Register/CompletePage";
+import RegisterPayPage from "./pages/Register/RegisterPayPage";
+import ConfirmFilePage from "./pages/Register/ConfirmFilePage";
 import RegisterPayPage from "./pages/Register/RegisterPayPage";
 import ConfirmFilePage from "./pages/Register/ConfirmFilePage";
 
 /** 주차 진행/알림 */
 import OutSoon from "./pages/OutSoon";
-import OutSoon_10m from "./pages/OutSoon_10m";
 import OutSoon_cancel from "./pages/OutSoon_cancel";
 import PrivateOutSoon from "./pages/PrivateOutSoon";
-import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
 
-// 디테일
-import PlaceDetail from "./pages/PlaceDetail";
+/** 디테일 (개인 / 공영·민영 분리) */
+import PvPlaceDetail from "./pages/Place/PvPlaceDetail";
+import PlaceDetail from "./pages/Place/PlaceDetail";
 
 //ai 주차 예측
 import AIPredict from "./pages/AIPredict";
@@ -40,9 +41,10 @@ import AIResult from "./pages/AIResult";
 // 신고 flow
 import ReportPage from "./pages/ReportPage";
 
-/** 결제 */
-
+/** 결제 & NFC */
 import NFCTagPage from "./pages/Nfc/NFCTagPage";
+import PvTimeSelect from "./pages/Nfc/PvTimeSelect";
+import PubTimeSelect from "./pages/Nfc/PubTimeSelect";
 import MapRoute from "./pages/Nfc/MapRoute";
 import PayPage from "./pages/Pay/PayPage";
 import PayLoading from "./pages/Pay/PayLoading";
@@ -78,6 +80,10 @@ function App() {
           {/* 디테일 */}
           <Route path="/place/:id" element={<PlaceDetail />} />
 
+          {/* 디테일 (분기) */}
+          <Route path="/pv/place/:placeId" element={<PvPlaceDetail />} />
+          <Route path="/place/:placeId" element={<PlaceDetail />} />
+
           {/*AI 주차 예측*/}
           <Route path="/aipredict" element={<AIPredict />}/>
           <Route path="/airesult" element={<AIResult />}/>
@@ -90,15 +96,24 @@ function App() {
           <Route path="/outsoon_10m" element={<OutSoon_10m />} />
           <Route path="/outsoon_cancel" element={<OutSoon_cancel />} />
           <Route path="/privateoutsoon" element={<PrivateOutSoon />} />
-          <Route path="/privateoutsoon_10m" element={<PrivateOutSoon_10m />} />
+
           <Route
             path="/privateoutsoon_cancel"
             element={<PrivateOutSoon_cancel />}
           />
           <Route path="/parkingend" element={<ParkingEnd />} />
-          {/** 결제 */}
+
+          {/* NFC / 개인용 타임선택 */}
           <Route path="/nfc" element={<NFCTagPage />} />
+          <Route path="/pv/time-select" element={<PvTimeSelect />} />
+          <Route path="/pub/time-select" element={<PubTimeSelect />} />
+
+          {/* 길 안내 */}
           <Route path="/MapRoute" element={<MapRoute />} />
+          {/* 필요하면 호환: <Route path="/map-route" element={<MapRoute />} /> */}
+
+          {/* 결제 플로우 (대소문자 호환) */}
+          <Route path="/PayPage" element={<PayPage />} />
           <Route path="/paypage" element={<PayPage />} />
           <Route path="/payloading" element={<PayLoading />} />
           <Route path="/paycomplete" element={<PayComplete />} />

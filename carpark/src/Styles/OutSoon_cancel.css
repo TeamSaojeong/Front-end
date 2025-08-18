@@ -159,45 +159,11 @@
   flex: 0 0 167px;
 }
 
-.outsoon-cancel-bubble-box {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
-  left: auto;
-  transform: none;
-  background: #fff;
-  border: 1px solid #eaeaea;
-  border-radius: 12px;
-  padding: 8px 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-  z-index: 1;
-  max-width: calc(100vw - 48px);
-  white-space: nowrap;
-}
-
-.outsoon-cancel-bubble-box::before {
-  content: "";
-  position: absolute;
-  top: 100%;
-  right: 60px; /* 말풍선에서 뾰족한 부분 조절하려면 여기 조절하면됌 */
-  border-width: 7px 7px 0 7px;
-  border-style: solid;
-  border-color: #eaeaea transparent transparent transparent;
-}
-.outsoon-cancel-bubble-box::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  right: 61px;
-  transform: translateY(-1px);
-  border-width: 6px 6px 0 6px;
-  border-style: solid;
-  border-color: #fff transparent transparent transparent;
-}
-
-.outsoon-cancel-bubble-text {
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 18px;
-  color: #303030;
+.outsoon-cancel-outsoon-cancel.is-disabled,
+.outsoon-cancel-outsoon-cancel:disabled {
+  background: #e9e9e9; /* 밝은 회색 */
+  color: #b5b5b5;
+  border: 1px solid #e1e1e1;
+  cursor: not-allowed;
+  pointer-events: none; /* 마우스 클릭 완전 차단 */
 }

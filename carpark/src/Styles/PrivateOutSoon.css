@@ -196,3 +196,24 @@
 .private-bubble-text strong {
   font-weight: 700;
 }
+
+.private-outsoon.active {
+  background: #de5e56;
+  color: #fff;
+  border: none;
+}
+.private-outsoon.is-disabled,
+.private-outsoon:disabled {
+  background: #e9e9e9;
+  color: #b5b5b5;
+  border: 1px solid #e1e1e1;
+  cursor: not-allowed;
+}
+
+/* 아이콘 네이밍 맞춤 */
+.infoyellow-icon {
+  width: 16px;
+  height: 16px;
+  position: relative;
+  top: 2px;
+}

@@ -1,4 +1,3 @@
-// PriceKeypad.jsx
 import React, { useMemo, useState } from "react";
 import NextBtn from "../../components/Register/NextBtn";
 import { useNavigate } from "react-router-dom";

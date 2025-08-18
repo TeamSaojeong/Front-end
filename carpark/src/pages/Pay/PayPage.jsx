@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import client from "../../apis/client";
+import { client } from "../../apis/client";
 import "../../Styles/Pay/PayPage.css";
 
 import arrow from "../../Assets/arrow.png";
@@ -11,13 +11,11 @@ const KRW = (n) =>
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "원";
 
-// 숫자만 포맷 (원 단위 제외)
 const KRW_NUM = (n) =>
   (isNaN(n) ? 0 : Math.round(n))
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-// HH:mm 고정 포맷
 const hhmm = new Intl.DateTimeFormat("ko-KR", {
   hour: "2-digit",
   minute: "2-digit",
@@ -26,9 +24,9 @@ const hhmm = new Intl.DateTimeFormat("ko-KR", {
 
 export default function PayPage() {
   const navigate = useNavigate();
-  const { state } = useLocation();
+  const { state } = useLocation() || {};
 
-  // 데모 기본값
+  // 데모/네비게이션으로 넘어온 값
   const lotId = state?.lotId ?? 1;
   const startAt = state?.startAt ? new Date(state.startAt) : new Date();
   const endAt =
@@ -63,6 +61,19 @@ export default function PayPage() {
 
   useEffect(() => {
     let mounted = true;
+
+    // ✅ demo 모드: API 생략하고 더미 값으로 즉시 세팅
+    if (state?.demo) {
+      setLotName("데모 주차장");
+      setPricePer10Min(1000); // 10분당 1,000원
+      setNearbyAvg10Min(1200);
+      setLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    // 실제 API 호출
     (async () => {
       try {
         const [lotRes, avgRes] = await Promise.all([
@@ -84,10 +95,11 @@ export default function PayPage() {
         if (mounted) setLoading(false);
       }
     })();
+
     return () => {
       mounted = false;
     };
-  }, [lotId]);
+  }, [lotId, state?.demo]);
 
   const handlePay = async () => {
     if (posting) return;
@@ -193,7 +205,6 @@ export default function PayPage() {
           <b>{KRW(svcFee)}</b>
         </div>
 
-        {/* 총 합계 - 행 스타일 동일 + 금액만 컬러 분리 */}
         <div className="paypage__pair paypage__total">
           <span>총 합계</span>
           <span className="total-amount">
@@ -203,7 +214,7 @@ export default function PayPage() {
         </div>
       </div>
 
-      {/* 카카오페이 안내 배지 (비클릭) */}
+      {/* 카카오페이 안내 배지 */}
       <div className="kakaopay-box" aria-live="polite">
         {kakaopay ? (
           <img src={kakaopay} alt="" />

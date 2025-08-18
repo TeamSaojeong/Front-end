@@ -1,0 +1,186 @@
+.pub-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 390px;
+  min-height: 844px;
+  margin: 0 auto;
+  background: #fff;
+  color: #303030;
+  box-sizing: border-box;
+}
+
+/* 뒤로가기 */
+.pub-back {
+  position: absolute;
+  top: 40px;
+  left: 24px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* 헤더 */
+.pub-header {
+  margin-top: 96px;
+  padding: 0 24px;
+}
+
+.pub-title {
+  white-space: pre-line;
+  font-size: 24px;
+  font-weight: 700;
+  color: #303030;
+  line-height: 1.35;
+}
+
+/* 라벨/값 */
+.pub-meta {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pub-row {
+  display: flex;
+  flex-direction: column; /* ✅ 세로 배치 */
+  align-items: flex-start; /* 왼쪽 정렬 */
+  gap: 4px; /* 라벨-값 간격 */
+  padding: 8px 0;
+}
+.pub-label {
+  font-size: 12px; /* 라벨은 작고 연하게 */
+  line-height: 18px;
+  color: #8c8c8c;
+}
+.pub-value {
+  font-size: 14px; /* 값은 또렷하게 */
+  line-height: 20px;
+  font-weight: 500;
+  color: #303030;
+  white-space: normal; /* ✅ 줄바꿈 허용 */
+  word-break: break-word;
+}
+
+/* 선택 시간 칩 (풀폭 바) */
+.pub-chip {
+  margin-top: 12px;
+  width: 100%;
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid #eaeaea;
+  background: #f1f1f5;
+  color: #5c5c5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+.pub-chip-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex: 0 0 18px;
+}
+
+/* 휠 */
+.pub-wheel-wrap {
+  position: relative;
+  margin: 60px 24px 0;
+  height: 120px; /* 가이드 라인 높이에 맞는 영역 */
+  border-radius: 8px; /* 시각적 여백만, 배경/테두리는 없음 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  gap: 10px;
+}
+
+.pub-wheel {
+  width: 110px;
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+.pub-wheel::-webkit-scrollbar {
+  display: none;
+}
+
+.pub-item {
+  height: 44px; /* JS ITEM_H와 동일 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #9b9b9b;
+  scroll-snap-align: center;
+}
+.pub-item.active {
+  font-size: 22px;
+  font-weight: 700;
+  color: #303030;
+}
+
+.pub-spacer {
+  height: 44px;
+} /* 위/아래 버퍼 */
+
+/* 가운데 콜론 */
+.pub-col-suffix {
+  width: 12px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #303030;
+}
+
+/* 두 줄 가이드 (2e80ec) */
+.pub-guide-line {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  height: 0;
+  border-top: 1px solid #2e80ec;
+  pointer-events: none;
+}
+.pub-guide-top {
+  top: calc(50% - 22px);
+} /* ITEM_H/2 */
+.pub-guide-bot {
+  top: calc(50% + 22px);
+}
+
+/* 하단 버튼 */
+.pub-bottom {
+  margin-top: 210px;
+  padding: 0 24px 24px;
+}
+.pub-pay {
+  width: 100%;
+  height: 56px;
+  border-radius: 6px;
+  border: 1px solid #a8a8a8;
+  font-size: 16px;
+  font-weight: 700;
+  background: #2e80ec;
+  color: #fff;
+  cursor: pointer;
+}
+.pub-pay.disabled,
+.pub-pay:disabled {
+  background: #e9e9e9;
+  color: #b5b5b5;
+  border-color: #e1e1e1;
+  cursor: not-allowed;
+}
+
+/* 에러 */
+.pub-error {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #de5e56;
+  text-align: center;
+}

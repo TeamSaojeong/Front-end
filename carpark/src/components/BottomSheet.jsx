@@ -10,6 +10,7 @@ export default function BottomSheet({
   errorMsg = "",
   onRefresh,
   onRefreshHere,
+  onSelectPlace,
 }) {
   const sheetRef = useRef(null);
   const contentRef = useRef(null);
@@ -28,6 +29,7 @@ export default function BottomSheet({
           errorMsg={errorMsg}
           onRefresh={onRefresh}
           onRefreshHere={onRefreshHere}
+          onSelectPlace={onSelectPlace}
         />
       </div>
     </div>

@@ -1,16 +1,18 @@
-// 지도 불러오는 부분 GPT 사용
-
+// 지도 불러오는 부분 + 상단/하단 UI 추가 + OSRM 거리/시간 표시
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../../Styles/app-frame.css";
 import "../../Styles/Nfc/MapRoute.css";
+
+import pinIcon from "../../Assets/emptypin.svg";
+import orangeLcIcon from "../../Assets/orangelc.svg";
 
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
 
 export default function MapRoute() {
   const navigate = useNavigate();
-  const { state } = useLocation(); // { dest, name }
+  const { state } = useLocation(); // { dest:{lat,lng}, name, address }
 
   // refs
   const mapEl = useRef(null);
@@ -21,6 +23,10 @@ export default function MapRoute() {
   // state
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [routeMeta, setRouteMeta] = useState({
+    distanceKm: null,
+    durationMin: null,
+  });
 
   useEffect(() => {
     const init = () => {
@@ -100,7 +106,7 @@ export default function MapRoute() {
     myLocOverlayRef.current.setMap(mapRef.current);
   };
 
-  // OSRM(프론트 호출)
+  // OSRM(프론트 호출) — 경로/거리/시간 동시 반환
   const fetchRoute = async (origin, dest) => {
     const url =
       `https://router.project-osrm.org/route/v1/driving/` +
@@ -110,8 +116,20 @@ export default function MapRoute() {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`OSRM ${resp.status}`);
     const json = await resp.json();
-    const coords = json?.routes?.[0]?.geometry?.coordinates ?? [];
-    return coords.map(([lng, lat]) => ({ lat, lng }));
+
+    const route = json?.routes?.[0];
+    const coords = route?.geometry?.coordinates ?? [];
+    const distanceMeters = route?.distance ?? null; // m
+    const durationSeconds = route?.duration ?? null; // s
+
+    const path = coords.map(([lng, lat]) => ({ lat, lng }));
+    return {
+      coords: path,
+      distanceKm:
+        typeof distanceMeters === "number" ? distanceMeters / 1000 : null,
+      durationMin:
+        typeof durationSeconds === "number" ? durationSeconds / 60 : null,
+    };
   };
 
   const showRouteTo = async (destLat, destLng) => {
@@ -134,8 +152,16 @@ export default function MapRoute() {
       setIsLoading(true);
       setErrorMsg("");
       showMyLocation(origin.lat, origin.lng);
-      const coords = await fetchRoute(origin, dest);
+
+      const { coords, distanceKm, durationMin } = await fetchRoute(
+        origin,
+        dest
+      );
       drawRoute(coords);
+      setRouteMeta({
+        distanceKm,
+        durationMin,
+      });
 
       // 목적지 마커
       const kakao = window.kakao;
@@ -151,8 +177,38 @@ export default function MapRoute() {
     }
   };
 
+  const fmtMeta = () => {
+    const d =
+      routeMeta.distanceKm != null
+        ? `${routeMeta.distanceKm.toFixed(1)}km`
+        : "—km";
+    const t =
+      routeMeta.durationMin != null
+        ? `${Math.round(routeMeta.durationMin)}분 남음`
+        : "—분";
+    return `${d} · ${t}`;
+  };
+
   return (
     <div className="map-wrap">
+      {/* 상단 정보 카드 */}
+      <div className="route-topcard">
+        <div className="route-left">
+          <img src={orangeLcIcon} alt="" className="route-pin" />
+          <div className="route-texts">
+            <div className="route-title">{state?.name ?? "주차 장소 이름"}</div>
+            <div className="route-sub">
+              <img src={pinIcon} alt="" className="route-sub-icon" />
+              <span>{fmtMeta()}</span>
+            </div>
+          </div>
+        </div>
+        <div className="route-chevron" aria-hidden>
+          ›
+        </div>
+      </div>
+
+      {/* 뒤로가기(옵션) */}
       <button
         className="map-top-back"
         onClick={() => navigate(-1)}
@@ -160,7 +216,19 @@ export default function MapRoute() {
       >
         ←
       </button>
+
       <div ref={mapEl} className="map-fill" />
+
+      {/* 하단 종료 버튼 */}
+      <div className="route-endbar">
+        <button
+          className="route-endbtn"
+          onClick={() => navigate("/home", { replace: true })}
+        >
+          경로 안내 종료
+        </button>
+      </div>
+
       {isLoading && <div className="map-toast">경로 불러오는 중…</div>}
       {!!errorMsg && <div className="map-toast error">{errorMsg}</div>}
     </div>

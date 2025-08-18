@@ -15,7 +15,7 @@
 }
 .pd-close {
   position: absolute;
-  top: 14px;
+  top: 40px;
   left: 0;
   width: 28px;
   height: 28px;
@@ -25,18 +25,24 @@
   border: 0;
   cursor: pointer;
 }
-.pd-bell {
+.pd-bell,
+.pd-alarm {
   position: absolute;
-  top: 14px;
-  right: 0;
+  top: 40px;
   width: 28px;
   height: 28px;
   background: transparent;
   border: 0;
   cursor: pointer;
 }
-
+.pd-bell {
+  right: 0;
+}
+.pd-alarm {
+  right: 36px;
+}
 .pd-bell img,
+.pd-alarm img,
 .pd-chip-icon img,
 .pd-copy-btn img {
   width: 20px;
@@ -53,32 +59,68 @@
   font-weight: 600;
   line-height: 34px;
   letter-spacing: -0.6px;
-  margin: 8px 0 12px;
+  margin: 35px 0 12px;
 }
 
-/* Chips */
+/* Soon notice */
+.pd-soon-notice {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f5f8ff;
+  color: #2448d8;
+  font-size: 14px;
+  line-height: 20px;
+}
+.pd-soon-notice strong {
+  font-weight: 700;
+}
+
+/* Chips: 정확히 169x68 */
 .pd-chips {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+  grid-template-columns: 169px 169px;
+  gap: 8px;
+  margin: 12px 0 20px;
 }
 .pd-chip {
+  width: 169px;
+  height: 68px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 10px 12px;
   border: 1px solid #eaeaea;
   border-radius: 12px;
-  background: #f7f7fb;
+  background: #fff;
+  box-sizing: border-box;
 }
-.pd-chip-text strong {
+.pd-chip-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+}
+.pd-chip-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.pd-chip-value {
+  font-size: 15px;
+  line-height: 20px;
   color: #303030;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pd-chip-sub {
-  font-size: 12px;
-  color: #767676;
   margin-top: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #767676;
+  white-space: nowrap;
 }
 
 /* Section */
@@ -86,9 +128,9 @@
   margin-top: 16px;
 }
 .pd-section-title {
-  color: #303030;
+  color: #767676;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 600;
   line-height: 20px;
   margin-bottom: 8px;
 }
@@ -107,11 +149,11 @@
   word-break: break-word;
 }
 .pd-copy-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid #eaeaea;
-  background: #fff;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 0;
   cursor: pointer;
 }
 
@@ -134,13 +176,14 @@
 }
 .pd-photo-placeholder {
   font-size: 28px;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 /* Note */
 .pd-note {
-  color: #767676;
+  color: #303030;
   font-size: 14px;
+  font-weight: 400;
   line-height: 20px;
   white-space: pre-wrap;
 }
@@ -154,11 +197,11 @@
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 20px 0 0;
-  margin-top: 12px;
+  margin-top: 35px;
 }
 .pd-btn {
-  height: 52px;
-  border-radius: 10px;
+  height: 56px;
+  border-radius: 6px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;

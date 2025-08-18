@@ -58,8 +58,10 @@ const PrivateOutSoon_cancel = () => {
 
       <div className="privatecancel-button-section">
         <button
-          className="privatecancel-outsoon"
-          onClick={() => navigate("/login")}
+          className="privatecancel-outsoon is-disabled"
+          disabled
+          aria-disabled="true"
+          tabIndex={-1}
         >
           곧 나감
         </button>
