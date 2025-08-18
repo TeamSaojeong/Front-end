@@ -10,15 +10,9 @@ import "../Styles/map-poi.css";
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
 
-// ===== (옵션) 목데이터 스위치: Vite or CRA =====
-// const useMock =
-//   import.meta?.env?.VITE_USE_MOCK === import greenFire from "../Assets/greenfire.svg";"1" ||
-//   process.env.REACT_APP_USE_MOCK === "1";
-
-//임시 확인 데이터
 const params = new URLSearchParams(window.location.search);
 const useMock =
-  params.get("mock") === "1" || // ← ?mock=1 이면 목 모드
+  params.get("mock") === "1" ||
   import.meta?.env?.VITE_USE_MOCK === "1" ||
   process.env.REACT_APP_USE_MOCK === "1";
 
@@ -33,7 +27,7 @@ const MOCK_PLACES = [
     price: 0,
     address: "서울특별시 중구 세종대로 110",
     type: "PRIVATE",
-    leavingSoon: true, // ✅ 연두색
+    leavingSoon: true,
   },
   {
     id: 2,
@@ -50,50 +44,42 @@ const MOCK_PLACES = [
 ];
 
 export default function Home() {
-  // Refs
   const wrapRef = useRef(null);
   const mapEl = useRef(null);
   const mapRef = useRef(null);
   const abortRef = useRef(null);
   const markersRef = useRef([]);
-  const overlaysRef = useRef([]); // [{ id, el, overlay, place }]
+  const overlaysRef = useRef([]);
   const loadingRef = useRef(false);
-
-  // 내 위치 표시용
   const myLocOverlayRef = useRef(null);
 
-  // State
   const [places, setPlaces] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 }); // 기본 서울시청
+  const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 });
   const [showRequery, setShowRequery] = useState(false);
-  const [selectedId, setSelectedId] = useState(null); // ✅ 클릭 선택 상태
+  const [isSheetOpen, setIsSheetOpen] = useState(false); // ✅ 시트 열림 상태
+  const [selectedId, setSelectedId] = useState(null);
 
   const navigate = useNavigate();
 
   const isPrivate = (place) =>
     String(place?.type || "").toUpperCase() === "PRIVATE";
 
-  // 선택된 주차장 → 세션 저장 → 타입에 따라 상세로 이동
   const onSelectPlace = (p) => {
     try {
       sessionStorage.setItem("selectedPlace", JSON.stringify(p));
     } catch {}
-    // ① 지도 말풍선 선택 하이라이트
     setSelectedId(p.id);
     updateBubbleStyles(p.id);
 
-    // ② 선택 컬러가 잠깐 보이도록 딜레이 후 이동
     const go = () =>
       isPrivate(p)
         ? navigate(`/pv/place/${p.id}`, { state: { place: p } })
         : navigate(`/place/${p.id}`, { state: { place: p } });
-
     setTimeout(go, 120);
   };
 
-  // Kakao Map init
   useEffect(() => {
     const init = () => {
       const kakao = window.kakao;
@@ -106,13 +92,11 @@ export default function Home() {
       });
       mapRef.current = map;
 
-      // 지도 이동/확대 축소 → 재검색 버튼 노출
       kakao.maps.event.addListener(map, "dragend", () => setShowRequery(true));
       kakao.maps.event.addListener(map, "zoom_changed", () =>
         setShowRequery(true)
       );
 
-      // 최초: 현재 위치 기반 조회
       detectAndLoad();
     };
 
@@ -133,7 +117,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ===== helpers =====
   const detectAndLoad = () => {
     if (!navigator.geolocation) {
       fetchNearby(center.lat, center.lng);
@@ -170,7 +153,6 @@ export default function Home() {
     overlaysRef.current = [];
   };
 
-  // 내 위치(파란 점)
   const showMyLocation = (lat, lng) => {
     const kakao = window.kakao;
     if (!mapRef.current || !kakao?.maps) return;
@@ -189,7 +171,6 @@ export default function Home() {
     myLocOverlayRef.current.setMap(mapRef.current);
   };
 
-  // 주차장 말풍선
   const renderBubbles = (rows) => {
     const kakao = window.kakao;
     if (!mapRef.current || !kakao?.maps) return;
@@ -197,7 +178,6 @@ export default function Home() {
     rows.forEach((p) => {
       if (!p.lat || !p.lng) return;
 
-      // ① 가격만 보이는 칩
       const chip = document.createElement("div");
       chip.className = "poi-chip";
       if (p.id === selectedId) chip.classList.add("poi-chip--selected");
@@ -219,20 +199,19 @@ export default function Home() {
         place: p,
       });
 
-      // ② '곧 나감'인 경우 추가 뱃지(파란 말풍선)
       if (p.leavingSoon) {
         const badge = document.createElement("div");
         badge.className = "poi-leaving-badge";
         badge.innerHTML = `
-        <img src="${greenFire}" alt="" class="poi-leaving-badge__icon" />
-        <span class="poi-leaving-badge__text">곧 나감</span>
-      `;
+          <img src="${greenFire}" alt="" class="poi-leaving-badge__icon" />
+          <span class="poi-leaving-badge__text">곧 나감</span>
+        `;
         badge.addEventListener("click", () => onSelectPlace(p));
 
         const badgeOv = new kakao.maps.CustomOverlay({
           position: new kakao.maps.LatLng(p.lat, p.lng),
           content: badge,
-          yAnchor: 1.55, // 칩 위에 뜨도록
+          yAnchor: 1.55,
           zIndex: 6,
           clickable: true,
         });
@@ -247,26 +226,23 @@ export default function Home() {
     });
   };
 
-  // 선택 클래스 토글
   const updateBubbleStyles = (selId = selectedId) => {
     overlaysRef.current.forEach(({ id, el }) => {
       if (!el) return;
-      el.classList.toggle("poi-chip--selected", id === selId); // ✅ 변경
+      el.classList.toggle("poi-chip--selected", id === selId);
     });
   };
 
-  // API 호출
   const fetchNearby = async (lat, lng) => {
-    if (loadingRef.current) return; // 중복 방지
+    if (loadingRef.current) return;
     loadingRef.current = true;
     setIsLoading(true);
     setErrorMsg("");
-    setSelectedId(null); // ✅ 새 조회 시 선택 초기화
+    setSelectedId(null);
     clearMarkers();
     clearOverlays();
 
     try {
-      // 목 모드
       if (useMock) {
         setPlaces(MOCK_PLACES);
         renderBubbles(MOCK_PLACES);
@@ -287,7 +263,6 @@ export default function Home() {
 
       const json = await resp.json();
 
-      // ✅ 백엔드 필드 맵핑 (type + leavingSoon 포함)
       const rows = (json?.data ?? json?.results ?? json ?? []).map(
         (it, idx) => {
           const id = it.id ?? it.parkingId ?? idx + 1;
@@ -299,10 +274,7 @@ export default function Home() {
           const etaMin = it.etaMin ?? it.eta_min ?? null;
           const price = it.price ?? it.fee ?? 0;
           const address = it.address ?? it.road_address ?? it.addr ?? "";
-
           const type = it.type ?? it.category ?? it.kind ?? null;
-
-          // 다양한 키 대응
           const leavingSoon =
             it.leavingSoon ??
             it.queueOpen ??
@@ -338,10 +310,8 @@ export default function Home() {
     }
   };
 
-  // 현 위치로 재조회 (바텀시트 버튼)
   const refreshFromCurrentPosition = () => {
     if (!navigator.geolocation) {
-      // 위치 권한이 없으면 지도 중심으로라도 조회
       if (mapRef.current) {
         const c = mapRef.current.getCenter();
         fetchNearby(c.getLat(), c.getLng());
@@ -357,7 +327,7 @@ export default function Home() {
         const lng = pos.coords.longitude;
         setCenter({ lat, lng });
         recenterMap(lat, lng);
-        showMyLocation(lat, lng); // 파란 점
+        showMyLocation(lat, lng);
         fetchNearby(lat, lng);
       },
       () => {
@@ -372,7 +342,6 @@ export default function Home() {
     );
   };
 
-  // “여기에서 다시 검색” (지도 중심 기준)
   const requeryHere = () => {
     if (!mapRef.current) return;
     const c = mapRef.current.getCenter();
@@ -384,12 +353,11 @@ export default function Home() {
     <div ref={wrapRef} className="map-wrap">
       <div ref={mapEl} className="map-fill" />
 
-      {/* 상단 카드/메뉴 */}
       <Mapmenu />
       <Aiforecast onClick={() => console.log("AI 예보 클릭")} />
 
-      {/* 여기에서 다시 검색 버튼 (바텀시트 위 중앙) */}
-      {showRequery && (
+      {/* ✅ 바텀시트가 내려가 있을 때만 노출 */}
+      {showRequery && !isSheetOpen && (
         <button
           className="requery-btn"
           onClick={requeryHere}
@@ -403,7 +371,6 @@ export default function Home() {
         </button>
       )}
 
-      {/* 바텀시트: 리스트도 동시 갱신 */}
       <BottomSheet
         hostRef={wrapRef}
         places={places}
@@ -411,6 +378,7 @@ export default function Home() {
         errorMsg={errorMsg}
         onRefreshHere={refreshFromCurrentPosition}
         onSelectPlace={onSelectPlace}
+        onOpenChange={setIsSheetOpen} // ✅ 열림 상태 반영
       />
     </div>
   );

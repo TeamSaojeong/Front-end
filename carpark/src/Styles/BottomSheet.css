@@ -1,9 +1,15 @@
+/* 접힌 상태에서 보이는 높이(PEEK) & 펼침 상단 여백(MIN_Y)과 일치 */
 .bs-wrapper {
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% - 380px); /* 접힌 상태에서 보이는 높이 (PEEK) */
-  height: calc(100% - 90px); /* 펼쳤을 때 남길 상단 여백 (MIN_Y) */
+
+  /* ✅ PEEK = 115px (접힘 상태에서 보이는 높이) */
+  top: calc(100% - 115px);
+
+  /* ✅ MIN_Y = 90px (완전 펼침 시 상단에 남기는 여백) */
+  height: calc(100% - 90px);
+
   display: flex;
   flex-direction: column;
   background: #fff;
@@ -12,7 +18,7 @@
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
   transition: transform 0.35s ease-out;
   will-change: transform;
-  z-index: 10;
+  z-index: 20;
 }
 
 .bs-header {
@@ -37,7 +43,7 @@
 
 /* 컨텐츠 여백 */
 .bs-body {
-  padding: 12px 16px 24px;
+  padding: 12px 16px calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 /* 검색 필드 */
@@ -45,6 +51,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 335px;
   height: 48px;
   padding: 0 16px;
   background: #f3f5f8;
@@ -70,14 +77,12 @@
 .bs-section {
   margin: 12px 2px 8px;
 }
-
 .bs-title {
   margin: 0 0 4px;
   font-size: 18px;
   font-weight: 700;
   color: #111;
 }
-
 .bs-sub {
   margin: 0;
   font-size: 13px;
@@ -96,32 +101,27 @@
   border: 1px solid #f0f0f0;
   margin-bottom: 12px;
 }
-
 .bs-card-image {
   width: 56px;
   height: 56px;
   border-radius: 8px;
   background: #e9eef5;
 }
-
 .bs-info {
   flex: 1;
   min-width: 0;
 }
-
 .bs-name {
   font-weight: 600;
   color: #111;
   margin-bottom: 4px;
 }
-
 .bs-card-details {
   font-size: 12px;
   color: #6b7280;
   display: flex;
   gap: 6px;
 }
-
 .bs-price {
   margin-top: 4px;
   font-size: 13px;
@@ -138,6 +138,7 @@
   font-weight: 600;
 }
 
+/* 하단 고정 버튼 */
 .bs-location {
   position: sticky;
   bottom: 12px;

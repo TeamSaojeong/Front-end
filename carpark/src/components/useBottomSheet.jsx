@@ -1,11 +1,16 @@
 import { useEffect, useRef } from "react";
 
-export default function useBottomSheet({ hostRef, sheetRef, contentRef }) {
+export default function useBottomSheet({
+  hostRef,
+  sheetRef,
+  contentRef,
+  onOpenChange, // 시트 열림 상태 변경 콜백
+}) {
   const m = useRef({
     touchStart: { sheetY: 0, touchY: 0 },
     touchMove: { prevTouchY: 0, moving: "none" }, // "up" | "down" | "none"
     isContentTouched: false,
-    bounds: { MIN_Y: 60, MAX_Y: 0 },
+    bounds: { MIN_Y: 90, MAX_Y: 0 }, // MIN_Y 기본값(동기화 목적)
     isOpen: false,
   });
 
@@ -16,26 +21,38 @@ export default function useBottomSheet({ hostRef, sheetRef, contentRef }) {
     if (!host || !sheet || !content) return;
 
     const H = host.clientHeight;
-    const MIN_Y = 60; // 완전 펼쳤을 때 상단 여백
-    const PEEK = 380; // 접힌 상태에서 보이는 높이
-    const MAX_Y = H - PEEK; // 접혀 있을 때의 sheet top
+
+    // ✅ CSS와 반드시 동일하게 유지
+    const MIN_Y = 90; // 완전 펼침 시 상단 여백 (BottomSheet.css: height: calc(100% - 90px))
+    const PEEK = 115; // 접힘 상태 노출 높이 (BottomSheet.css: top: calc(100% - 115px))
+    const MAX_Y = H - PEEK; // 접혀 있을 때 sheet top
+
     m.current.bounds = { MIN_Y, MAX_Y };
 
     const open = () => {
       sheet.style.transform = `translateY(${MIN_Y - MAX_Y}px)`;
       sheet.dataset.open = "1";
       m.current.isOpen = true;
+      onOpenChange?.(true);
     };
     const close = () => {
       sheet.style.transform = `translateY(0)`;
       sheet.dataset.open = "0";
       m.current.isOpen = false;
+      onOpenChange?.(false);
     };
 
+    // 초기 상태: 닫힘
     sheet.dataset.open = "0";
+    onOpenChange?.(false);
+
     const canMove = () => {
       if (!m.current.isContentTouched) return true;
-      if (sheet.getBoundingClientRect().y !== MIN_Y) return true;
+
+      // sub-pixel 오차 허용
+      if (Math.abs(sheet.getBoundingClientRect().y - MIN_Y) > 1) return true;
+
+      // 완전 펼침 상태일 때, 컨텐츠가 맨 위이면 아래로만 드래그 허용
       return m.current.touchMove.moving === "down" && content.scrollTop <= 0;
     };
 
@@ -64,7 +81,7 @@ export default function useBottomSheet({ hostRef, sheetRef, contentRef }) {
       }
       e.preventDefault();
 
-      // 드래그 중에는 따라다니되, 범위는 클램프
+      // 드래그 offset → 위치 클램프
       const offset = t.clientY - m.current.touchStart.touchY;
       let nextY = m.current.touchStart.sheetY + offset;
       if (nextY < MIN_Y) nextY = MIN_Y;
@@ -75,7 +92,7 @@ export default function useBottomSheet({ hostRef, sheetRef, contentRef }) {
     const onEnd = () => {
       document.body.style.overflowY = "auto";
 
-      // ⬇️ 핵심: 마지막 이동 방향으로 스냅
+      // 마지막 이동 방향으로 스냅
       if (m.current.touchMove.moving === "up") open();
       else close();
 
@@ -88,7 +105,7 @@ export default function useBottomSheet({ hostRef, sheetRef, contentRef }) {
       m.current.isContentTouched = true;
     };
 
-    // 터치 + 마우스 모두 연결
+    // 이벤트 연결
     sheet.addEventListener("touchstart", onStart, { passive: false });
     sheet.addEventListener("touchmove", onMove, { passive: false });
     sheet.addEventListener("touchend", onEnd);
@@ -108,5 +125,5 @@ export default function useBottomSheet({ hostRef, sheetRef, contentRef }) {
       window.removeEventListener("mouseup", onEnd);
       content.removeEventListener("touchstart", onContentStart);
     };
-  }, [hostRef, sheetRef, contentRef]);
+  }, [hostRef, sheetRef, contentRef, onOpenChange]);
 }

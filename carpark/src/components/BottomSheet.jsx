@@ -11,11 +11,12 @@ export default function BottomSheet({
   onRefresh,
   onRefreshHere,
   onSelectPlace,
+  onOpenChange, // ✅ 추가
 }) {
   const sheetRef = useRef(null);
   const contentRef = useRef(null);
 
-  useBottomSheet({ hostRef, sheetRef, contentRef });
+  useBottomSheet({ hostRef, sheetRef, contentRef, onOpenChange });
 
   return (
     <div className="bs-wrapper" ref={sheetRef}>
