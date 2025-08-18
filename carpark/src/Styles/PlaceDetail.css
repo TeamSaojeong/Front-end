@@ -185,3 +185,16 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.pd-soon-notice {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f5f8ff;
+  color: #2448d8;
+  font-size: 14px;
+  line-height: 20px;
+}
+.pd-soon-notice strong {
+  font-weight: 700;
+}

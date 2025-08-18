@@ -37,6 +37,7 @@ import PlaceDetail from "./pages/PlaceDetail";
 /** 결제 */
 
 import NFCTagPage from "./pages/Nfc/NFCTagPage";
+import TimeSelect from "./pages/Nfc/TimeSelect";
 import MapRoute from "./pages/Nfc/MapRoute";
 import PayPage from "./pages/Pay/PayPage";
 import PayLoading from "./pages/Pay/PayLoading";
@@ -84,6 +85,7 @@ function App() {
           <Route path="/parkingend" element={<ParkingEnd />} />
           {/** 결제 */}
           <Route path="/nfc" element={<NFCTagPage />} />
+          <Route path="/TimeSelect" element={<TimeSelect />} />
           <Route path="/MapRoute" element={<MapRoute />} />
           <Route path="/paypage" element={<PayPage />} />
           <Route path="/payloading" element={<PayLoading />} />
