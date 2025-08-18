@@ -1,3 +1,4 @@
+// src/components/Content.jsx
 import React from "react";
 import searchIcon from "../Assets/glasses.png";
 
@@ -7,6 +8,7 @@ export default function Content({
   isLoading = false,
   errorMsg = "",
   onRefreshHere,
+  onSelectPlace, // ✅ 추가
 }) {
   return (
     <div className="bs-body">
@@ -34,7 +36,12 @@ export default function Content({
       {!isLoading &&
         !errorMsg &&
         places.map((p) => (
-          <div className="bs-card" key={p.id}>
+          <div
+            className="bs-card"
+            key={p.id}
+            role="button"
+            onClick={() => onSelectPlace?.(p)} // ✅ 카드 클릭도 이동
+          >
             <div className="bs-card-image" aria-hidden="true" />
             <div className="bs-info">
               <div className="bs-name">{p.name}</div>
@@ -47,13 +54,21 @@ export default function Content({
                 ₩ {(p.price ?? 0).toLocaleString()}원
               </div>
             </div>
-            <button className="bs-more">상세보기</button>
+            <button
+              className="bs-more"
+              onClick={(e) => {
+                e.stopPropagation(); // 카드 onClick 중복 방지
+                onSelectPlace?.(p);
+              }}
+            >
+              상세보기
+            </button>
           </div>
         ))}
 
       <button
         className="bs-location"
-        onClick={onRefreshHere} // ← 현 위치로 지도+리스트 동시 갱신
+        onClick={onRefreshHere}
         disabled={isLoading}
         aria-busy={isLoading ? "true" : "false"}
       >

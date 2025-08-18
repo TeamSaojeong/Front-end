@@ -1,0 +1,222 @@
+.pd-wrap {
+  background: #fff;
+  width: 390px;
+  min-height: 844px;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0 24px 24px;
+}
+
+/* Top bar */
+.pd-topbar {
+  position: relative;
+  height: 56px;
+}
+.pd-close {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 28px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.pd-bell,
+.pd-alarm {
+  position: absolute;
+  top: 40px;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.pd-bell {
+  right: 0;
+}
+.pd-alarm {
+  right: 36px;
+}
+.pd-bell img,
+.pd-alarm img,
+.pd-chip-icon img,
+.pd-copy-btn img {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* Title */
+.pd-title {
+  color: #303030;
+  font-family: Pretendard, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 34px;
+  letter-spacing: -0.6px;
+  margin: 35px 0 12px;
+}
+
+/* Soon notice */
+.pd-soon-notice {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f5f8ff;
+  color: #2448d8;
+  font-size: 14px;
+  line-height: 20px;
+}
+.pd-soon-notice strong {
+  font-weight: 700;
+}
+
+/* Chips: 정확히 169x68 */
+.pd-chips {
+  display: grid;
+  grid-template-columns: 169px 169px;
+  gap: 8px;
+  margin: 12px 0 20px;
+}
+.pd-chip {
+  width: 169px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #fff;
+  box-sizing: border-box;
+}
+.pd-chip-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+}
+.pd-chip-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.pd-chip-value {
+  font-size: 15px;
+  line-height: 20px;
+  color: #303030;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pd-chip-sub {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #767676;
+  white-space: nowrap;
+}
+
+/* Section */
+.pd-section {
+  margin-top: 16px;
+}
+.pd-section-title {
+  color: #767676;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  margin-bottom: 8px;
+}
+
+/* Address */
+.pd-address-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.pd-address {
+  font-size: 14px;
+  color: #303030;
+  line-height: 20px;
+  word-break: break-word;
+}
+.pd-copy-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Time */
+.pd-times {
+  font-size: 14px;
+  color: #303030;
+}
+
+/* Photo */
+.pd-photo-box {
+  width: 100%;
+  height: 220px;
+  background: #f1f1f5;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  margin: 8px 0 12px;
+}
+.pd-photo-placeholder {
+  font-size: 28px;
+  opacity: 0.55;
+}
+
+/* Note */
+.pd-note {
+  color: #303030;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: pre-wrap;
+}
+
+/* Bottom buttons */
+.pd-actions {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 20px 0 0;
+  margin-top: 35px;
+}
+.pd-btn {
+  height: 56px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pd-btn-outline {
+  border: 1px solid #e1e1e1;
+  background: #fff;
+  color: #303030;
+}
+.pd-btn-primary {
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+}
+.pd-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

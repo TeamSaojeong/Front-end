@@ -2,8 +2,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% - 90px); /* 접힌 상태에서 보이는 높이 (PEEK) */
-  height: calc(100% - 60px); /* 펼쳤을 때 남길 상단 여백 (MIN_Y) */
+  top: calc(100% - 380px); /* 접힌 상태에서 보이는 높이 (PEEK) */
+  height: calc(100% - 90px); /* 펼쳤을 때 남길 상단 여백 (MIN_Y) */
   display: flex;
   flex-direction: column;
   background: #fff;

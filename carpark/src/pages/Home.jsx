@@ -1,5 +1,5 @@
-// src/pages/Home.jsx
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BottomSheet from "../components/BottomSheet";
 import "../Styles/app-frame.css";
 import Mapmenu from "../components/Mapmenu";
@@ -12,6 +12,7 @@ const SDK_SRC =
 const useMock =
   import.meta?.env?.VITE_USE_MOCK === "1" ||
   process.env.REACT_APP_USE_MOCK === "1";
+
 const MOCK_PLACES = [
   {
     id: 1,
@@ -21,6 +22,8 @@ const MOCK_PLACES = [
     distanceKm: 0.4,
     etaMin: 3,
     price: 0,
+    address: "서울특별시 중구 세종대로 110",
+    type: "PRIVATE", // ✅ 개인
   },
   {
     id: 2,
@@ -30,6 +33,8 @@ const MOCK_PLACES = [
     distanceKm: 0.6,
     etaMin: 5,
     price: 1000,
+    address: "서울특별시 중구 태평로1가",
+    type: "PUBLIC", // ✅ 공영/민영
   },
 ];
 
@@ -53,6 +58,23 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 }); // 기본 서울시청
   const [showRequery, setShowRequery] = useState(false);
+
+  const navigate = useNavigate();
+
+  const isPrivate = (place) =>
+    String(place?.type || "").toUpperCase() === "PRIVATE";
+
+  // 선택된 주차장 → 세션 저장 → 타입에 따라 상세로 이동
+  const onSelectPlace = (p) => {
+    try {
+      sessionStorage.setItem("selectedPlace", JSON.stringify(p));
+    } catch {}
+    if (isPrivate(p)) {
+      navigate(`/pv/place/${p.id}`, { state: { place: p } });
+    } else {
+      navigate(`/place/${p.id}`, { state: { place: p } });
+    }
+  };
 
   // Kakao Map init
   useEffect(() => {
@@ -146,22 +168,6 @@ export default function Home() {
       clickable: false,
     });
     myLocOverlayRef.current.setMap(mapRef.current);
-
-    // if (myAccCircleRef.current) myAccCircleRef.current.setMap(null);
-    // if (typeof accuracy === "number" && accuracy > 0) {
-    //   myAccCircleRef.current = new kakao.maps.Circle({
-    //     center: new kakao.maps.LatLng(lat, lng),
-    //     radius: accuracy,
-    //     strokeWeight: 1,
-    //     strokeColor: "#3B82F6",
-    //     strokeOpacity: 0.5,
-    //     strokeStyle: "solid",
-    //     fillColor: "#3B82F6",
-    //     fillOpacity: 0.1,
-    //     zIndex: 9998,
-    //   });
-    //   myAccCircleRef.current.setMap(mapRef.current);
-    // }
   };
 
   // 주차장 말풍선
@@ -182,6 +188,9 @@ export default function Home() {
           ).toLocaleString()}원</div>
         </div>
       `;
+
+      // ✅ 말풍선 클릭 → 타입별 상세 이동
+      el.addEventListener("click", () => onSelectPlace(p));
 
       const overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(p.lat, p.lng),
@@ -225,6 +234,8 @@ export default function Home() {
       if (!resp.ok) throw new Error(`API ${resp.status}`);
 
       const json = await resp.json();
+
+      // ✅ 백엔드 필드 맵핑 시 type 포함
       const rows = (json?.data ?? json?.results ?? json ?? []).map(
         (it, idx) => {
           const id = it.id ?? it.parkingId ?? idx + 1;
@@ -235,7 +246,22 @@ export default function Home() {
             it.distanceKm ?? it.distance_km ?? it.distance ?? null;
           const etaMin = it.etaMin ?? it.eta_min ?? null;
           const price = it.price ?? it.fee ?? 0;
-          return { id, name, lat: latV, lng: lngV, distanceKm, etaMin, price };
+          const address = it.address ?? it.road_address ?? it.addr ?? "";
+
+          // 예시: backend가 'type' / 'category' / 'kind' 중 하나로 줄 수 있음
+          const type = it.type ?? it.category ?? it.kind ?? null; // "PRIVATE" | "PUBLIC" | "COMMERCIAL" 등
+
+          return {
+            id,
+            name,
+            lat: latV,
+            lng: lngV,
+            distanceKm,
+            etaMin,
+            price,
+            address,
+            type, // ✅ 포함
+          };
         }
       );
 
@@ -325,6 +351,7 @@ export default function Home() {
         isLoading={isLoading}
         errorMsg={errorMsg}
         onRefreshHere={refreshFromCurrentPosition}
+        onSelectPlace={onSelectPlace}
       />
     </div>
   );

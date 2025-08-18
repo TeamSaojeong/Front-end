@@ -19,6 +19,8 @@ import Address from "./components/Register/Address";
 import ZipCodePage from "./pages/Register/ZipCodePage";
 import TimePage from "./pages/Register/TimePage";
 import CompletePage from "./pages/Register/CompletePage";
+import RegisterPayPage from "./pages/Register/RegisterPayPage";
+import ConfirmFilePage from "./pages/Register/ConfirmFilePage";
 
 /** 주차 진행/알림 */
 import OutSoon from "./pages/OutSoon";
@@ -29,9 +31,14 @@ import PrivateOutSoon_10m from "./pages/PrivateOutSoon_10m";
 import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
 
-/** 결제 */
+/** 디테일 (개인 / 공영·민영 분리) */
+import PvPlaceDetail from "./pages/Place/PvPlaceDetail";
+import PlaceDetail from "./pages/Place/PlaceDetail";
 
+/** 결제 & NFC */
 import NFCTagPage from "./pages/Nfc/NFCTagPage";
+import PvTimeSelect from "./pages/Nfc/PvTimeSelect";
+import PubTimeSelect from "./pages/Nfc/PubTimeSelect";
 import MapRoute from "./pages/Nfc/MapRoute";
 import PayPage from "./pages/Pay/PayPage";
 import PayLoading from "./pages/Pay/PayLoading";
@@ -56,11 +63,16 @@ function App() {
 
           {/* 등록 플로우 */}
           <Route path="/name" element={<NamePage />} />
+          <Route path="/confirm" element={<ConfirmFilePage />} />
           <Route path="/description" element={<DescriptionPage />} />
-          <Route path="/address" element={<Address />} />
           <Route path="/zipcode" element={<ZipCodePage />} />
           <Route path="/time" element={<TimePage />} />
+          <Route path="/registerpay" element={<RegisterPayPage />} />
           <Route path="/complete" element={<CompletePage />} />
+
+          {/* 디테일 (분기) */}
+          <Route path="/pv/place/:placeId" element={<PvPlaceDetail />} />
+          <Route path="/place/:placeId" element={<PlaceDetail />} />
 
           {/* 주차 진행/알림 */}
           <Route path="/outsoon" element={<OutSoon />} />
@@ -73,9 +85,18 @@ function App() {
             element={<PrivateOutSoon_cancel />}
           />
           <Route path="/parkingend" element={<ParkingEnd />} />
-          {/** 결제 */}
+
+          {/* NFC / 개인용 타임선택 */}
           <Route path="/nfc" element={<NFCTagPage />} />
+          <Route path="/pv/time-select" element={<PvTimeSelect />} />
+          <Route path="/pub/time-select" element={<PubTimeSelect />} />
+
+          {/* 길 안내 */}
           <Route path="/MapRoute" element={<MapRoute />} />
+          {/* 필요하면 호환: <Route path="/map-route" element={<MapRoute />} /> */}
+
+          {/* 결제 플로우 (대소문자 호환) */}
+          <Route path="/PayPage" element={<PayPage />} />
           <Route path="/paypage" element={<PayPage />} />
           <Route path="/payloading" element={<PayLoading />} />
           <Route path="/paycomplete" element={<PayComplete />} />

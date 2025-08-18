@@ -1,0 +1,310 @@
+/* =========================
+   PvPlaceDetail.css (FULL)
+   ========================= */
+
+/* App page wrapper */
+.pd-wrap {
+  background: #fff;
+  width: 390px;
+  min-height: 844px;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0 24px 24px; /* 좌우 24px 패딩 */
+}
+
+/* ───────── Top bar ───────── */
+.pd-topbar {
+  position: relative;
+  height: 56px;
+}
+
+.pd-close {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 28px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.pd-bell,
+.pd-alarm {
+  position: absolute;
+  top: 40px;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.pd-bell {
+  right: 0;
+}
+.pd-alarm {
+  right: 36px;
+}
+
+.pd-bell img,
+.pd-alarm img,
+.pd-chip-icon img,
+.pd-copy-btn img {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* ───────── Title ───────── */
+.pd-title {
+  color: #303030;
+  font-family: Pretendard, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 34px;
+  letter-spacing: -0.6px;
+  margin: 35px 0 12px;
+}
+
+/* ───────── Chips (169×68) ─────────
+   디자인 스펙을 맞추기 위해 고정 크기 사용 */
+.pd-chips {
+  display: grid;
+  grid-template-columns: repeat(2, 169px);
+  gap: 12px; /* 필요 시 8~12px에서 조절 */
+  margin-bottom: 20px;
+}
+.pd-chip {
+  width: 169px;
+  height: 68px;
+  padding: 12px 14px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #eaeaea;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+}
+.pd-chip-text strong {
+  color: #303030;
+  font-size: 14px;
+}
+.pd-chip-sub {
+  font-size: 12px;
+  color: #767676;
+  margin-top: 2px;
+}
+
+/* ───────── Section ───────── */
+.pd-section {
+  margin-top: 16px;
+}
+
+.pd-section-title {
+  color: #767676;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  margin-bottom: 8px;
+}
+
+/* ───────── Address ───────── */
+.pd-address-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.pd-address {
+  font-size: 14px;
+  color: #303030;
+  line-height: 20px;
+  word-break: break-word;
+}
+.pd-copy-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin-right: 80px; /* 디자인 맞춤 여백 */
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ───────── Times ───────── */
+.pd-times {
+  font-size: 14px;
+  color: #303030;
+}
+
+/* ───────── Photo ───────── */
+.pd-photo-box {
+  width: 100%;
+  height: 220px;
+  background: #eaeaea;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  margin: 8px 0 12px;
+}
+.pd-photo-placeholder {
+  font-size: 28px;
+  opacity: 0.6;
+}
+
+/* ───────── Note ───────── */
+.pd-note {
+  color: #303030;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: pre-wrap;
+}
+
+/* ───────── Bottom actions ───────── */
+.pd-actions {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  gap: 12px;
+  padding: 20px 0 0;
+  margin-top: 35px;
+}
+.pd-btn {
+  height: 56px; /* 버튼 높이 56px (디자인) */
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pd-btn-outline {
+  width: 167px;
+  height: 56px;
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #303030;
+}
+.pd-btn-primary {
+  width: 167px;
+  height: 56px;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: #fff;
+}
+.pd-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* (구) 상단 안내 배너 — 필요 시 사용 */
+.pd-soon-notice {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f5f8ff;
+  color: #2448d8;
+  font-size: 14px;
+  line-height: 20px;
+}
+.pd-soon-notice strong {
+  font-weight: 700;
+}
+
+/* ───────── OutSoon_10m 방식 말풍선 ─────────
+   오른쪽(미리 대기하기) 버튼 위에 고정 */
+.pd-bubble-container {
+  position: relative;
+  width: 167px; /* 버튼 폭과 동일 */
+  height: 56px; /* 버튼 높이와 동일 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 167px; /* grid 2열에서 고정폭 */
+}
+
+/* 말풍선 박스 */
+.pd-bubble-box {
+  position: absolute;
+  bottom: calc(100% + 8px); /* 버튼 위 8px */
+  right: 0;
+  left: auto;
+  transform: none;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+  max-width: calc(100vw - 48px); /* 좌우 패딩 24px 고려 */
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 말풍선 꼬리(외곽선) */
+.pd-bubble-box::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 60px; /* 꼬리 위치 조절 */
+  border-width: 7px 7px 0 7px;
+  border-style: solid;
+  border-color: #eaeaea transparent transparent transparent;
+}
+/* 말풍선 꼬리(채움) */
+.pd-bubble-box::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 61px;
+  transform: translateY(-1px);
+  border-width: 6px 6px 0 6px;
+  border-style: solid;
+  border-color: #fff transparent transparent transparent;
+}
+
+/* 말풍선 아이콘/텍스트 */
+.pd-bubble-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+.pd-bubble-text {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #303030;
+}
+.pd-bubble-text strong {
+  font-weight: 700;
+}
+
+.pd-btn-primary.pd-btn-wait {
+  background: #434343;
+  color: #fff;
+}
+
+/* 선택 사항: 눌림/포커스 시 약간 어둡게 */
+.pd-btn-primary.pd-btn-wait:active {
+  background: #3a3a3a;
+}
+.pd-btn-primary.pd-btn-wait:focus-visible {
+  outline: 2px solid rgba(67, 67, 67, 0.5);
+  outline-offset: 2px;
+}
