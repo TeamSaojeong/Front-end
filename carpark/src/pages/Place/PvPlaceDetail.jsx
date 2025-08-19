@@ -33,10 +33,13 @@ export default function PvPlaceDetail() {
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
-  const [queueOpen, setQueueOpen] = useState(false);
-  const [leavingEtaMin, setLeavingEtaMin] = useState(null);
 
-  // ✅ 테스트용: 1초 후 더미 데이터 주입
+  // 실시간 상태
+  const [queueOpen, setQueueOpen] = useState(false); // 대기열 열림(곧 나감)
+  const [leavingEtaMin, setLeavingEtaMin] = useState(null); // 곧 나감까지 남은 분
+  const [isAvailable, setIsAvailable] = useState(true); // ✅ 이용 가능 여부
+
+  // ✅ 테스트용 더미 데이터 주입
   useEffect(() => {
     setLoading(true);
     const timer = setTimeout(() => {
@@ -53,14 +56,40 @@ export default function PvPlaceDetail() {
         lng: 127.01,
         queueOpen: true,
         leavingEtaMin: 5,
+        available: false, // ✅ 자리 없음 → “이용 중...”
       };
       setDetail(fake);
-      setQueueOpen(fake.queueOpen);
-      setLeavingEtaMin(fake.leavingEtaMin);
+      setQueueOpen(!!fake.queueOpen);
+      setLeavingEtaMin(
+        typeof fake.leavingEtaMin === "number"
+          ? Math.max(0, fake.leavingEtaMin)
+          : null
+      );
+      setIsAvailable(fake.available ?? true);
       setLoading(false);
-    }, 1000);
+    }, 800);
     return () => clearTimeout(timer);
   }, [placeId]);
+
+  // (실서비스 시) 주기 갱신 예시
+  // useEffect(() => {
+  //   let interval;
+  //   async function fetchStatus() {
+  //     try {
+  //       const r = await fetch(`/api/parking/places/${placeId}/leaving-soon`);
+  //       if (!r.ok) throw new Error("status");
+  //       const j = await r.json();
+  //       setQueueOpen(!!j?.queueOpen);
+  //       setLeavingEtaMin(typeof j?.etaMin === "number" ? Math.max(0, j.etaMin) : null);
+  //       setIsAvailable(j?.available ?? true);
+  //     } catch {}
+  //   }
+  //   if (placeId) {
+  //     fetchStatus();
+  //     interval = setInterval(fetchStatus, 10_000);
+  //   }
+  //   return () => clearInterval(interval);
+  // }, [placeId]);
 
   const goBack = () => navigate(-1);
 
@@ -125,10 +154,24 @@ export default function PvPlaceDetail() {
     availableTimes,
     note,
   } = detail;
+
   const etaText =
     typeof leavingEtaMin === "number"
       ? `${Math.max(0, leavingEtaMin)}분`
       : "잠시";
+
+  // 버튼 상태/액션
+  const primaryDisabled = !isAvailable;
+  const primaryLabel = primaryDisabled
+    ? "이용 중..."
+    : queueOpen
+    ? "미리 대기하기"
+    : "주차장 이용하기";
+  const primaryOnClick = primaryDisabled
+    ? undefined
+    : queueOpen
+    ? joinWait
+    : startUse;
 
   return (
     <div className="pd-wrap">
@@ -145,7 +188,7 @@ export default function PvPlaceDetail() {
           aria-label={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
           title={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
         >
-          <img src={alarmOn ? alarmIconOn : alarmIcon} alt="" />
+          <img src={alarmIconOn && alarmOn ? alarmIconOn : alarmIcon} alt="" />
         </button>
         <button
           className="pd-bell"
@@ -213,15 +256,15 @@ export default function PvPlaceDetail() {
         <pre className="pd-note">{note}</pre>
       </section>
 
-      {/* 하단 버튼 + 말풍선(OutSoon 방식) */}
+      {/* 하단 버튼 + 말풍선(곧 나감) */}
       <div className="pd-actions">
         <button className="pd-btn pd-btn-outline" onClick={openRoute}>
           경로 안내 보기
         </button>
 
-        {/* 버튼과 동일한 폭/높이의 컨테이너 */}
         <div className="pd-bubble-container">
-          {queueOpen && (
+          {/* ✅ 이용 가능할 때만 곧나감 말풍선 표시 */}
+          {queueOpen && isAvailable && (
             <div className="pd-bubble-box" role="status" aria-live="polite">
               <img src={out5m} alt="" className="pd-bubble-icon" />
               <span className="pd-bubble-text">
@@ -233,10 +276,11 @@ export default function PvPlaceDetail() {
           <button
             className={`pd-btn pd-btn-primary ${
               queueOpen ? "pd-btn-wait" : ""
-            }`}
-            onClick={queueOpen ? joinWait : startUse}
+            } ${primaryDisabled ? "in-use" : ""}`} // ← 추가
+            disabled={primaryDisabled}
+            onClick={primaryOnClick}
           >
-            {queueOpen ? "미리 대기하기" : "주차장 이용하기"}
+            {primaryLabel}
           </button>
         </div>
       </div>
