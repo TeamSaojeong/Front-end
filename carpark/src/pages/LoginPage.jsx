@@ -1,7 +1,8 @@
+// src/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Login.css";
-import { client } from "../apis/client";
+import { client } from "../apis/client"; // ✅ named import
 import mainpic from "../Assets/main_logo_text.png";
 
 const LoginPage = () => {
@@ -24,38 +25,44 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      //프록시 사용 → /login 으로 호출하면 proxy로 백엔드로 전달됨
-      const res = await client.post("/login", {
-        loginId: id.trim(),
-        password: pw,
+      // ✅ 엔드포인트/필드 수정
+      const res = await client.post("/api/login", {
+        loginId: id.trim(), // 이메일 or 아이디
+        password: pw, // 비밀번호
       });
 
-      const { status, message } = res.data || {};
-      // 토큰이 헤더로 올 수도 있어 대비 (axios는 헤더 키가 소문자)
-      const accessRaw = res.headers?.["authorization"]; // 예: "Bearer x.y.z"
-      const refreshRaw = res.headers?.["refresh-token"]; // 예: "x.y.z"
+      // 서버가 status를 HTTP 코드/바디 둘 다로 줄 가능성 대비
+      const httpOk = res.status >= 200 && res.status < 300;
+      const { status: bodyStatus, message, token } = res.data || {};
+
+      // 토큰은 바디 또는 헤더로 올 수 있음 (헤더 노출에는 서버 CORS의 expose 필요)
+      const accessRaw = res.headers?.["authorization"]; // "Bearer x.y.z" 또는 없음
+      const refreshRaw = res.headers?.["refresh-token"]; // "x.y.z" 또는 없음
       const accessToken = accessRaw?.startsWith("Bearer ")
         ? accessRaw.slice(7)
-        : accessRaw;
+        : accessRaw || token;
 
-      if (status === 200) {
-        if (accessToken) localStorage.setItem("accessToken", accessToken);
-        if (refreshRaw) localStorage.setItem("refreshToken", refreshRaw);
+      if (httpOk && (bodyStatus === undefined || bodyStatus === 200)) {
         if (accessToken) {
+          localStorage.setItem("accessToken", accessToken);
           client.defaults.headers.common[
             "Authorization"
           ] = `Bearer ${accessToken}`;
         }
+        if (refreshRaw) localStorage.setItem("refreshToken", refreshRaw);
         navigate("/home");
       } else {
         setMsg(message || "로그인에 실패했어요. 다시 시도해 주세요.");
       }
     } catch (err) {
+      const code = err?.response?.status;
       const serverMsg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        "아이디 또는 비밀번호를 확인해 주세요.";
-      setMsg(serverMsg);
+        err?.response?.data?.message || err?.response?.data?.error;
+
+      if (code === 401)
+        setMsg(serverMsg || "아이디 또는 비밀번호를 확인해 주세요.");
+      else if (code === 403) setMsg(serverMsg || "접근 권한이 없습니다.");
+      else setMsg(serverMsg || "잠시 후 다시 시도해 주세요.");
     } finally {
       setLoading(false);
     }
@@ -79,6 +86,7 @@ const LoginPage = () => {
               onFocus={() => setIdPlaceholder("")}
               onBlur={() => setIdPlaceholder("이메일을 입력해 주세요")}
               autoComplete="username"
+              inputMode="email"
             />
           </div>
         </div>
