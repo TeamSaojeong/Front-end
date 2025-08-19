@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/TimeProvider.css";
 
 import backIcon from "../Assets/arrow.png";
-import closeSvg from "../Assets/close.svg";
+import closeSvg from "../Assets/close1.svg";
 
 const ITEM_H = 44;
 const AMPM = ["오전", "오후"];

@@ -1,4 +1,3 @@
-// PriceKeypad.jsx
 import React, { useMemo, useState } from "react";
 import NextBtn from "../../components/Register/NextBtn";
 import { useNavigate } from "react-router-dom";
@@ -42,21 +41,21 @@ const RegisterPayPage = ({ value = 0, onChange, maxDigits = 7, onNext }) => {
   const handleSunmit = async () => {
     if (!isActive) return;
     // 저장 전 로컬 상태에 요금 반영
-    setField("charge", amount);
-    try {
-      const token = ""; // TODO: 실제 액세스 토큰 주입
-      const resp = await register(token);
-      const id = resp?.data?.parking_id;
-      if (!id) {
-        console("등록 실패: parking_id 없음");
-        return;
-      }
-      // 완료 페이지로 id 전달
-      //onNext?.(amount);
-      navigate("/complete", { state: { id } });
-    } catch (e) {
-      console(e?.message || "등록 실패");
-    }
+    // setField("charge", amount);
+    // try {
+    //   const token = ""; // TODO: 실제 액세스 토큰 주입
+    //   const resp = await register(token);
+    //   const id = resp?.data?.parking_id;
+    //   if (!id) {
+    //     console.log("등록 실패: parking_id 없음");
+    //     return;
+    //   }
+    // 완료 페이지로 id 전달
+    //onNext?.(amount);
+    navigate("/complete"); //, { state: { id } }
+    // } catch (e) {
+    //   console.log(e?.message || "등록 실패");
+    // }
   };
   const back = () => {
     const next = digits.length <= 1 ? "0" : digits.slice(0, -1);

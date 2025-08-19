@@ -7,3 +7,198 @@
   box-sizing: border-box;
   padding: 0 1.5rem;
 }
+
+.ar-time {
+  align-items: center;
+  color: #303030;
+
+  /* MO/Title/KR/T3_KR_Rg */
+  font-family: Pretendard;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 155.556% */
+  letter-spacing: -0.45px;
+  width: 105px;
+  height: 28px;
+}
+.ar-pred-title {
+  margin-bottom: 48px;
+}
+
+.ar-pred-sub {
+  color: #303030;
+
+  /* MO/Title/KR/T2_KR_Rg */
+  font-family: Pretendard;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 140% */
+  letter-spacing: -0.5px;
+}
+
+.ar-address {
+  margin-top: 20px;
+  color: #303030;
+
+  /* MO/Title/KR/T3_KR_Rg */
+  font-family: Pretendard;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 155.556% */
+  letter-spacing: -0.45px;
+}
+
+.ar-time-wrap {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+}
+.ar-time-img {
+  width: 20px;
+  height: 20px;
+}
+
+.ar-picked {
+  color: #5c5c5c;
+  text-align: center;
+
+  /* MO/Body/KR/B4_KR_Rg */
+  font-family: Pretendard;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px; /* 150% */
+  letter-spacing: -0.3px;
+}
+
+.ar-time-selected {
+  margin-left: 10px;
+  display: inline-flex;
+  padding: 6px 12px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  border: 1px solid #eaeaea;
+  background: #f1f1f5;
+}
+
+.ar-next {
+  top: 260px !important;
+  left: 24px !important;
+  left: 0;
+  right: 0;
+  display: flex;
+  position: absolute !important;
+  justify-content: center;
+}
+
+/* 리스트 컨테이너 */
+.ar-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 카드 */
+.ar-card {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #fff;
+  gap: 12px;
+}
+
+/* 썸네일 자리 */
+.ar-card-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: #d9d9d9;
+  flex: 0 0 56px;
+}
+
+/* 본문 */
+.ar-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ar-card-title {
+  color: #303030;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  margin-bottom: 6px;
+}
+
+/* 메타 정보(주소/요금) */
+.ar-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ar-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ar-meta-ico {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #e7f0ff; /* 아이콘 배경 느낌만 */
+  position: relative;
+}
+
+/* 간단한 아이콘 느낌(의사요소) */
+.ar-ico-place::after {
+  content: "📍";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+}
+.ar-ico-fee::after {
+  content: "₩";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: #2e80ec;
+}
+
+.ar-meta-text {
+  color: #5c5c5c;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* CTA 버튼 */
+.ar-card-cta {
+  display: inline-flex;
+  padding: 9px 16px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 100px;
+  background: #2e80ec;
+  border: none;
+
+  color: var(--Font-01_White, #fff);
+  text-align: center;
+
+  /* Button/BUT3_Sb */
+  font-family: Pretendard;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 18px; /* 138.462% */
+  letter-spacing: -0.325px;
+}
