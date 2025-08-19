@@ -1,14 +1,17 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import PreviousBtn from "../../components/Register/PreviousBtn";
 import NextBtn from "../../components/Register/NextBtn";
 import Address from "../../components/Register/Address";
 import InputBox from "../../components/InputBox";
 import AddImg from "../../components/Register/AddImg";
 import { useParkingForm } from "../../store/ParkingForm";
-import { ApiRegister } from "../../apis/register";
+import { register } from "../../apis/register";
 import "../../Styles/Register/DescriptionPage.css";
 const DescriptionPage = () => {
+  const form = useParkingForm();
   const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
   const { name, address, content, image, setField, reset } = useParkingForm();
 
   const hasAddress =

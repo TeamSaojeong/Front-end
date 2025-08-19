@@ -26,6 +26,12 @@ import PrivateOutSoon_cancel from "./pages/PrivateOutSoon_cancel";
 import ParkingEnd from "./pages/ParkingEnd";
 import PvPlaceDetail from "./pages/Place/PvPlaceDetail";
 import PlaceDetail from "./pages/Place/PlaceDetail";
+//ai 주차 예측
+import AIPredict from "./pages/AIPredict";
+import AIResult from "./pages/AIResult";
+
+// 신고 flow
+import ReportPage from "./pages/ReportPage";
 import NFCTagPage from "./pages/Nfc/NFCTagPage";
 import PvTimeSelect from "./pages/Nfc/PvTimeSelect";
 import PubTimeSelect from "./pages/Nfc/PubTimeSelect";
@@ -67,6 +73,14 @@ function App() {
           {/* 디테일 */}
           <Route path="/pv/place/:placeId" element={<PvPlaceDetail />} />
           <Route path="/place/:placeId" element={<PlaceDetail />} />
+
+          {/*AI 주차 예측*/}
+          <Route path="/aipredict" element={<AIPredict />} />
+          <Route path="/airesult" element={<AIResult />} />
+
+          {/*신고하기 flow */}
+          <Route path="/report" element={<ReportPage />} />
+
           {/* 주차 진행/알림 */}
           <Route path="/outsoon" element={<OutSoon />} />
           <Route path="/outsoon_cancel" element={<OutSoon_cancel />} />

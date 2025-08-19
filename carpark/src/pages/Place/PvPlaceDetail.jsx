@@ -1,4 +1,3 @@
-// src/pages/Place/PvPlaceDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../../Styles/Place/PvPlaceDetail.css";
@@ -44,10 +43,32 @@ export default function PvPlaceDetail() {
   const [leavingEtaMin, setLeavingEtaMin] = useState(null);
   const [isAvailable, setIsAvailable] = useState(true);
 
+  const startUse = () => {
+    if (!placeId) return;
+    navigate("/paypage", {
+      state: {
+        parkingId: placeId,
+        lotName: detail?.name ?? "개인 주차장",
+      },
+    });
+  };
+  const joinWait = () => {
+    if (!placeId) return;
+    // 선예약 플로우: PayPage에서 startInMinutes를 받아 예약 생성
+    navigate("/paypage", {
+      state: {
+        parkingId: placeId,
+        lotName: detail?.name ?? "개인 주차장",
+        startInMinutes:
+          typeof leavingEtaMin === "number" ? Math.max(1, leavingEtaMin) : 5,
+      },
+    });
+  };
+
   const [primary, setPrimary] = useState({
     disabled: false,
     label: "주차장 이용하기",
-    onClick: () => {},
+    onClick: startUse,
   });
 
   useEffect(() => {
@@ -98,20 +119,22 @@ export default function PvPlaceDetail() {
       if (!placeId) return;
       try {
         const { data } = await getParkingStatus(placeId);
-        const ui = mapStatusToUI(data?.data);
+        const ui = mapStatusToUI(data?.data ?? data);
         setIsAvailable(ui.isAvailable);
         setQueueOpen(ui.queueOpen);
         setLeavingEtaMin(ui.leavingEtaMin);
         setPrimary({
           disabled: ui.primaryDisabled,
-          label: ui.primaryLabel, // RESERVABLE → 미리 대기하기
+          label: ui.primaryLabel, // RESERVABLE이면 "미리 대기하기"
           onClick: ui.primaryDisabled
             ? undefined
             : ui.queueOpen
             ? joinWait
             : startUse,
         });
-      } catch {}
+      } catch {
+        // 폴백: 기존 상태 유지
+      }
     }
 
     load();
@@ -123,7 +146,7 @@ export default function PvPlaceDetail() {
       clearInterval(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [placeId]);
+  }, [placeId, leavingEtaMin]);
 
   const goBack = () => navigate(-1);
 
@@ -174,10 +197,6 @@ export default function PvPlaceDetail() {
       alert("혼잡도 예측을 불러오지 못했습니다.");
     }
   };
-
-  // TODO: 실제 API 연결
-  const joinWait = () => alert("대기 등록 완료! (추후 API 연결)");
-  const startUse = () => alert("주차장 이용 시작! (추후 예약/결제 연결)");
 
   if (loading) {
     return (

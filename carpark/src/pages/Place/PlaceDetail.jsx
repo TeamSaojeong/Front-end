@@ -1,4 +1,3 @@
-// src/pages/Place/PlaceDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../../Styles/Place/PlaceDetail.css";
@@ -39,10 +38,20 @@ export default function PlaceDetail() {
   const [isAvailable, setIsAvailable] = useState(true);
   const [pred, setPred] = useState(null);
 
+  const startUse = () => {
+    if (!placeId) return;
+    navigate("/paypage", {
+      state: {
+        parkingId: placeId,
+        lotName: detail?.name ?? "주차장",
+      },
+    });
+  };
+
   const [primary, setPrimary] = useState({
     disabled: false,
     label: "주차장 이용하기",
-    onClick: () => {},
+    onClick: startUse,
   });
 
   useEffect(() => {
@@ -81,6 +90,11 @@ export default function PlaceDetail() {
 
         setDetail(normalized);
         setIsAvailable(!!normalized.available);
+        setPrimary({
+          disabled: !normalized.available,
+          label: normalized.available ? "주차장 이용하기" : "이용 중...",
+          onClick: normalized.available ? startUse : undefined,
+        });
       } catch (e) {
         if (!mounted) return;
         setError(
@@ -95,15 +109,16 @@ export default function PlaceDetail() {
       if (!placeId) return;
       try {
         const { data } = await getParkingStatus(placeId);
-        const ui = mapStatusToUI(data?.data);
+        const ui = mapStatusToUI(data?.data ?? data);
         setIsAvailable(ui.isAvailable);
-        // 공영/민영은 ‘미리 대기하기’ 없이 사용/불가만
         setPrimary({
           disabled: !ui.isAvailable,
           label: ui.isAvailable ? "주차장 이용하기" : "이용 중...",
           onClick: ui.isAvailable ? startUse : undefined,
         });
-      } catch {}
+      } catch {
+        // 폴백: 기존 상태 유지
+      }
     }
 
     load();
@@ -164,11 +179,6 @@ export default function PlaceDetail() {
     } catch {
       alert("혼잡도 예측을 불러오지 못했습니다.");
     }
-  };
-
-  const startUse = () => {
-    // TODO: 예약/결제 플로우 연결
-    alert("주차장 이용하기 시작! (추후 예약/결제 연결)");
   };
 
   if (loading) {
