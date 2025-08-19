@@ -1,3 +1,4 @@
+// src/pages/Place/PvPlaceDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../../Styles/Place/PvPlaceDetail.css";
@@ -12,9 +13,8 @@ import out5m from "../../Assets/out5m.svg";
 
 import {
   getPrivateDetail,
-  getPredict,
-  subscribeAlert,
   getParkingStatus,
+  subscribeAlert,
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
 
@@ -38,37 +38,14 @@ export default function PvPlaceDetail() {
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
 
-  // 상태
   const [queueOpen, setQueueOpen] = useState(false);
   const [leavingEtaMin, setLeavingEtaMin] = useState(null);
   const [isAvailable, setIsAvailable] = useState(true);
 
-  const startUse = () => {
-    if (!placeId) return;
-    navigate("/paypage", {
-      state: {
-        parkingId: placeId,
-        lotName: detail?.name ?? "개인 주차장",
-      },
-    });
-  };
-  const joinWait = () => {
-    if (!placeId) return;
-    // 선예약 플로우: PayPage에서 startInMinutes를 받아 예약 생성
-    navigate("/paypage", {
-      state: {
-        parkingId: placeId,
-        lotName: detail?.name ?? "개인 주차장",
-        startInMinutes:
-          typeof leavingEtaMin === "number" ? Math.max(1, leavingEtaMin) : 5,
-      },
-    });
-  };
-
   const [primary, setPrimary] = useState({
     disabled: false,
     label: "주차장 이용하기",
-    onClick: startUse,
+    onClick: () => {},
   });
 
   useEffect(() => {
@@ -81,29 +58,26 @@ export default function PvPlaceDetail() {
       try {
         const { data } = await getPrivateDetail(placeId);
         if (!mounted) return;
-
+        const d = data?.data ?? data;
         const normalized = {
-          id: data.id ?? data.parkingId ?? placeId,
-          name: data.name ?? placeFromSession?.name ?? "개인 주차장",
+          id: d.id ?? d.parkingId ?? placeId,
+          name: d.name ?? placeFromSession?.name ?? "개인 주차장",
           distanceKm:
-            data.distanceMeters != null
-              ? data.distanceMeters / 1000
-              : data.distanceKm ?? placeFromSession?.distanceKm ?? null,
-          etaMin:
-            data.etaMin ?? data.etaMinutes ?? placeFromSession?.etaMin ?? null,
-          pricePer10m:
-            data.pricePer10m ?? data.price ?? placeFromSession?.price ?? 0,
-          address: data.address ?? placeFromSession?.address ?? "",
+            d.distanceMeters != null
+              ? d.distanceMeters / 1000
+              : d.distanceKm ?? placeFromSession?.distanceKm ?? null,
+          etaMin: d.etaMin ?? d.etaMinutes ?? placeFromSession?.etaMin ?? null,
+          pricePer10m: d.pricePer10m ?? d.price ?? placeFromSession?.price ?? 0,
+          address: d.address ?? placeFromSession?.address ?? "",
           availableTimes:
-            data.availableTimes ??
-            data.openHours ??
+            d.availableTimes ??
+            d.openHours ??
             placeFromSession?.available ??
             "00:00 ~ 24:00",
-          note: data.note ?? placeFromSession?.note ?? "",
-          lat: data.lat ?? data.latitude ?? placeFromSession?.lat ?? null,
-          lng: data.lng ?? data.longitude ?? placeFromSession?.lng ?? null,
+          note: d.note ?? placeFromSession?.note ?? "",
+          lat: d.lat ?? d.latitude ?? placeFromSession?.lat ?? null,
+          lng: d.lng ?? d.longitude ?? placeFromSession?.lng ?? null,
         };
-
         setDetail(normalized);
       } catch (e) {
         if (!mounted) return;
@@ -119,34 +93,56 @@ export default function PvPlaceDetail() {
       if (!placeId) return;
       try {
         const { data } = await getParkingStatus(placeId);
-        const ui = mapStatusToUI(data?.data ?? data);
+        const ui = mapStatusToUI(data?.data);
         setIsAvailable(ui.isAvailable);
         setQueueOpen(ui.queueOpen);
         setLeavingEtaMin(ui.leavingEtaMin);
+
+        // 개인: 항상 시간선택 화면으로 이동
         setPrimary({
           disabled: ui.primaryDisabled,
-          label: ui.primaryLabel, // RESERVABLE이면 "미리 대기하기"
+          label: ui.queueOpen
+            ? "미리 대기하기"
+            : ui.isAvailable
+            ? "주차장 이용하기"
+            : "이용 중...",
           onClick: ui.primaryDisabled
             ? undefined
-            : ui.queueOpen
-            ? joinWait
-            : startUse,
+            : () =>
+                navigate("/pv/time-select", {
+                  state: {
+                    parkingId: placeId,
+                    name: detail?.name,
+                    address: detail?.address,
+                  },
+                }),
         });
       } catch {
-        // 폴백: 기존 상태 유지
+        // 실패 시에도 시간선택으로 이동 가능하게
+        setPrimary({
+          disabled: false,
+          label: "주차장 이용하기",
+          onClick: () =>
+            navigate("/pv/time-select", {
+              state: {
+                parkingId: placeId,
+                name: detail?.name,
+                address: detail?.address,
+              },
+            }),
+        });
       }
     }
 
     load();
     pullStatus();
     const timer = setInterval(pullStatus, 10_000);
-
     return () => {
       mounted = false;
       clearInterval(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [placeId, leavingEtaMin]);
+  }, [placeId]);
 
   const goBack = () => navigate(-1);
 
@@ -161,42 +157,10 @@ export default function PvPlaceDetail() {
     }
   };
 
-  const openRoute = () => {
-    const lat = detail?.lat;
-    const lng = detail?.lng;
-    if (lat == null || lng == null) {
-      alert("목적지 좌표가 없어 경로를 열 수 없습니다.");
-      return;
-    }
-    navigate("/MapRoute", {
-      state: {
-        dest: { lat, lng },
-        name: detail?.name,
-        address: detail?.address,
-      },
-    });
-  };
-
-  const onSubscribeAlert = async () => {
-    if (!placeId) return;
-    try {
-      await subscribeAlert(placeId);
-      setAlarmOn(true);
-      alert("알림이 설정되었습니다.");
-    } catch {
-      alert("알림 설정에 실패했습니다.");
-    }
-  };
-
-  const onPredict = async () => {
-    if (!placeId) return;
-    try {
-      const { data } = await getPredict(placeId, 10);
-      alert("예측 결과: " + JSON.stringify(data));
-    } catch {
-      alert("혼잡도 예측을 불러오지 못했습니다.");
-    }
-  };
+  const etaText =
+    typeof leavingEtaMin === "number"
+      ? `${Math.max(0, leavingEtaMin)}분`
+      : "잠시";
 
   if (loading) {
     return (
@@ -248,14 +212,8 @@ export default function PvPlaceDetail() {
     note,
   } = detail;
 
-  const etaText =
-    typeof leavingEtaMin === "number"
-      ? `${Math.max(0, leavingEtaMin)}분`
-      : "잠시";
-
   return (
     <div className="pd-wrap">
-      {/* 상단바 */}
       <div className="pd-topbar">
         <button className="pd-close" onClick={goBack} aria-label="닫기">
           ✕
@@ -263,7 +221,15 @@ export default function PvPlaceDetail() {
 
         <button
           className="pd-alarm"
-          onClick={onSubscribeAlert}
+          onClick={async () => {
+            try {
+              await subscribeAlert(placeId);
+              setAlarmOn(true);
+              alert("알림이 설정되었습니다.");
+            } catch {
+              alert("알림 설정에 실패했습니다.");
+            }
+          }}
           aria-pressed={alarmOn}
           aria-label={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
           title={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
@@ -282,7 +248,6 @@ export default function PvPlaceDetail() {
 
       <h1 className="pd-title">{name}</h1>
 
-      {/* 정보 칩 */}
       <div className="pd-chips">
         <div className="pd-chip">
           <div className="pd-chip-icon">
@@ -306,7 +271,6 @@ export default function PvPlaceDetail() {
         </div>
       </div>
 
-      {/* 주소 */}
       <section className="pd-section">
         <h2 className="pd-section-title">주차 장소와 가장 근접한 위치</h2>
         <div className="pd-address-row">
@@ -322,13 +286,11 @@ export default function PvPlaceDetail() {
         </div>
       </section>
 
-      {/* 시간 */}
       <section className="pd-section">
         <h2 className="pd-section-title">주차 가능 시간</h2>
         <div className="pd-times">{availableTimes}</div>
       </section>
 
-      {/* 사진 + 설명 */}
       <section className="pd-section">
         <h2 className="pd-section-title">주차 장소 설명</h2>
         <div className="pd-photo-box" role="img" aria-label="주차 장소 사진">
@@ -337,9 +299,23 @@ export default function PvPlaceDetail() {
         <pre className="pd-note">{note}</pre>
       </section>
 
-      {/* 하단 버튼 + 말풍선(곧 나감) */}
       <div className="pd-actions">
-        <button className="pd-btn pd-btn-outline" onClick={openRoute}>
+        <button
+          className="pd-btn pd-btn-outline"
+          onClick={() => {
+            if (!detail?.lat || !detail?.lng) {
+              alert("목적지 좌표가 없어 경로를 열 수 없습니다.");
+              return;
+            }
+            navigate("/MapRoute", {
+              state: {
+                dest: { lat: detail.lat, lng: detail.lng },
+                name: detail.name,
+                address: detail.address,
+              },
+            });
+          }}
+        >
           경로 안내 보기
         </button>
 
@@ -363,10 +339,6 @@ export default function PvPlaceDetail() {
             {primary.label}
           </button>
         </div>
-
-        <button className="pd-btn pd-btn-ghost" onClick={onPredict}>
-          혼잡도 예측
-        </button>
       </div>
     </div>
   );

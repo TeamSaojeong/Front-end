@@ -25,8 +25,12 @@ export default function OutSoon() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  const placeName = state?.placeName ?? "콘하스 DDP 앞 주차장";
-  const placeId = state?.placeId ?? placeName; // 장소 식별
+  const placeName = state?.placeName ?? "주차장";
+  const placeId = state?.placeId ?? placeName;
+
+  // ✅ “다른 사용자가 이미 이용 중인지” 여부 (기본 false)
+  const inUseByOther = !!state?.inUseByOther;
+
   const now0 = useMemo(() => new Date(), []);
 
   // 데모 기본값: 시작=30분 전, 종료=현재+11분 (10분 전 테스트 용이)
@@ -52,9 +56,9 @@ export default function OutSoon() {
   // 10분/5분 근처에서만 버튼 활성
   const near10 = Math.abs(minsLeft - 10) <= TOL_MIN;
   const near5 = Math.abs(minsLeft - 5) <= TOL_MIN;
-  const canPressOutSoon = near10 || near5;
+  const canPressOutSoon = inUseByOther && (near10 || near5);
 
-  // ✅ 말풍선: ‘이번 주차 세션’(placeId + startAt) 기준으로 눌렀는지 저장
+  // ‘이번 세션’ 기준 눌렀는지 저장
   const pressedKey = useMemo(
     () => `outsoon-pressed-${placeId}-${startAt.getTime()}`,
     [placeId, startAt]
@@ -66,14 +70,13 @@ export default function OutSoon() {
       return false;
     }
   });
-  // startAt/장소가 바뀌면 키도 바뀌므로 상태 동기화
   useEffect(() => {
     try {
       setPressedOutSoon(sessionStorage.getItem(pressedKey) === "1");
     } catch {}
   }, [pressedKey]);
 
-  const bubbleMinuteLabel = near5 ? "5분" : "10분"; // 문구 자동 변경
+  const bubbleMinuteLabel = near5 ? "5분" : "10분";
 
   // ===== 연장하기(휠 타임피커) =====
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -129,13 +132,12 @@ export default function OutSoon() {
     const next = new Date(endAt);
     next.setHours(next.getHours() + extH);
     next.setMinutes(next.getMinutes() + extM);
-    setEndAt(next); // 상단 시간 즉시 갱신
+    setEndAt(next);
     setOpen(false);
     setExtH(0);
     setExtM(0);
   };
 
-  // ‘곧 나감’ 클릭
   const onPressOutSoon = () => {
     if (!canPressOutSoon) return;
     setPressedOutSoon(true);
@@ -145,6 +147,45 @@ export default function OutSoon() {
     navigate("/outsoon_cancel", { state: { openModal: true } });
   };
 
+  // 사용 중이 아니라면 CTA만 보여주기
+  if (!inUseByOther) {
+    return (
+      <div className="outsoon-container">
+        <div className="outsoon-header">
+          <div className="outsoon-text">
+            {placeName}
+            <br />
+            {/* 이용중 문구 제거 */}
+          </div>
+        </div>
+
+        <div className="outsoon-car-section" style={{ marginTop: 16 }}>
+          <img src={car_icon} alt="자동차 아이콘" />
+        </div>
+
+        <div className="outsoon-button-section" style={{ marginTop: 24 }}>
+          <button
+            className="outsoon-extend"
+            onClick={() => navigate(-1)}
+            title="뒤로"
+          >
+            뒤로가기
+          </button>
+
+          <button
+            className="outsoon-outsoon"
+            onClick={() =>
+              alert("주차장 이용하기 (결제/예약 플로우 연결 예정)")
+            }
+          >
+            주차장 이용하기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== 여기부터는 '다른 사용자가 이용 중'일 때만 노출 =====
   return (
     <div className="outsoon-container">
       <div className="outsoon-header">
@@ -170,7 +211,7 @@ export default function OutSoon() {
           <img src={info_icon} alt="안내 아이콘" className="info-icon" />
           <div className="outsoon-notice-text">
             <p className="outsoon-info-text1">
-              출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
+              출차 전에 ‘곧 나감’을 눌러주세요!
             </p>
             <p className="outsoon-info-text2">
               {canPressOutSoon
@@ -191,7 +232,6 @@ export default function OutSoon() {
         </button>
 
         <div className="outsoon-bubble-container">
-          {/* ✅ ‘곧 나감’ 누르기 전까지 항상 노출 */}
           {!pressedOutSoon && (
             <div
               className="outsoon-bubble-box"
@@ -220,7 +260,6 @@ export default function OutSoon() {
         </div>
       </div>
 
-      {/* 하단 시트: 휠 타임피커 */}
       {open && (
         <>
           <div className="extend-backdrop" onClick={() => setOpen(false)} />
