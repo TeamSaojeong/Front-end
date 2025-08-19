@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Login.css";
-import { client } from "../apis/client"; // ✅ named import
+import { client } from "../apis/client";
 import mainpic from "../Assets/main_logo_text.png";
 
 const LoginPage = () => {
@@ -25,31 +25,40 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // ✅ 엔드포인트/필드 수정
       const res = await client.post("/api/login", {
-        loginId: id.trim(), // 이메일 or 아이디
-        password: pw, // 비밀번호
+        loginId: id.trim(),
+        password: pw,
       });
 
-      // 서버가 status를 HTTP 코드/바디 둘 다로 줄 가능성 대비
       const httpOk = res.status >= 200 && res.status < 300;
-      const { status: bodyStatus, message, token } = res.data || {};
+      const { status: bodyStatus, message } = res.data || {};
 
-      // 토큰은 바디 또는 헤더로 올 수 있음 (헤더 노출에는 서버 CORS의 expose 필요)
-      const accessRaw = res.headers?.["authorization"]; // "Bearer x.y.z" 또는 없음
-      const refreshRaw = res.headers?.["refresh-token"]; // "x.y.z" 또는 없음
-      const accessToken = accessRaw?.startsWith("Bearer ")
-        ? accessRaw.slice(7)
-        : accessRaw || token;
+      // 1) 응답 헤더(Authorization) → "Bearer xxx" 또는 "xxx"
+      const authRaw = res.headers?.["authorization"];
+      const fromHeader = authRaw?.startsWith("Bearer ")
+        ? authRaw.slice(7)
+        : authRaw;
+
+      // 2) 혹시 바디에 토큰이 온다면 대비
+      const fromBody =
+        res.data?.accessToken ||
+        res.data?.token ||
+        res.data?.jwt ||
+        res.data?.data?.accessToken ||
+        res.data?.data?.token;
+
+      const accessToken = fromHeader || fromBody;
 
       if (httpOk && (bodyStatus === undefined || bodyStatus === 200)) {
         if (accessToken) {
           localStorage.setItem("accessToken", accessToken);
-          client.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${accessToken}`;
+          client.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+        } else {
+          // 서버가 헤더로만 토큰을 주는 경우, CORS에 expose가 필요
+          console.warn(
+            "[LOGIN] 토큰 미수신. 서버 CORS에 Access-Control-Expose-Headers: Authorization, Refresh-Token 추가 필요."
+          );
         }
-        if (refreshRaw) localStorage.setItem("refreshToken", refreshRaw);
         navigate("/home");
       } else {
         setMsg(message || "로그인에 실패했어요. 다시 시도해 주세요.");
@@ -58,7 +67,6 @@ const LoginPage = () => {
       const code = err?.response?.status;
       const serverMsg =
         err?.response?.data?.message || err?.response?.data?.error;
-
       if (code === 401)
         setMsg(serverMsg || "아이디 또는 비밀번호를 확인해 주세요.");
       else if (code === 403) setMsg(serverMsg || "접근 권한이 없습니다.");

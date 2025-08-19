@@ -8,37 +8,10 @@ import Aiforecast from "../components/Aiforecast";
 import greenFire from "../Assets/greenfire.svg";
 import "../Styles/map-poi.css";
 import OutModal from "../components/Modal/OutModal";
+import { getNearby } from "../apis/parking";
 
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
-
-// ==== 임의 데이터 (백엔드 연결 전 테스트용) ====
-const MOCK_PLACES = [
-  {
-    id: 1,
-    name: "모의 주차장 A",
-    lat: 37.5667,
-    lng: 126.9784,
-    distanceKm: 0.4,
-    etaMin: 3,
-    price: 0,
-    address: "서울특별시 중구 세종대로 110",
-    type: "PRIVATE",
-    leavingSoon: true,
-  },
-  {
-    id: 2,
-    name: "모의 주차장 B",
-    lat: 37.5659,
-    lng: 126.9769,
-    distanceKm: 0.6,
-    etaMin: 5,
-    price: 1000,
-    address: "서울특별시 중구 태평로1가",
-    type: "PUBLIC",
-    leavingSoon: false,
-  },
-];
 
 // (예시) 알림 등록한 주차장 불러오기
 function getWatchedIds() {
@@ -54,7 +27,7 @@ export default function Home() {
   const mapEl = useRef(null);
   const mapRef = useRef(null);
   const abortRef = useRef(null);
-  const markersRef = useRef([]);
+  const markersRef = useRef([]); // 현재는 미사용, 남겨둠
   const overlaysRef = useRef([]);
   const loadingRef = useRef(false);
   const myLocOverlayRef = useRef(null);
@@ -177,6 +150,7 @@ export default function Home() {
   const renderBubbles = (rows) => {
     const kakao = window.kakao;
     if (!mapRef.current) return;
+
     rows.forEach((p) => {
       if (!p.lat || !p.lng) return;
 
@@ -228,7 +202,7 @@ export default function Home() {
 
   const updateBubbleStyles = (selId = selectedId) => {
     overlaysRef.current.forEach(({ id, el }) => {
-      if (!el) return;
+      if (!el || !el.classList?.contains("poi-chip")) return;
       el.classList.toggle("poi-chip--selected", id === selId);
     });
   };
@@ -244,24 +218,48 @@ export default function Home() {
     }
   };
 
-  // 주차장 불러오기
+  // ===== 주차장 불러오기 (API 연동) =====
   const fetchNearby = async (lat, lng) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
     setIsLoading(true);
     setErrorMsg("");
     setSelectedId(null);
+
+    // 기존 오버레이 정리
     overlaysRef.current.forEach((o) => o.overlay?.setMap(null));
     overlaysRef.current = [];
 
     try {
-      setPlaces(MOCK_PLACES);
-      renderBubbles(MOCK_PLACES);
+      const { data } = await getNearby(lat, lng);
+
+      // 응답 → UI 모델 변환 (필드명은 서버 실데이터에 맞춰 필요 시 수정)
+      const rowsRaw = Array.isArray(data) ? data : data?.items ?? [];
+      const rows = rowsRaw.map((r) => ({
+        id: r.id ?? r.parkingId,
+        name: r.name,
+        lat: r.lat ?? r.latitude,
+        lng: r.lng ?? r.longitude,
+        price: r.pricePer10m ?? r.price ?? 0,
+        address: r.address,
+        type: (r.type || r.category || "PUBLIC").toUpperCase(),
+        distanceKm:
+          r.distanceMeters != null ? r.distanceMeters / 1000 : r.distanceKm,
+        etaMin: r.etaMin ?? r.etaMinutes,
+        leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut),
+      }));
+
+      setPlaces(rows);
+      renderBubbles(rows);
       setShowRequery(false);
-      maybeOpenOutModal(MOCK_PLACES);
-    } finally {
-      setIsLoading(false);
-      loadingRef.current = false;
+      maybeOpenOutModal(rows);
+    } catch (e) {
+      const code = e?.response?.status;
+      const msg =
+        e?.response?.data?.message ||
+        e?.message ||
+        "주변 주차장 조회에 실패했습니다.";
+      setErrorMsg(`[${code ?? "ERR"}] ${msg}`);
     }
   };
 
