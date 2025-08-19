@@ -1,0 +1,189 @@
+.frame {
+  height: 112px;
+  position: relative;
+  width: 342px;
+}
+
+.view-wrapper {
+  background-color: #b5b5b5;
+  border-radius: 12px;
+  height: 78px;
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  top: 17px;
+  width: 78px;
+}
+
+/* 필요하면 아래에 배경 이미지 지정: .view { background-image:url(...); } */
+.view {
+  position: relative;
+  left: 21px;
+  top: 21px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+}
+
+.ai-text-wrapper {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  color: #303030;
+  left: 90px;
+  top: 18px;
+  width: 252px;
+  position: absolute;
+
+  font-family: Pretendard;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 26px; /* 144.444% */
+  letter-spacing: -0.45px;
+}
+
+.frame-wrapper {
+  align-items: center;
+  background-color: #2e80ec;
+  border-radius: 100px;
+  display: inline-flex;
+  gap: 10px;
+  justify-content: center;
+  left: 266px;
+  padding: 9px 16px;
+  position: absolute;
+  top: 57px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.div-wrapper {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  justify-content: center;
+  position: relative;
+}
+
+.div {
+  color: var(--font-0-1white);
+  font-family: var(--button-but3-sb-font-family);
+  font-size: var(--button-but3-sb-font-size);
+  font-style: var(--button-but3-sb-font-style);
+  font-weight: var(--button-but3-sb-font-weight);
+  letter-spacing: var(--button-but3-sb-letter-spacing);
+  line-height: var(--button-but3-sb-line-height);
+  margin-top: -1px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.div-2 {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  left: 90px;
+  position: absolute;
+  top: 50px;
+}
+
+.pepicons-pencil-map {
+  aspect-ratio: 1;
+  height: 20px;
+  width: 20px;
+  position: relative;
+}
+
+.group {
+  height: 17px;
+  width: 14px;
+  position: relative;
+  left: 3px;
+  top: 1px;
+}
+
+.overlap-group {
+  height: 17px;
+  position: relative;
+}
+
+.vector {
+  height: 10px;
+  width: 14px;
+  position: absolute;
+  left: 0;
+  top: 7px;
+}
+
+.img {
+  height: 4px;
+  width: 4px;
+  position: absolute;
+  top: 3px;
+}
+
+.vector-2 {
+  height: 12px;
+  width: 9px;
+  position: absolute;
+  left: 3px;
+  top: 0;
+}
+
+.text-wrapper-2 {
+  color: #2f2f2f;
+  position: relative;
+  width: 200px; /* 원본 134px → 길게 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-family: var(--MO-body-KR-b4-KR-rg-font-family);
+  font-size: var(--MO-body-KR-b4-KR-rg-font-size);
+  font-style: var(--MO-body-KR-b4-KR-rg-font-style);
+  font-weight: var(--MO-body-KR-b4-KR-rg-font-weight);
+  letter-spacing: var(--MO-body-KR-b4-KR-rg-letter-spacing);
+  line-height: var(--MO-body-KR-b4-KR-rg-line-height);
+}
+
+.div-3 {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  left: 90px;
+  position: absolute;
+  top: 74px;
+}
+
+.img-2 {
+  width: 20px;
+  height: 20px;
+}
+
+.text-wrapper-3 {
+  color: #2f2f2f;
+  white-space: nowrap;
+
+  font-family: var(--MO-body-EN-b3-EN-rg-font-family);
+  font-size: var(--MO-body-EN-b3-EN-rg-font-size);
+  font-style: var(--MO-body-EN-b3-EN-rg-font-style);
+  font-weight: var(--MO-body-EN-b3-EN-rg-font-weight);
+  letter-spacing: var(--MO-body-EN-b3-EN-rg-letter-spacing);
+  line-height: var(--MO-body-EN-b3-EN-rg-line-height);
+}
+
+/* 리스트 컨테이너 (페이지에서) */
+.ar-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
