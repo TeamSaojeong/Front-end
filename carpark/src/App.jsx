@@ -20,8 +20,6 @@ import TimePage from "./pages/TimeProvider";
 import CompletePage from "./pages/Register/CompletePage";
 import RegisterPayPage from "./pages/Register/RegisterPayPage";
 import ConfirmFilePage from "./pages/Register/ConfirmFilePage";
-import RegisterPayPage from "./pages/Register/RegisterPayPage";
-import ConfirmFilePage from "./pages/Register/ConfirmFilePage";
 
 /** 주차 진행/알림 */
 import OutSoon from "./pages/OutSoon";
@@ -93,7 +91,6 @@ function App() {
 
           {/* 주차 진행/알림 */}
           <Route path="/outsoon" element={<OutSoon />} />
-          <Route path="/outsoon_10m" element={<OutSoon_10m />} />
           <Route path="/outsoon_cancel" element={<OutSoon_cancel />} />
           <Route path="/privateoutsoon" element={<PrivateOutSoon />} />
 

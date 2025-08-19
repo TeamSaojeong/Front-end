@@ -7,7 +7,6 @@ import "../../Styles/Register/TimePage.css";
 const TimePage = () => {
       const [time, setTime] = useState("");
       const navigate = useNavigate();
-
       // const handleNext = () => {
       //     if() return;
       //     navigate("/description");

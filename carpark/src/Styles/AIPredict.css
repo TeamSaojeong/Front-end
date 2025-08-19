@@ -47,3 +47,38 @@ line-height: 20px; /* 142.857% */
 letter-spacing: -0.35px;
 margin-top: 32px;
 }
+
+.ai-time-img{
+    width: 24px;
+    height: 24px;
+}
+
+.ai-picked{
+    color: #5C5C5C;
+text-align: center;
+
+/* MO/Body/KR/B2_KR_Rg */
+font-family: Pretendard;
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+letter-spacing: -0.35px;
+margin-left: 4px;
+}
+
+.ai-time{
+    display: flex;
+width: 342px;
+height: 24px;
+padding: 8px 0;
+justify-content: center !important;
+align-items: center !important;
+border-radius: 6px;
+border: 1px solid #EAEAEA;
+background: #F1F1F5;
+margin-top : 48px;
+}
+
+.ai-next{
+    margin-top: 156px;
+}
