@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomSheet from "../components/BottomSheet";
@@ -9,9 +8,45 @@ import greenFire from "../Assets/greenfire.svg";
 import "../Styles/map-poi.css";
 import OutModal from "../components/Modal/OutModal";
 import { getNearby } from "../apis/parking";
+import { postMyLocation } from "../apis/location";
 
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
+
+// (옵션) ?mock=1 또는 환경변수로 목 모드
+const params = new URLSearchParams(window.location.search);
+const useMock =
+  params.get("mock") === "1" ||
+  (typeof import.meta !== "undefined" &&
+    import.meta.env?.VITE_USE_MOCK === "1") ||
+  process.env.REACT_APP_USE_MOCK === "1";
+
+const MOCK_PLACES = [
+  {
+    id: 1,
+    name: "모의 주차장 A",
+    lat: 37.5667,
+    lng: 126.9784,
+    distanceKm: 0.4,
+    etaMin: 3,
+    price: 0,
+    address: "서울특별시 중구 세종대로 110",
+    type: "PRIVATE",
+    leavingSoon: true,
+  },
+  {
+    id: 2,
+    name: "모의 주차장 B",
+    lat: 37.5659,
+    lng: 126.9769,
+    distanceKm: 0.6,
+    etaMin: 5,
+    price: 1000,
+    address: "서울특별시 중구 태평로1가",
+    type: "PUBLIC",
+    leavingSoon: false,
+  },
+];
 
 // (예시) 알림 등록한 주차장 불러오기
 function getWatchedIds() {
@@ -19,7 +54,7 @@ function getWatchedIds() {
     const raw = localStorage.getItem("watchedPlaceIds");
     if (raw) return JSON.parse(raw);
   } catch {}
-  return [1]; // 기본 예시
+  return [1];
 }
 
 export default function Home() {
@@ -27,8 +62,8 @@ export default function Home() {
   const mapEl = useRef(null);
   const mapRef = useRef(null);
   const abortRef = useRef(null);
-  const markersRef = useRef([]); // 현재는 미사용, 남겨둠
-  const overlaysRef = useRef([]);
+  const markersRef = useRef([]); // 현재 미사용
+  const overlaysRef = useRef([]); // [{ id, el, overlay, place }]
   const loadingRef = useRef(false);
   const myLocOverlayRef = useRef(null);
 
@@ -73,11 +108,20 @@ export default function Home() {
       const kakao = window.kakao;
       if (!mapEl.current || mapRef.current) return;
 
+      mapEl.current.style.touchAction = "manipulation"; // iOS 사파리 대응
+      mapEl.current.style.webkitUserSelect = "none";
+
       const centerLatLng = new kakao.maps.LatLng(center.lat, center.lng);
       const map = new kakao.maps.Map(mapEl.current, {
         center: centerLatLng,
         level: 4,
+        draggable: true, // ← 터치/마우스 드래그 허용
+        scrollwheel: true, // ← 핀치/휠 줌 허용
       });
+
+      map.setDraggable(true);
+      map.setZoomable(true);
+
       mapRef.current = map;
 
       kakao.maps.event.addListener(map, "dragend", () => setShowRequery(true));
@@ -94,6 +138,7 @@ export default function Home() {
       const s = document.createElement("script");
       s.src = SDK_SRC;
       s.async = true;
+      s.id = "kakao-map-sdk";
       s.onload = () => window.kakao.maps.load(init);
       document.head.appendChild(s);
     }
@@ -104,10 +149,10 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ===== 위치 탐지 + 데이터 로드 =====
+  // ===== 위치 탐지 + 서버 업로드 + 데이터 로드 =====
   const detectAndLoad = () => {
     if (!navigator.geolocation) {
-      fetchNearby(center.lat, center.lng);
+      syncAndFetch(center.lat, center.lng);
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -117,11 +162,19 @@ export default function Home() {
         setCenter({ lat, lng });
         recenterMap(lat, lng);
         showMyLocation(lat, lng);
-        fetchNearby(lat, lng);
+        syncAndFetch(lat, lng);
       },
-      () => fetchNearby(center.lat, center.lng),
+      () => syncAndFetch(center.lat, center.lng),
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
     );
+  };
+
+  // 서버에 내 위치 업로드 후 주변 조회
+  const syncAndFetch = async (lat, lng) => {
+    try {
+      await postMyLocation({ lat, lng }); // 헤더에 토큰 필요
+    } catch {}
+    await fetchNearby(lat, lng);
   };
 
   const recenterMap = (lat, lng) => {
@@ -130,7 +183,41 @@ export default function Home() {
     mapRef.current.setCenter(new kakao.maps.LatLng(lat, lng));
   };
 
-  // 내 위치 점
+  // ===== 터치 드래그와 탭 구분(오버레이용) =====
+  const attachTouchClick = (el, onTap) => {
+    let sx = 0,
+      sy = 0,
+      moved = false;
+    const THRESH = 8; // px
+
+    const ts = (e) => {
+      moved = false;
+      const t = e.touches?.[0];
+      if (!t) return;
+      sx = t.clientX;
+      sy = t.clientY;
+    };
+    const tm = (e) => {
+      const t = e.touches?.[0];
+      if (!t) return;
+      if (
+        Math.abs(t.clientX - sx) > THRESH ||
+        Math.abs(t.clientY - sy) > THRESH
+      ) {
+        moved = true; // 드래그 → 탭 취소
+      }
+    };
+    const te = () => {
+      if (!moved) onTap();
+    };
+
+    el.addEventListener("touchstart", ts, { passive: true });
+    el.addEventListener("touchmove", tm, { passive: true });
+    el.addEventListener("touchend", te);
+    el.addEventListener("click", onTap); // 데스크톱
+  };
+
+  // 내 위치(파란 점)
   const showMyLocation = (lat, lng) => {
     const kakao = window.kakao;
     if (!mapRef.current) return;
@@ -142,11 +229,12 @@ export default function Home() {
       content: el,
       yAnchor: 0.5,
       zIndex: 9999,
+      clickable: false,
     });
     myLocOverlayRef.current.setMap(mapRef.current);
   };
 
-  // 버블 렌더
+  // 주차장 버블 렌더
   const renderBubbles = (rows) => {
     const kakao = window.kakao;
     if (!mapRef.current) return;
@@ -158,7 +246,7 @@ export default function Home() {
       chip.className = "poi-chip";
       if (p.id === selectedId) chip.classList.add("poi-chip--selected");
       chip.textContent = `₩ ${(p.price ?? 0).toLocaleString()}원`;
-      chip.addEventListener("click", () => onSelectPlace(p));
+      attachTouchClick(chip, () => onSelectPlace(p));
 
       const chipOv = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(p.lat, p.lng),
@@ -182,13 +270,14 @@ export default function Home() {
           <img src="${greenFire}" alt="" />
           <span>곧 나감</span>
         `;
-        badge.addEventListener("click", () => onSelectPlace(p));
+        attachTouchClick(badge, () => onSelectPlace(p));
 
         const badgeOv = new kakao.maps.CustomOverlay({
           position: new kakao.maps.LatLng(p.lat, p.lng),
           content: badge,
           yAnchor: 1.55,
           zIndex: 6,
+          clickable: true,
         });
         badgeOv.setMap(mapRef.current);
         overlaysRef.current.push({
@@ -207,47 +296,56 @@ export default function Home() {
     });
   };
 
-  // 모달 오픈 조건
-  const maybeOpenOutModal = (rows) => {
-    const watched = getWatchedIds();
-    const hit = rows.find((p) => watched.includes(p.id) && p.leavingSoon);
-    if (hit) {
-      setModalPlace({ id: hit.id, name: hit.name, type: hit.type });
-      setModalMinutes(5);
-      setModalOpen(true);
-    }
-  };
-
-  // ===== 주차장 불러오기 (API 연동) =====
+  // ===== API: 주변 주차장 =====
   const fetchNearby = async (lat, lng) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
     setIsLoading(true);
     setErrorMsg("");
     setSelectedId(null);
-
-    // 기존 오버레이 정리
     overlaysRef.current.forEach((o) => o.overlay?.setMap(null));
     overlaysRef.current = [];
 
     try {
-      const { data } = await getNearby(lat, lng);
+      if (useMock) {
+        setPlaces(MOCK_PLACES);
+        renderBubbles(MOCK_PLACES);
+        setShowRequery(false);
+        return;
+      }
 
-      // 응답 → UI 모델 변환 (필드명은 서버 실데이터에 맞춰 필요 시 수정)
-      const rowsRaw = Array.isArray(data) ? data : data?.items ?? [];
-      const rows = rowsRaw.map((r) => ({
-        id: r.id ?? r.parkingId,
-        name: r.name,
-        lat: r.lat ?? r.latitude,
-        lng: r.lng ?? r.longitude,
-        price: r.pricePer10m ?? r.price ?? 0,
-        address: r.address,
-        type: (r.type || r.category || "PUBLIC").toUpperCase(),
-        distanceKm:
-          r.distanceMeters != null ? r.distanceMeters / 1000 : r.distanceKm,
-        etaMin: r.etaMin ?? r.etaMinutes,
-        leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut),
-      }));
+      const { data } = await getNearby(lat, lng); // 서버: lat,lon 포맷 사용
+
+      const rowsRaw = Array.isArray(data)
+        ? data
+        : data?.data ?? data?.items ?? [];
+      const rows = rowsRaw.map((r, idx) => {
+        // 카카오 POI 필드 매핑 (x:lng, y:lat), 요금 환산
+        const unitMin = r.timerate ?? r.timeRate ?? null;
+        const unitPrice = r.addrate ?? r.addRate ?? null;
+        const pricePer10 =
+          unitMin && unitPrice
+            ? Math.round((unitPrice * 10) / unitMin)
+            : unitPrice ?? 0;
+
+        return {
+          id: r.id ?? r.parkingId ?? idx + 1,
+          name: r.placeName ?? r.name ?? "주차장",
+          lat: r.y ?? r.lat ?? r.latitude,
+          lng: r.x ?? r.lng ?? r.longitude,
+          price: pricePer10,
+          address: r.addressName ?? r.address ?? "",
+          type: (r.type || r.category || "PUBLIC").toUpperCase(),
+          distanceKm:
+            r.distance != null
+              ? Number(r.distance) / 1000
+              : r.distanceMeters != null
+              ? r.distanceMeters / 1000
+              : r.distanceKm,
+          etaMin: r.etaMin ?? r.etaMinutes,
+          leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut),
+        };
+      });
 
       setPlaces(rows);
       renderBubbles(rows);
@@ -260,6 +358,20 @@ export default function Home() {
         e?.message ||
         "주변 주차장 조회에 실패했습니다.";
       setErrorMsg(`[${code ?? "ERR"}] ${msg}`);
+    } finally {
+      setIsLoading(false);
+      loadingRef.current = false;
+    }
+  };
+
+  // “곧 나감” 모달 자동 오픈
+  const maybeOpenOutModal = (rows) => {
+    const watched = getWatchedIds();
+    const hit = rows.find((p) => watched.includes(p.id) && p.leavingSoon);
+    if (hit) {
+      setModalPlace({ id: hit.id, name: hit.name, type: hit.type });
+      setModalMinutes(5);
+      setModalOpen(true);
     }
   };
 
@@ -267,7 +379,9 @@ export default function Home() {
     if (!navigator.geolocation) {
       if (mapRef.current) {
         const c = mapRef.current.getCenter();
-        fetchNearby(c.getLat(), c.getLng());
+        syncAndFetch(c.getLat(), c.getLng());
+      } else {
+        syncAndFetch(center.lat, center.lng);
       }
       return;
     }
@@ -279,12 +393,14 @@ export default function Home() {
         setCenter({ lat, lng });
         recenterMap(lat, lng);
         showMyLocation(lat, lng);
-        fetchNearby(lat, lng);
+        syncAndFetch(lat, lng);
       },
       () => {
         if (mapRef.current) {
           const c = mapRef.current.getCenter();
-          fetchNearby(c.getLat(), c.getLng());
+          syncAndFetch(c.getLat(), c.getLng());
+        } else {
+          syncAndFetch(center.lat, center.lng);
         }
       }
     );
@@ -293,7 +409,8 @@ export default function Home() {
   const requeryHere = () => {
     if (!mapRef.current) return;
     const c = mapRef.current.getCenter();
-    fetchNearby(c.getLat(), c.getLng());
+    setCenter({ lat: c.getLat(), lng: c.getLng() });
+    syncAndFetch(c.getLat(), c.getLng());
   };
 
   const goDetailFromModal = () => {

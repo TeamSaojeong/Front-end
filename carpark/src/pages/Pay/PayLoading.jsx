@@ -17,7 +17,6 @@ export default function PayLoading() {
     const t = setTimeout(() => {
       navigate("/paycomplete", { replace: true });
     }, 3000);
-
     return () => clearTimeout(t);
   }, [navigate]);
 
@@ -28,7 +27,6 @@ export default function PayLoading() {
         <div className="payloading__title">서비스 결제 중</div>
         <div className="payloading__subtitle">잠시만 기다려주세요 :)</div>
       </div>
-
       <div className="payloading__bottom">
         <p>주차까지, 가장 간단한 방법</p>
         <img src={phlogo} alt="PARK HERE" />
