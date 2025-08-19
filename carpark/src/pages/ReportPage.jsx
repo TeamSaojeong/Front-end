@@ -92,7 +92,10 @@ const ReportPage = () => {
               placeholder="EX) 123가4568"
               maxLength={8}
             />
-            <AddImg className="rg-carnum-addimg" onChange={handleAddImgChange} />
+            <AddImg
+              className="rg-carnum-addimg"
+              onChange={handleAddImgChange}
+            />
           </div>
         )}
 
@@ -124,7 +127,11 @@ const ReportPage = () => {
       </div>
 
       {/* 다음 버튼: 활성 조건 적용 */}
-      <NextBtn className="rp-next-wrap" label="신고하기" isActive={!!canProceed} />
+      <NextBtn
+        className="rp-next-wrap"
+        label="신고하기"
+        isActive={!!canProceed}
+      />
     </div>
   );
 };

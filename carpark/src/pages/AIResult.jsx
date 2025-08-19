@@ -14,7 +14,10 @@ function formatKoreanTime(hhmm) {
   let h = parseInt(hStr, 10);
   const m = parseInt(mStr, 10);
   let ampm = "오전";
-  if (h >= 12) { ampm = "오후"; if (h > 12) h -= 12; }
+  if (h >= 12) {
+    ampm = "오후";
+    if (h > 12) h -= 12;
+  }
   if (h === 0) h = 12;
   return `${ampm} ${h}시 ${m}분`;
 }
@@ -24,11 +27,11 @@ const levelMessages = {
     title: "주차가 여유로울 가능성이 높아요",
     color: "#1DD871",
     typography: {
-        fontFamily: "Pretendard",
+      fontFamily: "Pretendard",
       fontSize: "24px",
       fontStyle: "normal",
       fontWeight: 600,
-      lineHeight: "34px",      // 141.667%
+      lineHeight: "34px", // 141.667%
       letterSpacing: "-0.6px",
     },
     emoji: emoji_s, // ✅ 경로 자체를 값으로
@@ -59,8 +62,7 @@ const AIResult = () => {
 
   // 모의 응답에서 첫 번째 결과 사용
   const first = mockApiResponse.items?.[0];
-  const msg =
-    levelMessages[first?.pred_level] || levelMessages["여유"]; // ✅ 안전한 fallback
+  const msg = levelMessages[first?.pred_level] || levelMessages["여유"]; // ✅ 안전한 fallback
 
   return (
     <div className="airesult-wrap">
@@ -79,27 +81,30 @@ const AIResult = () => {
       {/* 혼잡도 문구: 가운데만 색상, 이모지는 이미지로 */}
       <p className="ar-pred-title" style={msg.typography}>
         주차가{" "}
-        <span className="ar-pred-title-text"style={{ color: msg.color }}>
+        <span className="ar-pred-title-text" style={{ color: msg.color }}>
           {msg.title.replace("주차가 ", "")}
         </span>{" "}
-        <img src={msg.emoji} alt="" style={{ width: 32, height: 32, verticalAlign: "middle" }} />
+        <img
+          src={msg.emoji}
+          alt=""
+          style={{ width: 32, height: 32, verticalAlign: "middle" }}
+        />
       </p>
-      <p className="ar-pred-sub"> 
+      <p className="ar-pred-sub">
         {msg.sub //줄바꿈
-        .split(/<br\s*\/?>/i)
-        .map((chunk, i, arr) => (
+          .split(/<br\s*\/?>/i)
+          .map((chunk, i, arr) => (
             <>
-            {chunk.trim()}
-            {i < arr.length - 1 && <br />}
+              {chunk.trim()}
+              {i < arr.length - 1 && <br />}
             </>
-  ))}
-            </p>
-            
+          ))}
+      </p>
 
       {/* 리스트 예시 */}
       <ParkingCard />
 
-      <NextBtn className="ar-next" label="확인"/>
+      <NextBtn className="ar-next" label="확인" />
     </div>
   );
 };

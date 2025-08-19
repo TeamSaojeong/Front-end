@@ -7,7 +7,10 @@ export async function register(accessToken) {
   const fd = new FormData();
   const request = { name, address, zipcode, content, operateTimes, charge };
 
-  fd.append("request", new Blob([JSON.stringify(request)], { type: "application/json" }));
+  fd.append(
+    "request",
+    new Blob([JSON.stringify(request)], { type: "application/json" })
+  );
   if (image) fd.append("image", image);
 
   const res = await fetch("/api/parking", {

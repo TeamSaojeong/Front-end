@@ -1,7 +1,7 @@
-// 지도 불러오는 부분 + 상단/하단 UI 추가 + OSRM 거리/시간 표시
+// src/pages/Nfc/MapRoute.jsx
+// 지도 불러오기 + 상단/하단 UI + OSRM 거리/시간 + 상단 카드 클릭 시 상세로 이동
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../../Styles/app-frame.css";
 import "../../Styles/Nfc/MapRoute.css";
 
 import pinIcon from "../../Assets/emptypin.svg";
@@ -12,7 +12,8 @@ const SDK_SRC =
 
 export default function MapRoute() {
   const navigate = useNavigate();
-  const { state } = useLocation(); // { dest:{lat,lng}, name, address }
+  // state 예시: { dest:{lat,lng}, name, address, placeId, isPrivate }
+  const { state } = useLocation();
 
   // refs
   const mapEl = useRef(null);
@@ -28,6 +29,7 @@ export default function MapRoute() {
     durationMin: null,
   });
 
+  // ===== Kakao Map init =====
   useEffect(() => {
     const init = () => {
       const kakao = window.kakao;
@@ -58,6 +60,7 @@ export default function MapRoute() {
       s.onload = () => window.kakao.maps.load(init);
       document.head.appendChild(s);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   // ===== helpers =====
@@ -189,10 +192,28 @@ export default function MapRoute() {
     return `${d} · ${t}`;
   };
 
+  // 상단 카드 클릭 → 상세 페이지로
+  const goToDetail = () => {
+    const pid = state?.placeId ?? state?.id;
+    if (!pid) {
+      navigate(-1);
+      return;
+    }
+    const path = state?.isPrivate ? `/pv/place/${pid}` : `/place/${pid}`;
+    navigate(path, { state });
+  };
+
   return (
     <div className="map-wrap">
-      {/* 상단 정보 카드 */}
-      <div className="route-topcard">
+      {/* 상단 정보 카드 (클릭 시 상세로 이동) */}
+      <div
+        className="route-topcard"
+        onClick={goToDetail}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => (e.key === "Enter" ? goToDetail() : null)}
+        style={{ cursor: "pointer" }}
+      >
         <div className="route-left">
           <img src={orangeLcIcon} alt="" className="route-pin" />
           <div className="route-texts">
@@ -208,7 +229,7 @@ export default function MapRoute() {
         </div>
       </div>
 
-      {/* 뒤로가기(옵션) */}
+      {/* 뒤로가기 */}
       <button
         className="map-top-back"
         onClick={() => navigate(-1)}
@@ -217,6 +238,7 @@ export default function MapRoute() {
         ←
       </button>
 
+      {/* 지도 */}
       <div ref={mapEl} className="map-fill" />
 
       {/* 하단 종료 버튼 */}
@@ -229,6 +251,7 @@ export default function MapRoute() {
         </button>
       </div>
 
+      {/* 상태 토스트 */}
       {isLoading && <div className="map-toast">경로 불러오는 중…</div>}
       {!!errorMsg && <div className="map-toast error">{errorMsg}</div>}
     </div>

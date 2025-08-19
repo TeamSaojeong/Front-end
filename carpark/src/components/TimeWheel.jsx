@@ -64,7 +64,10 @@ export default function TimeWheel({ value, onChange, ariaLabelPrefix = "" }) {
       >
         <div className="time-spacer" />
         {AMPM.map((v) => (
-          <div key={v} className={`time-item ${target.ampm === v ? "active" : ""}`}>
+          <div
+            key={v}
+            className={`time-item ${target.ampm === v ? "active" : ""}`}
+          >
             {v}
           </div>
         ))}
@@ -82,7 +85,10 @@ export default function TimeWheel({ value, onChange, ariaLabelPrefix = "" }) {
       >
         <div className="time-spacer" />
         {HOURS12.map((v) => (
-          <div key={v} className={`time-item ${target.h12 === v ? "active" : ""}`}>
+          <div
+            key={v}
+            className={`time-item ${target.h12 === v ? "active" : ""}`}
+          >
             {v}
           </div>
         ))}
@@ -100,7 +106,10 @@ export default function TimeWheel({ value, onChange, ariaLabelPrefix = "" }) {
       >
         <div className="time-spacer" />
         {MINUTES10.map((v) => (
-          <div key={v} className={`time-item ${target.m === v ? "active" : ""}`}>
+          <div
+            key={v}
+            className={`time-item ${target.m === v ? "active" : ""}`}
+          >
             {pad2(v)}
           </div>
         ))}

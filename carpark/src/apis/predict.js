@@ -10,9 +10,9 @@ const predict = () => {
       setLoading(true);
       // 예시 body (실제 API 스펙에 맞게 수정 필요)
       const body = {
-        lat: 37.482, 
-        lng: 127.036, 
-        time: "2025-08-18T06:00:00" 
+        lat: 37.482,
+        lng: 127.036,
+        time: "2025-08-18T06:00:00",
       };
 
       const res = await axios.post("/api/parking/predict", body);
@@ -33,9 +33,14 @@ const predict = () => {
       <ul>
         {results.map((item, idx) => (
           <li key={idx}>
-            <strong>{item.prkNm}</strong> ({(item.dist_km*1000).toFixed(0)}m)<br/>
-            예측: {item.pred_level}  
-            <small> (여유 {Math.round(item.p_여유*100)}%, 혼잡 {Math.round(item.p_혼잡*100)}%)</small>
+            <strong>{item.prkNm}</strong> ({(item.dist_km * 1000).toFixed(0)}m)
+            <br />
+            예측: {item.pred_level}
+            <small>
+              {" "}
+              (여유 {Math.round(item.p_여유 * 100)}%, 혼잡{" "}
+              {Math.round(item.p_혼잡 * 100)}%)
+            </small>
           </li>
         ))}
       </ul>

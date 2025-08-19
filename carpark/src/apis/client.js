@@ -28,6 +28,6 @@ client.interceptors.response.use(
       "| data:",
       err.response?.data
     );
-    return Promise.reject(err); // 에러 원본 유지
+    return Promise.reject(err);
   }
 );

@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { client } from "../../apis/client";
 import "../../Styles/Pay/PayPage.css";
 
 import arrow from "../../Assets/arrow.png";
 import kakaopay from "../../Assets/kakaopay.svg";
+
+import { getPublicDetail, createReservation } from "../../apis/parking"; // ← 명세 기반 API 사용
 
 const KRW = (n) =>
   (isNaN(n) ? 0 : Math.round(n))
@@ -26,26 +27,35 @@ export default function PayPage() {
   const navigate = useNavigate();
   const { state } = useLocation() || {};
 
-  // 데모/네비게이션으로 넘어온 값
-  const lotId = state?.lotId ?? 1;
+  // 상세에서 넘어올 수 있는 값들
+  // A) 바로 리디렉트 모드: paymentUrl 또는 reservationId 만 넘어온 경우
+  const paymentUrl =
+    state?.paymentUrl || state?.data?.paymentRedirectUrl || null;
+  const presetReservationId =
+    state?.reservationId || state?.data?.reservationId || null;
+
+  // B) 계산/예약 모드: parkingId/시작/종료 등
+  const parkingId = state?.parkingId ?? state?.lotId ?? null; // lotId 호환
   const startAt = state?.startAt ? new Date(state.startAt) : new Date();
-  const endAt =
-    state?.endAt ?? new Date(startAt.getTime() + 2 * 60 * 60 * 1000);
-  const endDt = new Date(endAt);
+  const endAt = state?.endAt
+    ? new Date(state.endAt)
+    : new Date(startAt.getTime() + 2 * 60 * 60 * 1000);
+  const startInMinutes = state?.startInMinutes; // RESERVABLE에서 넘겨줄 수 있음(곧 나감 n분 뒤)
 
   // 화면 데이터
   const [loading, setLoading] = useState(true);
   const [lotName, setLotName] = useState("");
   const [pricePer10Min, setPricePer10Min] = useState(0);
-  const [nearbyAvg10Min, setNearbyAvg10Min] = useState(null);
+  const [nearbyAvg10Min, setNearbyAvg10Min] = useState(null); // 선택: 표시만
   const [posting, setPosting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   // 이용 시간(분)
   const minutes = useMemo(() => {
-    const diff = Math.max(0, Math.round((endDt - startAt) / 60000));
+    const diff = Math.max(0, Math.round((endAt - startAt) / 60000));
     return diff;
-  }, [startAt, endDt]);
+  }, [startAt, endAt]);
+
   const hoursPart = Math.floor(minutes / 60);
   const minsPart = minutes % 60;
 
@@ -59,37 +69,54 @@ export default function PayPage() {
   const svcFee = useMemo(() => Math.round(fee * svcRate), [fee]);
   const total = useMemo(() => fee + svcFee, [fee, svcFee]);
 
+  // ───────────────────────────────────────────────────────────
+  // 1) 바로 리디렉트 모드 처리: paymentUrl/reservationId만 넘어온 케이스
+  // ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (paymentUrl) {
+      // 외부 PG로 바로 이동
+      window.location.href = paymentUrl;
+      return;
+    }
+    if (presetReservationId) {
+      // 결제 없이 바로 완료
+      navigate("/paycomplete", {
+        replace: true,
+        state: { reservationId: presetReservationId },
+      });
+    }
+  }, [paymentUrl, presetReservationId, navigate]);
+
+  // ───────────────────────────────────────────────────────────
+  // 2) 계산/예약 모드: 가격 정보 로드
+  // ───────────────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
 
-    // ✅ demo 모드: API 생략하고 더미 값으로 즉시 세팅
-    if (state?.demo) {
-      setLotName("데모 주차장");
-      setPricePer10Min(1000); // 10분당 1,000원
-      setNearbyAvg10Min(1200);
+    // 리디렉트 모드가 아니고, parkingId가 있어야 계산/예약 모드로 진행
+    if (!parkingId || paymentUrl || presetReservationId) {
       setLoading(false);
       return () => {
         mounted = false;
       };
     }
 
-    // 실제 API 호출
     (async () => {
       try {
-        const [lotRes, avgRes] = await Promise.all([
-          client.get(`/lots/${lotId}`), // { data: { name, pricePer10Min } }
-          client.get(`/lots/${lotId}/nearby-avg`), // { data: { avgPer10Min } }
-        ]);
+        // 공영/민영 상세에서 가격 가져오기
+        const lotRes = await getPublicDetail(parkingId); // { data: {...} }
         if (!mounted) return;
 
-        setLotName(lotRes?.data?.data?.name ?? "주차장 이름");
-        setPricePer10Min(lotRes?.data?.data?.pricePer10Min ?? 0);
-        setNearbyAvg10Min(avgRes?.data?.data?.avgPer10Min ?? null);
+        const d = lotRes?.data || {};
+        setLotName(d?.name ?? state?.lotName ?? "주차장");
+        setPricePer10Min(
+          d?.pricePer10m ?? d?.pricePer10Min ?? state?.pricePer10m ?? 0
+        );
+        setNearbyAvg10Min(null); // 서버 준비되면 채우기
       } catch (e) {
         console.error(e);
-        setLotName("주차장 이름");
-        setPricePer10Min(0);
-        setNearbyAvg10Min(null);
+        setLotName(state?.lotName ?? "주차장");
+        setPricePer10Min(state?.pricePer10m ?? 0);
         setErrorMsg("요금 정보를 불러오지 못했습니다.");
       } finally {
         if (mounted) setLoading(false);
@@ -99,55 +126,67 @@ export default function PayPage() {
     return () => {
       mounted = false;
     };
-  }, [lotId, state?.demo]);
+  }, [
+    parkingId,
+    paymentUrl,
+    presetReservationId,
+    state?.lotName,
+    state?.pricePer10m,
+  ]);
 
+  // ───────────────────────────────────────────────────────────
+  // 3) 예약/결제 실행
+  // ───────────────────────────────────────────────────────────
   const handlePay = async () => {
     if (posting) return;
+    if (!parkingId) return alert("주차장 정보가 없습니다.");
     if (minutes <= 0) return alert("이용 시간을 확인해 주세요.");
     if (pricePer10Min <= 0) return alert("요금 정보가 없습니다.");
 
     setPosting(true);
     try {
-      navigate("/payloading", {
-        replace: true,
-        state: { lotId, startAt, endAt, fee, svcFee, total },
-      });
+      // 선예약이면 startInMinutes 포함
+      const payload =
+        typeof startInMinutes === "number"
+          ? { startInMinutes, minutes }
+          : { minutes };
 
-      const res = await client.post("/payments", {
-        lotId,
-        startAt,
-        endAt,
-        minutes,
-        unitMinutes: 10,
-        unitPrice: pricePer10Min,
-        fee,
-        serviceFee: svcFee,
-        total,
-        method: "CARD",
-      });
+      const res = await createReservation(parkingId, payload);
 
-      if (res?.data?.status === 200) {
+      const paymentRedirectUrl =
+        res?.data?.paymentRedirectUrl || res?.data?.data?.paymentRedirectUrl;
+      const reservationId =
+        res?.data?.reservationId || res?.data?.data?.reservationId;
+
+      if (paymentRedirectUrl) {
+        // 외부결제 이동
+        window.location.href = paymentRedirectUrl;
+      } else if (reservationId) {
+        // 결제 없는 예약완료
         navigate("/paycomplete", {
           replace: true,
           state: {
-            lotId,
+            reservationId,
+            startAt: startAt.toISOString(),
+            endAt: endAt.toISOString(),
             lotName,
-            total,
-            paymentId: res?.data?.data?.paymentId,
           },
         });
       } else {
-        alert(res?.data?.message || "결제에 실패했습니다.");
-        navigate(-1);
+        alert("예약은 되었지만 응답을 해석할 수 없습니다.");
       }
     } catch (e) {
       console.error(e);
-      alert("결제 중 오류가 발생했습니다.");
-      navigate(-1);
+      alert(e?.response?.data?.message || "예약/결제에 실패했습니다.");
     } finally {
       setPosting(false);
     }
   };
+
+  // ───────────────────────────────────────────────────────────
+
+  // 리디렉트 모드면 UI를 보여줄 필요 없이 빈 화면 유지
+  if (paymentUrl || presetReservationId) return null;
 
   return (
     <div className="paypage">
@@ -189,8 +228,8 @@ export default function PayPage() {
         <div className="paypage__row">
           <div className="label">주차 이용 시간</div>
           <div className="value">
-            {hhmm.format(startAt)} ~ {hhmm.format(endDt)} ({hoursPart}시간{" "}
-            {minsPart}분)
+            {hhmm.format(startAt)} ~ {hhmm.format(endAt)} (
+            {Math.floor(minutes / 60)}시간 {minutes % 60}분)
           </div>
         </div>
 

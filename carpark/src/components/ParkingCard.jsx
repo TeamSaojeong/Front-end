@@ -1,10 +1,10 @@
 import React from "react";
-import "../Styles/ParkingCard.css";                 // ⬅️ 아래 CSS
-import moiimg from "../Assets/moiimg.svg";    // ⬅️ (선택) 한 곳에 모은 이미지 객체
+import "../Styles/ParkingCard.css"; // ⬅️ 아래 CSS
+import moiimg from "../Assets/moiimg.svg"; // ⬅️ (선택) 한 곳에 모은 이미지 객체
 import ai_location from "../Assets/ai_location.svg";
 import ai_won from "../Assets/ai_won.svg";
 export default function FrameCard({
-  name ="주차 장소 이름",
+  name = "주차 장소 이름",
   address = "주차 장소 주소",
   fee = "0,000원",
   onDetail,

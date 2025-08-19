@@ -1,13 +1,12 @@
-.rp-next-wrap{
+.rp-next-wrap {
   top: 260px !important;
-    left: 24px !important;
-  left:0;
+  left: 24px !important;
+  left: 0;
   right: 0;
-  display:flex;
-    position: absolute !important;
+  display: flex;
+  position: absolute !important;
   justify-content: center;
 }
-
 
 .rp-wrapper {
   background-color: #fff;
@@ -56,10 +55,18 @@
   cursor: pointer;
 }
 
-.rp-check-own { margin-top: 32px; margin-bottom: 20px; }
-.rp-check-two { margin-bottom: 20px; }
+.rp-check-own {
+  margin-top: 32px;
+  margin-bottom: 20px;
+}
+.rp-check-two {
+  margin-bottom: 20px;
+}
 
-.rg-own-check { padding-left: 4px; margin-bottom: 20px; }
+.rg-own-check {
+  padding-left: 4px;
+  margin-bottom: 20px;
+}
 
 .rg-carnum {
   color: #5c5c5c;
@@ -71,11 +78,13 @@
   margin-bottom: 8px;
 }
 
-.rg-carnum-input { margin-bottom: 8px; }
+.rg-carnum-input {
+  margin-bottom: 8px;
+}
 
 .rg-parkname-wrap {
-  position: absolute;        /* 필요에 따라 absolute/fixed 선택 */
-  top: 623px;                /* 프로젝트 레이아웃에 맞춰 숫자 조정 */
+  position: absolute; /* 필요에 따라 absolute/fixed 선택 */
+  top: 623px; /* 프로젝트 레이아웃에 맞춰 숫자 조정 */
   left: 24px;
   margin-bottom: 0;
   width: 325px;
@@ -85,14 +94,17 @@
   align-items: center;
   padding: 8px;
   border-radius: 6px;
-  border: 1px solid #EAEAEA;
-  background: #F1F1F5;
+  border: 1px solid #eaeaea;
+  background: #f1f1f5;
 }
 
-.rg-parkname-wrap img { width: 24px; height: 24px; }
+.rg-parkname-wrap img {
+  width: 24px;
+  height: 24px;
+}
 .rg-parkname {
   margin-left: 8px;
-  color: #5C5C5C;
+  color: #5c5c5c;
   text-align: center;
   font-family: Pretendard;
   font-size: 14px;
@@ -102,7 +114,7 @@
 }
 
 .rp-next-wrap {
-  position: absolute;  /* 필요 시 fixed 로 */
+  position: absolute; /* 필요 시 fixed 로 */
   left: 0;
   right: 0;
   bottom: 46px;
@@ -114,7 +126,7 @@
 button.rp-next-wrap:not(:disabled),
 .rp-next-wrap.next-button:not(:disabled),
 .rp-next-wrap.enabled {
-  background: #DE5E56 !important;
+  background: #de5e56 !important;
   color: #fff !important;
 }
 
