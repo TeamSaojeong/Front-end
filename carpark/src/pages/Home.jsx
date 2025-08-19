@@ -108,7 +108,7 @@ export default function Home() {
       const kakao = window.kakao;
       if (!mapEl.current || mapRef.current) return;
 
-      mapEl.current.style.touchAction = "manipulation"; // iOS 사파리 대응
+      mapEl.current.style.touchAction = "none";
       mapEl.current.style.webkitUserSelect = "none";
 
       const centerLatLng = new kakao.maps.LatLng(center.lat, center.lng);

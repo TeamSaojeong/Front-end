@@ -57,7 +57,9 @@ body,
   position: absolute;
   inset: 0;
   z-index: 1;
-  touch-action: pan-x pan-y; /*터치 패닝 허용(이거 안하면 지도 터치 안됌*/
+  touch-action: none;
+  -ms-touch-action: none;
+  pointer-events: auto;
 }
 
 .requery-btn {
