@@ -1,3 +1,4 @@
+// src/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Login.css";
@@ -24,38 +25,52 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      //프록시 사용 → /login 으로 호출하면 proxy로 백엔드로 전달됨
-      const res = await client.post("/login", {
+      const res = await client.post("/api/login", {
         loginId: id.trim(),
         password: pw,
       });
 
-      const { status, message } = res.data || {};
-      // 토큰이 헤더로 올 수도 있어 대비 (axios는 헤더 키가 소문자)
-      const accessRaw = res.headers?.["authorization"]; // 예: "Bearer x.y.z"
-      const refreshRaw = res.headers?.["refresh-token"]; // 예: "x.y.z"
-      const accessToken = accessRaw?.startsWith("Bearer ")
-        ? accessRaw.slice(7)
-        : accessRaw;
+      const httpOk = res.status >= 200 && res.status < 300;
+      const { status: bodyStatus, message } = res.data || {};
 
-      if (status === 200) {
-        if (accessToken) localStorage.setItem("accessToken", accessToken);
-        if (refreshRaw) localStorage.setItem("refreshToken", refreshRaw);
+      // 1) 응답 헤더(Authorization) → "Bearer xxx" 또는 "xxx"
+      const authRaw = res.headers?.["authorization"];
+      const fromHeader = authRaw?.startsWith("Bearer ")
+        ? authRaw.slice(7)
+        : authRaw;
+
+      // 2) 혹시 바디에 토큰이 온다면 대비
+      const fromBody =
+        res.data?.accessToken ||
+        res.data?.token ||
+        res.data?.jwt ||
+        res.data?.data?.accessToken ||
+        res.data?.data?.token;
+
+      const accessToken = fromHeader || fromBody;
+
+      if (httpOk && (bodyStatus === undefined || bodyStatus === 200)) {
         if (accessToken) {
-          client.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${accessToken}`;
+          localStorage.setItem("accessToken", accessToken);
+          client.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+        } else {
+          // 서버가 헤더로만 토큰을 주는 경우, CORS에 expose가 필요
+          console.warn(
+            "[LOGIN] 토큰 미수신. 서버 CORS에 Access-Control-Expose-Headers: Authorization, Refresh-Token 추가 필요."
+          );
         }
         navigate("/home");
       } else {
         setMsg(message || "로그인에 실패했어요. 다시 시도해 주세요.");
       }
     } catch (err) {
+      const code = err?.response?.status;
       const serverMsg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        "아이디 또는 비밀번호를 확인해 주세요.";
-      setMsg(serverMsg);
+        err?.response?.data?.message || err?.response?.data?.error;
+      if (code === 401)
+        setMsg(serverMsg || "아이디 또는 비밀번호를 확인해 주세요.");
+      else if (code === 403) setMsg(serverMsg || "접근 권한이 없습니다.");
+      else setMsg(serverMsg || "잠시 후 다시 시도해 주세요.");
     } finally {
       setLoading(false);
     }
@@ -79,6 +94,7 @@ const LoginPage = () => {
               onFocus={() => setIdPlaceholder("")}
               onBlur={() => setIdPlaceholder("이메일을 입력해 주세요")}
               autoComplete="username"
+              inputMode="email"
             />
           </div>
         </div>

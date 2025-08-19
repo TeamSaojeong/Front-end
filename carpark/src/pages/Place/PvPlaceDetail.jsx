@@ -10,14 +10,18 @@ import alarmIcon from "../../Assets/alarm.svg";
 import alarmIconOn from "../../Assets/alarm1.svg";
 import out5m from "../../Assets/out5m.svg";
 
+import {
+  getPrivateDetail,
+  getPredict,
+  subscribeAlert,
+  getParkingStatus,
+} from "../../apis/parking";
+import { mapStatusToUI } from "../../utils/parkingStatus";
+
 export default function PvPlaceDetail() {
   const navigate = useNavigate();
-  const params = useParams();
+  const { placeId: placeIdFromParam } = useParams();
   const [alarmOn, setAlarmOn] = useState(false);
-
-  // 어떤 키로 오든 첫 번째 파라미터 사용
-  const idFromParam =
-    params?.id ?? params?.placeId ?? Object.values(params ?? {})[0] ?? null;
 
   const placeFromSession = useMemo(() => {
     try {
@@ -28,46 +32,129 @@ export default function PvPlaceDetail() {
     }
   }, []);
 
-  // placeId가 없어도 dummy로 강제 세팅 → 항상 테스트 가능
-  const placeId = placeFromSession?.id ?? idFromParam ?? "dummy-1";
+  const placeId = placeFromSession?.id ?? placeIdFromParam ?? null;
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
+  const [error, setError] = useState("");
+
+  // 상태
   const [queueOpen, setQueueOpen] = useState(false);
   const [leavingEtaMin, setLeavingEtaMin] = useState(null);
+  const [isAvailable, setIsAvailable] = useState(true);
 
-  // ✅ 테스트용: 1초 후 더미 데이터 주입
+  const startUse = () => {
+    if (!placeId) return;
+    navigate("/paypage", {
+      state: {
+        parkingId: placeId,
+        lotName: detail?.name ?? "개인 주차장",
+      },
+    });
+  };
+  const joinWait = () => {
+    if (!placeId) return;
+    // 선예약 플로우: PayPage에서 startInMinutes를 받아 예약 생성
+    navigate("/paypage", {
+      state: {
+        parkingId: placeId,
+        lotName: detail?.name ?? "개인 주차장",
+        startInMinutes:
+          typeof leavingEtaMin === "number" ? Math.max(1, leavingEtaMin) : 5,
+      },
+    });
+  };
+
+  const [primary, setPrimary] = useState({
+    disabled: false,
+    label: "주차장 이용하기",
+    onClick: startUse,
+  });
+
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      const fake = {
-        id: placeId,
-        name: "테스트 개인 주차장",
-        distanceKm: 2.4,
-        etaMin: 6,
-        pricePer10m: 500,
-        address: "서울특별시 성북구 삼선교로 16길 116",
-        availableTimes: "00:00 ~ 24:00",
-        note: "노란색 기둥 오른편\n(주차 장소 간략 설명)",
-        lat: 37.58,
-        lng: 127.01,
-        queueOpen: true,
-        leavingEtaMin: 5,
-      };
-      setDetail(fake);
-      setQueueOpen(fake.queueOpen);
-      setLeavingEtaMin(fake.leavingEtaMin);
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [placeId]);
+    let mounted = true;
+
+    async function load() {
+      if (!placeId) return;
+      setLoading(true);
+      setError("");
+      try {
+        const { data } = await getPrivateDetail(placeId);
+        if (!mounted) return;
+
+        const normalized = {
+          id: data.id ?? data.parkingId ?? placeId,
+          name: data.name ?? placeFromSession?.name ?? "개인 주차장",
+          distanceKm:
+            data.distanceMeters != null
+              ? data.distanceMeters / 1000
+              : data.distanceKm ?? placeFromSession?.distanceKm ?? null,
+          etaMin:
+            data.etaMin ?? data.etaMinutes ?? placeFromSession?.etaMin ?? null,
+          pricePer10m:
+            data.pricePer10m ?? data.price ?? placeFromSession?.price ?? 0,
+          address: data.address ?? placeFromSession?.address ?? "",
+          availableTimes:
+            data.availableTimes ??
+            data.openHours ??
+            placeFromSession?.available ??
+            "00:00 ~ 24:00",
+          note: data.note ?? placeFromSession?.note ?? "",
+          lat: data.lat ?? data.latitude ?? placeFromSession?.lat ?? null,
+          lng: data.lng ?? data.longitude ?? placeFromSession?.lng ?? null,
+        };
+
+        setDetail(normalized);
+      } catch (e) {
+        if (!mounted) return;
+        setError(
+          e?.response?.data?.message || "상세 정보를 불러오지 못했습니다."
+        );
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    async function pullStatus() {
+      if (!placeId) return;
+      try {
+        const { data } = await getParkingStatus(placeId);
+        const ui = mapStatusToUI(data?.data ?? data);
+        setIsAvailable(ui.isAvailable);
+        setQueueOpen(ui.queueOpen);
+        setLeavingEtaMin(ui.leavingEtaMin);
+        setPrimary({
+          disabled: ui.primaryDisabled,
+          label: ui.primaryLabel, // RESERVABLE이면 "미리 대기하기"
+          onClick: ui.primaryDisabled
+            ? undefined
+            : ui.queueOpen
+            ? joinWait
+            : startUse,
+        });
+      } catch {
+        // 폴백: 기존 상태 유지
+      }
+    }
+
+    load();
+    pullStatus();
+    const timer = setInterval(pullStatus, 10_000);
+
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placeId, leavingEtaMin]);
 
   const goBack = () => navigate(-1);
 
   const copyAddress = async () => {
-    if (!detail?.address) return;
+    const text = detail?.address || "";
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(detail.address);
+      await navigator.clipboard.writeText(text);
       alert("주소가 복사되었습니다.");
     } catch {
       alert("복사에 실패했습니다.");
@@ -75,21 +162,41 @@ export default function PvPlaceDetail() {
   };
 
   const openRoute = () => {
-    if (!detail?.lat || !detail?.lng) {
+    const lat = detail?.lat;
+    const lng = detail?.lng;
+    if (lat == null || lng == null) {
       alert("목적지 좌표가 없어 경로를 열 수 없습니다.");
       return;
     }
-    navigate("/maproute", {
+    navigate("/MapRoute", {
       state: {
-        dest: { lat: detail.lat, lng: detail.lng },
-        name: detail.name,
-        address: detail.address,
+        dest: { lat, lng },
+        name: detail?.name,
+        address: detail?.address,
       },
     });
   };
 
-  const joinWait = () => alert("대기 등록 완료! (테스트)");
-  const startUse = () => alert("주차장 이용 시작! (테스트)");
+  const onSubscribeAlert = async () => {
+    if (!placeId) return;
+    try {
+      await subscribeAlert(placeId);
+      setAlarmOn(true);
+      alert("알림이 설정되었습니다.");
+    } catch {
+      alert("알림 설정에 실패했습니다.");
+    }
+  };
+
+  const onPredict = async () => {
+    if (!placeId) return;
+    try {
+      const { data } = await getPredict(placeId, 10);
+      alert("예측 결과: " + JSON.stringify(data));
+    } catch {
+      alert("혼잡도 예측을 불러오지 못했습니다.");
+    }
+  };
 
   if (loading) {
     return (
@@ -103,6 +210,21 @@ export default function PvPlaceDetail() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="pd-wrap">
+        <div className="pd-topbar">
+          <button className="pd-close" onClick={goBack} aria-label="닫기">
+            ✕
+          </button>
+        </div>
+        <h1 className="pd-title">오류</h1>
+        <p style={{ padding: "0 24px" }}>{error}</p>
+      </div>
+    );
+  }
+
   if (!detail) {
     return (
       <div className="pd-wrap">
@@ -125,6 +247,7 @@ export default function PvPlaceDetail() {
     availableTimes,
     note,
   } = detail;
+
   const etaText =
     typeof leavingEtaMin === "number"
       ? `${Math.max(0, leavingEtaMin)}분`
@@ -140,13 +263,14 @@ export default function PvPlaceDetail() {
 
         <button
           className="pd-alarm"
-          onClick={() => setAlarmOn((v) => !v)}
+          onClick={onSubscribeAlert}
           aria-pressed={alarmOn}
           aria-label={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
           title={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
         >
-          <img src={alarmOn ? alarmIconOn : alarmIcon} alt="" />
+          <img src={alarmIconOn && alarmOn ? alarmIconOn : alarmIcon} alt="" />
         </button>
+
         <button
           className="pd-bell"
           onClick={() => alert("신고하기 준비 중")}
@@ -165,8 +289,8 @@ export default function PvPlaceDetail() {
             <img src={pinIcon} alt="위치" />
           </div>
           <div className="pd-chip-text">
-            <strong>{distanceKm}km</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
-            <strong>{etaMin}분</strong>
+            <strong>{distanceKm ?? "-"}km</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
+            <strong>{etaMin ?? "-"}분</strong>
             <div className="pd-chip-sub">주차 장소까지</div>
           </div>
         </div>
@@ -176,7 +300,7 @@ export default function PvPlaceDetail() {
             <img src={moneyIcon} alt="요금" />
           </div>
           <div className="pd-chip-text">
-            <strong>{Number(pricePer10m).toLocaleString()}원</strong>
+            <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
             <div className="pd-chip-sub">10분당 주차 비용</div>
           </div>
         </div>
@@ -186,7 +310,7 @@ export default function PvPlaceDetail() {
       <section className="pd-section">
         <h2 className="pd-section-title">주차 장소와 가장 근접한 위치</h2>
         <div className="pd-address-row">
-          <div className="pd-address">{address}</div>
+          <div className="pd-address">{address || "-"}</div>
           <button
             className="pd-copy-btn"
             onClick={copyAddress}
@@ -213,15 +337,14 @@ export default function PvPlaceDetail() {
         <pre className="pd-note">{note}</pre>
       </section>
 
-      {/* 하단 버튼 + 말풍선(OutSoon 방식) */}
+      {/* 하단 버튼 + 말풍선(곧 나감) */}
       <div className="pd-actions">
         <button className="pd-btn pd-btn-outline" onClick={openRoute}>
           경로 안내 보기
         </button>
 
-        {/* 버튼과 동일한 폭/높이의 컨테이너 */}
         <div className="pd-bubble-container">
-          {queueOpen && (
+          {queueOpen && isAvailable && (
             <div className="pd-bubble-box" role="status" aria-live="polite">
               <img src={out5m} alt="" className="pd-bubble-icon" />
               <span className="pd-bubble-text">
@@ -233,12 +356,17 @@ export default function PvPlaceDetail() {
           <button
             className={`pd-btn pd-btn-primary ${
               queueOpen ? "pd-btn-wait" : ""
-            }`}
-            onClick={queueOpen ? joinWait : startUse}
+            } ${primary.disabled ? "in-use" : ""}`}
+            disabled={primary.disabled}
+            onClick={primary.onClick}
           >
-            {queueOpen ? "미리 대기하기" : "주차장 이용하기"}
+            {primary.label}
           </button>
         </div>
+
+        <button className="pd-btn pd-btn-ghost" onClick={onPredict}>
+          혼잡도 예측
+        </button>
       </div>
     </div>
   );

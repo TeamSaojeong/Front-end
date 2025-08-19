@@ -57,19 +57,22 @@ body,
   position: absolute;
   inset: 0;
   z-index: 1;
-  touch-action: pan-x pan-y; /*터치 패닝 허용(이거 안하면 지도 터치 안됌*/
+  touch-action: none;
+  -ms-touch-action: none;
+  pointer-events: auto;
 }
 
 .requery-btn {
   position: absolute;
   z-index: 26;
   left: 50%;
-  bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(
+    120px + env(safe-area-inset-bottom, 0px)
+  ); /* 110px → 160px 등으로 조정 */
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-
   padding: 12px 16px;
   border: 0;
   border-radius: 24px;
@@ -96,8 +99,8 @@ body,
   display: inline-grid;
   place-items: center;
   border-radius: 50%;
-  background: #eaf2fe; /*연한 파랑 원형 배경 */
-  font-size: 14px; /*↻ 아이콘 크기 */
+  background: #eaf2fe;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -113,7 +116,7 @@ body,
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #3b82f6; 
+  background: #3b82f6;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
   position: relative;
 }

@@ -1,9 +1,10 @@
+/* 접힌 상태에서 보이는 높이(PEEK) & 펼침 상단 여백(MIN_Y)에 맞춰야 함 */
 .bs-wrapper {
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% - 380px); /* 접힌 상태에서 보이는 높이 (PEEK) */
-  height: calc(100% - 90px); /* 펼쳤을 때 남길 상단 여백 (MIN_Y) */
+  top: calc(100% - 115px); /* PEEK */
+  height: calc(100% - 90px); /* MIN_Y */
   display: flex;
   flex-direction: column;
   background: #fff;
@@ -12,16 +13,23 @@
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
   transition: transform 0.35s ease-out;
   will-change: transform;
-  z-index: 10;
+  z-index: 20;
 }
 
 .bs-header {
-  height: 24px;
-  padding: 12px 0 4px;
+  height: 36px; /* 좀 더 잡기 쉽게 */
+  padding: 10px 0 6px;
+  touch-action: none; /* 헤더에서 제스처 캡처 */
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: grab;
+}
+.bs-header:active {
+  cursor: grabbing;
 }
 
 .bs-handle {
-  width: 40px;
+  width: 44px;
   height: 4px;
   border-radius: 2px;
   margin: 0 auto;
@@ -33,30 +41,30 @@
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   padding: 0;
+  touch-action: pan-y; /* 컨텐츠는 세로 스크롤만 */
 }
 
 /* 컨텐츠 여백 */
 .bs-body {
-  padding: 12px 16px 24px;
+  padding: 12px 16px calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
-/* 검색 필드 */
+/* 이하 동일 - 카드/버튼 등 */
 .bs-search {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 335px;
   height: 48px;
   padding: 0 16px;
   background: #f3f5f8;
   border-radius: 24px;
   margin-bottom: 16px;
 }
-
 .bs-search-icon {
   font-size: 18px;
   line-height: 1;
 }
-
 .bs-search input {
   flex: 1;
   border: 0;
@@ -65,26 +73,20 @@
   font-size: 16px;
   color: #111;
 }
-
-/* 섹션 타이틀 */
 .bs-section {
   margin: 12px 2px 8px;
 }
-
 .bs-title {
   margin: 0 0 4px;
   font-size: 18px;
   font-weight: 700;
   color: #111;
 }
-
 .bs-sub {
   margin: 0;
   font-size: 13px;
   color: #6b7280;
 }
-
-/* 카드 */
 .bs-card {
   display: flex;
   align-items: center;
@@ -96,38 +98,32 @@
   border: 1px solid #f0f0f0;
   margin-bottom: 12px;
 }
-
 .bs-card-image {
   width: 56px;
   height: 56px;
   border-radius: 8px;
   background: #e9eef5;
 }
-
 .bs-info {
   flex: 1;
   min-width: 0;
 }
-
 .bs-name {
   font-weight: 600;
   color: #111;
   margin-bottom: 4px;
 }
-
 .bs-card-details {
   font-size: 12px;
   color: #6b7280;
   display: flex;
   gap: 6px;
 }
-
 .bs-price {
   margin-top: 4px;
   font-size: 13px;
   color: #6b7280;
 }
-
 .bs-more {
   padding: 8px 12px;
   border-radius: 16px;
@@ -137,7 +133,6 @@
   font-size: 13px;
   font-weight: 600;
 }
-
 .bs-location {
   position: sticky;
   bottom: 12px;

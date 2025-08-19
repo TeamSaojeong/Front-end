@@ -1,13 +1,35 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../../Styles/Pay/PayComplete.css";
 
-import arrow from "../../Assets/arrow.png";
 import car_icon from "../../Assets/paycomplete.svg";
 import clock_icon from "../../Assets/clock.svg";
 
+const fmt = new Intl.DateTimeFormat("ko-KR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 const PayComplete = () => {
   const navigate = useNavigate();
+  const { state } = useLocation() || {};
+  const reservationId = state?.reservationId || null;
+  const startAt = state?.startAt ? new Date(state.startAt) : null;
+  const endAt = state?.endAt ? new Date(state.endAt) : null;
+  const lotName = state?.lotName || "";
+
+  const totalMin =
+    startAt && endAt
+      ? Math.max(0, Math.round((endAt - startAt) / 60000))
+      : null;
+
+  const timeText =
+    startAt && endAt
+      ? `${fmt.format(startAt)} ~ ${fmt.format(endAt)} (${Math.floor(
+          totalMin / 60
+        )}시간 ${totalMin % 60}분)`
+      : "시간 정보 없음";
 
   return (
     <div className="paycomplete-container">
@@ -18,6 +40,18 @@ const PayComplete = () => {
           <p>
             정상적으로 결제가 완료되었습니다.
             <br />
+            {reservationId && (
+              <>
+                예약번호: <b>{reservationId}</b>
+                <br />
+              </>
+            )}
+            {lotName && (
+              <>
+                {lotName}
+                <br />
+              </>
+            )}
             자동으로 화면이 넘어갈 예정입니다.
           </p>
         </div>
@@ -26,9 +60,7 @@ const PayComplete = () => {
       <div className="paycomplete-time-box">
         <div className="paycomplete-time-inner">
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
-          <span className="paycomplete-time-text">
-            00:00 ~ 00:00 (3시간 20분)
-          </span>
+          <span className="paycomplete-time-text">{timeText}</span>
         </div>
       </div>
 
@@ -39,7 +71,7 @@ const PayComplete = () => {
       <div className="paycomplete-button-section">
         <button
           className="paycomplete-outsoon"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate("/home")}
         >
           주차를 해주세요!
         </button>
@@ -47,4 +79,5 @@ const PayComplete = () => {
     </div>
   );
 };
+
 export default PayComplete;
