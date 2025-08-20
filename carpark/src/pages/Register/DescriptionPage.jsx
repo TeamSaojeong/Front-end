@@ -6,22 +6,19 @@ import Address from "../../components/Register/Address";
 import InputBox from "../../components/InputBox";
 import AddImg from "../../components/Register/AddImg";
 import { useParkingForm } from "../../store/ParkingForm";
-import { register } from "../../apis/register";
 import "../../Styles/Register/DescriptionPage.css";
-const DescriptionPage = () => {
-  const form = useParkingForm();
-  const navigate = useNavigate();
-  const [errors, setErrors] = useState({});
-  const { name, address, content, image, setField, reset } = useParkingForm();
 
+export default function DescriptionPage() {
+  const navigate = useNavigate();
+  const { address, content, image, setField } = useParkingForm();
+  const [errors] = useState({});
+
+  // 주소/설명/이미지 모두 있어야 다음 활성화
   const hasAddress =
     typeof address === "string"
       ? !!address.trim()
-      : !!address?.zip ||
-        !!address?.zonecode ||
-        !!address.roa ||
-        !!address?.roadAddress;
-  const hasContent = !!content?.trim();
+      : !!address?.roadAddress || !!address?.address;
+  const hasContent = !!(content || "").trim();
   const hasImage = image instanceof File || (!!image && !!image.name);
   const isActive = hasAddress && hasContent && hasImage;
 
@@ -45,7 +42,19 @@ const DescriptionPage = () => {
 
       <div>
         <p className="ds-address-title">주차 장소과 가장 근접한 위치</p>
-        <Address onchange={(addr) => setField("address", addr)} />
+
+        {/* Address 컴포넌트가 넘겨주는 객체를 그대로 저장 */}
+        <Address
+          onChange={(addr) => {
+            // 가능한 필드들 흡수
+            const zip =
+              addr?.zonecode || addr?.zip || addr?.zipcode || addr?.postCode;
+            const full =
+              addr?.roadAddress || addr?.address || addr?.jibunAddress || "";
+            if (zip) setField("zipcode", zip);
+            setField("address", full);
+          }}
+        />
       </div>
 
       <div>
@@ -69,11 +78,11 @@ const DescriptionPage = () => {
 
       <NextBtn
         disabled={!isActive}
+        isActive={isActive}
         onClick={handleNext}
         className="ds-nextBtn"
+        label="다음"
       />
     </div>
   );
-};
-
-export default DescriptionPage;
+}

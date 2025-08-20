@@ -50,3 +50,7 @@ export const createReservation = (parkingId, usingMinutes) =>
 export const postSoonOut = (payload) =>
   // payload: { lat, lng, minute, provider?, externalId?, parkingId?, reservationId?, placeName, address }
   client.post(`/api/soonout`, payload);
+
+/** 🔹 주변 평균 요금 조회 (10분당 금액 등) */
+export const getAvgFee = (lat, lon) =>
+  client.get("/api/parking/avg", { params: { lat, lon } });

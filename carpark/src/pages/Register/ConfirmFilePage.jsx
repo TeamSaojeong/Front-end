@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 const ConfirmFilePage = ({ onNext }) => {
   const [files, setFiles] = useState([]);
   const handleUpload = (e) => {
-    const newFiles = Array.from(e.target.files);
+    const newFiles = Array.from(e.target.files || []);
     setFiles((prev) => [...prev, ...newFiles]);
   };
 
@@ -43,7 +43,7 @@ const ConfirmFilePage = ({ onNext }) => {
 
       <div className="cf-file-upload-wrap">
         <label className="cf-upload-btn">
-          <img src={cf_plus} className="cf-plus" />
+          <img src={cf_plus} className="cf-plus" alt="" />
           파일 업로드하기
           <input
             type="file"
@@ -56,7 +56,7 @@ const ConfirmFilePage = ({ onNext }) => {
         <div className="cf-file-list">
           {files.map((file, idx) => (
             <div className="cd-file-item" key={idx}>
-              <img src={folder} className="cf-folder" />
+              <img src={folder} className="cf-folder" alt="" />
               <span className="cf-folder-name">{file.name}</span>
             </div>
           ))}

@@ -1,5 +1,11 @@
 import { useParkingForm } from "../store/ParkingForm";
 
+/**
+ * 개인 주차장 등록
+ * - multipart/form-data
+ * - request: application/json (필드: name, zipcode, address, content, operateTimes, charge)
+ * - image: File (선택 아님)
+ */
 export async function register(accessToken) {
   const { name, address, zipcode, content, operateTimes, charge, image } =
     useParkingForm.getState();

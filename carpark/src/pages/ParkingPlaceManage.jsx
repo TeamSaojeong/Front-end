@@ -1,25 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/ParkingPlaceManage.css";
 import backIcon from "../Assets/arrow.png";
+import { useMyParkings } from "../store/MyParkings";
 
 export default function ParkingPlaceManage() {
   const navigate = useNavigate();
 
-  // 임의 데이터
-  const [places, setPlaces] = useState([
-    { id: 1, name: "주차장소 이름", enabled: true },
-    { id: 2, name: "주차장소 이름", enabled: true },
-    { id: 3, name: "주차장소 이름", enabled: false },
-  ]);
-
-  const toggle = (id) =>
-    setPlaces((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p))
-    );
+  const places = useMyParkings((s) => s.items);
+  const toggleEnabled = useMyParkings((s) => s.toggleEnabled);
 
   const edit = (id) => {
-    // 나중에 여기에 '수정하기' 누르면 뜨는 페이지 등록
+    // 추후 수정 페이지 연결
     alert(`수정하기: ID ${id}`);
   };
 
@@ -36,13 +28,12 @@ export default function ParkingPlaceManage() {
         <h1 className="ppm-title">주차 장소 관리</h1>
       </header>
 
-      {/* 리스트 */}
       <ul className="ppm-list">
-        {places.map((p) => (
+        {(places || []).map((p) => (
           <li key={p.id} className="ppm-item">
             <div className="ppm-left">
               <div className={`ppm-name ${!p.enabled ? "disabled" : ""}`}>
-                {p.name}
+                {p.name || "내 주차장"}
               </div>
               <button
                 className={`ppm-edit ${!p.enabled ? "disabled" : ""}`}
@@ -52,12 +43,11 @@ export default function ParkingPlaceManage() {
               </button>
             </div>
 
-            {/* 토글 */}
             <label className={`ppm-switch ${p.enabled ? "on" : "off"}`}>
               <input
                 type="checkbox"
-                checked={p.enabled}
-                onChange={() => toggle(p.id)}
+                checked={!!p.enabled}
+                onChange={() => toggleEnabled(p.id)}
                 aria-label={`${p.name} 사용 여부`}
               />
               <span className="ppm-knob" />

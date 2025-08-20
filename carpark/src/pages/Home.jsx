@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import BottomSheet from "../components/BottomSheet";
 import "../Styles/app-frame.css";
 import Mapmenu from "../components/Mapmenu";
@@ -10,11 +10,11 @@ import "../Styles/map-poi.css";
 import OutModal from "../components/Modal/OutModal";
 import { getNearby } from "../apis/parking";
 import { postMyLocation } from "../apis/location";
+import { useMyParkings } from "../store/MyParkings";
 
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
 
-// (옵션) ?mock=1 또는 환경변수로 목 모드
 const params = new URLSearchParams(window.location.search);
 const useMock =
   params.get("mock") === "1" ||
@@ -46,14 +46,13 @@ function getWatchedIds() {
   return ["1021815417"];
 }
 
-// 좌표 캐시 유틸
+/* ===== 위치 캐시 유틸 ===== */
 const getCachedLoc = () => {
   try {
     const raw = localStorage.getItem("lastKnownLoc");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
 };
 const setCachedLoc = (lat, lng) => {
   try {
@@ -63,129 +62,28 @@ const setCachedLoc = (lat, lng) => {
     );
   } catch {}
 };
-
-// 1) 빠른 좌표 폴백: 1.5초 내 미수신 시 캐시/지도중심 사용
-const getFastCoords = (fallback) =>
-  new Promise((resolve) => {
-    const cached = getCachedLoc();
-    const timer = setTimeout(() => resolve(cached || fallback), 1500);
-    if (!navigator.geolocation) return; // 타이머가 해결
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        clearTimeout(timer);
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setCachedLoc(lat, lng);
-        resolve({ lat, lng });
-      },
-      () => {
-        clearTimeout(timer);
-        resolve(cached || fallback);
-      },
-      { enableHighAccuracy: false, timeout: 3000, maximumAge: 60_000 }
-    );
-  });
-
-// 2) nearby 5초 타임아웃 + AbortController
-async function fetchNearbyWithTimeout({
-  lat,
-  lng,
-  useMockFlag,
-  setPlaces,
-  renderBubbles,
-  setShowRequery,
-  maybeOpenOutModal,
-  setIsLoading,
-  setErrorMsg,
-  overlaysRef,
-  setSelectedId,
-  loadingRef,
-}) {
-  if (loadingRef.current) return;
-  loadingRef.current = true;
-  setIsLoading(true);
-  setErrorMsg("");
-  setSelectedId(null);
-  overlaysRef.current.forEach((o) => o.overlay?.setMap(null));
-  overlaysRef.current = [];
-
-  const ctrl = new AbortController();
-  const timeoutId = setTimeout(() => ctrl.abort("timeout"), 5000);
-
-  try {
-    let rows;
-    if (useMockFlag) {
-      rows = MOCK_PLACES;
-    } else {
-      const { data } = await getNearby(lat, lng, { signal: ctrl.signal });
-      const rowsRaw = Array.isArray(data)
-        ? data
-        : data?.data ?? data?.items ?? [];
-      rows = rowsRaw.map((r, idx) => {
-        const id =
-          r.id ?? r.kakaoId ?? r.placeId ?? r.parkingId ?? String(idx + 1);
-        const x = r.x ?? r.lon ?? r.longitude ?? r.lng;
-        const y = r.y ?? r.lat ?? r.latitude;
-        const unitMin = r.timerate ?? r.timeRate ?? null;
-        const unitPrice = r.addrate ?? r.addRate ?? null;
-        const price =
-          unitMin && unitPrice
-            ? Math.round((unitPrice * 10) / unitMin)
-            : r.price ?? 0;
-        return {
-          id,
-          kakaoId: id, // ✅ 상세 요청용
-          name: r.placeName ?? r.name ?? "주차장",
-          lat: y,
-          lng: x,
-          price,
-          address: r.addressName ?? r.address ?? "",
-          type: (r.type || r.category || "PUBLIC").toUpperCase(),
-          distanceKm:
-            r.distance != null
-              ? Number(r.distance) / 1000
-              : r.distanceMeters != null
-              ? r.distanceMeters / 1000
-              : r.distanceKm,
-          etaMin: r.etaMin ?? r.etaMinutes,
-          leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut),
-        };
-      });
-    }
-
-    setPlaces(rows);
-    renderBubbles(rows);
-    setShowRequery(false);
-    maybeOpenOutModal(rows);
-  } catch (e) {
-    const msg =
-      e?.message === "timeout" || e?.name === "CanceledError"
-        ? "추천 서버 응답이 느려요. 잠시 후 다시 시도해 주세요."
-        : e?.response?.data?.message ||
-          e?.message ||
-          "주변 주차장 조회에 실패했습니다.";
-    setErrorMsg(msg);
-  } finally {
-    clearTimeout(timeoutId);
-    setIsLoading(false);
-    loadingRef.current = false;
-  }
-}
+// 두 좌표가 거의 같은지(중복 fetch 방지)
+const near = (a, b) => {
+  if (!a || !b) return false;
+  const dLat = Math.abs(a.lat - b.lat);
+  const dLng = Math.abs(a.lng - b.lng);
+  return dLat < 0.0003 && dLng < 0.0003; // 대략 30m
+};
 
 export default function Home() {
   const wrapRef = useRef(null);
   const mapEl = useRef(null);
   const mapRef = useRef(null);
-  const abortRef = useRef(null);
   const overlaysRef = useRef([]);
   const loadingRef = useRef(false);
   const myLocOverlayRef = useRef(null);
 
+  const cached0 = getCachedLoc() ?? { lat: 37.5665, lng: 126.978 }; // ← 캐시 우선
+  const [center, setCenter] = useState(cached0);
+
   const [places, setPlaces] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 });
   const [showRequery, setShowRequery] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
@@ -199,12 +97,19 @@ export default function Home() {
   const [modalMinutes, setModalMinutes] = useState(5);
 
   const navigate = useNavigate();
-  const { state: navState } = useLocation();
+  const myParks = useMyParkings((s) => s.items); // ✅ 내 주차장
 
   const isPrivate = (p) => String(p?.type || "").toUpperCase() === "PRIVATE";
 
   const onSelectPlace = (p) => {
-    // ✅ kakaoId, 좌표 보존 (상세 API에 필요)
+    // 로컬-only 항목은 상세 진입 제한
+    if (isPrivate(p) && p?._localOnly) {
+      alert(
+        "이 장소는 아직 서버에 등록 확인이 되지 않아 상세 페이지가 없어요."
+      );
+      return;
+    }
+
     const payload = {
       ...p,
       kakaoId: p.kakaoId ?? p.id,
@@ -225,13 +130,12 @@ export default function Home() {
     }, 120);
   };
 
-  // 지도 초기화
+  /* ===== Kakao Map init ===== */
   useEffect(() => {
     const init = () => {
       const kakao = window.kakao;
       if (!mapEl.current || mapRef.current) return;
 
-      // 터치 조작 허용
       mapEl.current.style.touchAction = "manipulation";
       mapEl.current.style.webkitUserSelect = "none";
 
@@ -264,61 +168,69 @@ export default function Home() {
       document.head.appendChild(s);
     }
 
+    // 화면 복귀 시에도 캐시 위치로 복구 후 부드럽게 갱신
+    const onVisible = () => {
+      const c = getCachedLoc();
+      if (c) {
+        setCenter(c);
+        recenterMap(c.lat, c.lng);
+        showMyLocation(c.lat, c.lng);
+      }
+      detectAndLoad();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
+
     return () => {
-      if (abortRef.current) abortRef.current.abort();
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onVisible);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 다른 화면에서 복귀 시 자동 재탐지
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        refreshFromCurrentPosition();
-      }
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, []);
+  /* ===== 위치 감지 & 즉시 캐시 표시 → GPS 갱신 ===== */
+  const detectAndLoad = () => {
+    const cached = getCachedLoc();
 
-  // MapRoute 등에서 { state:{ recenter:true } }로 돌아오면 즉시 재조회
-  useEffect(() => {
-    if (navState?.recenter) {
-      refreshFromCurrentPosition();
-    }
-  }, [navState?.recenter]);
+    // 1) 캐시나 현재 center로 즉시 표시/조회
+    const base = cached ?? center;
+    recenterMap(base.lat, base.lng);
+    showMyLocation(base.lat, base.lng);
+    syncAndFetch(base.lat, base.lng);
 
-  const detectAndLoad = async () => {
-    const fallback = mapRef.current
-      ? {
-          lat: mapRef.current.getCenter().getLat(),
-          lng: mapRef.current.getCenter().getLng(),
+    // 2) GPS로 갱신 (짧은 타임아웃 + 실패 시 캐시 유지)
+    if (!navigator.geolocation) return;
+    let settled = false;
+    const hard = setTimeout(() => (settled = true), 4000);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (settled) return;
+        clearTimeout(hard);
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setCachedLoc(loc.lat, loc.lng);
+
+        if (!near(base, loc)) {
+          setCenter(loc);
+          recenterMap(loc.lat, loc.lng);
+          showMyLocation(loc.lat, loc.lng);
+          syncAndFetch(loc.lat, loc.lng);
         }
-      : center;
-    setIsLoading(true);
-    const { lat, lng } = await getFastCoords(fallback);
-    setCenter({ lat, lng });
-    recenterMap(lat, lng);
-    showMyLocation(lat, lng);
-    await syncAndFetch(lat, lng);
+      },
+      () => {
+        clearTimeout(hard);
+        // 실패해도 캐시로 이미 표시 중
+      },
+      { enableHighAccuracy: false, timeout: 3500, maximumAge: 120000 }
+    );
   };
 
   const syncAndFetch = async (lat, lng) => {
-    postMyLocation({ lat, lng }).catch(() => {}); // fire-and-forget
-    await fetchNearbyWithTimeout({
-      lat,
-      lng,
-      useMockFlag: useMock,
-      setPlaces,
-      renderBubbles,
-      setShowRequery,
-      maybeOpenOutModal,
-      setIsLoading,
-      setErrorMsg,
-      overlaysRef,
-      setSelectedId,
-      loadingRef,
-    });
+    try {
+      setCachedLoc(lat, lng);
+      await postMyLocation({ lat, lng });
+    } catch {}
+    await fetchNearby(lat, lng);
   };
 
   const recenterMap = (lat, lng) => {
@@ -431,6 +343,104 @@ export default function Home() {
     });
   };
 
+  const fetchNearby = async (lat, lng) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    setIsLoading(true);
+    setErrorMsg("");
+    setSelectedId(null);
+    overlaysRef.current.forEach((o) => o.overlay?.setMap(null));
+    overlaysRef.current = [];
+
+    try {
+      let rows;
+      if (useMock) {
+        rows = MOCK_PLACES;
+      } else {
+        const { data } = await getNearby(lat, lng);
+        const rowsRaw = Array.isArray(data)
+          ? data
+          : data?.data ?? data?.items ?? [];
+        rows = rowsRaw.map((r, idx) => {
+          const id =
+            r.id ?? r.kakaoId ?? r.placeId ?? r.parkingId ?? String(idx + 1);
+          const x = r.x ?? r.lon ?? r.longitude ?? r.lng;
+          const y = r.y ?? r.lat ?? r.latitude;
+          const unitMin = r.timerate ?? r.timeRate ?? null;
+          const unitPrice = r.addrate ?? r.addRate ?? null;
+          const price =
+            unitMin && unitPrice
+              ? Math.round((unitPrice * 10) / unitMin)
+              : r.price ?? 0;
+          return {
+            id,
+            kakaoId: id,
+            name: r.placeName ?? r.name ?? "주차장",
+            lat: y,
+            lng: x,
+            price,
+            address: r.addressName ?? r.address ?? "",
+            type: (r.type || r.category || "PUBLIC").toUpperCase(),
+            distanceKm:
+              r.distance != null
+                ? Number(r.distance) / 1000
+                : r.distanceMeters != null
+                ? r.distanceMeters / 1000
+                : r.distanceKm,
+            etaMin: r.etaMin ?? r.etaMinutes,
+            leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut),
+          };
+        });
+      }
+
+      // ✅ 내 주차장 합치기 (위치 없는 건 제외)
+      const mine = (myParks || [])
+        .filter(
+          (m) =>
+            m.enabled && typeof m.lat === "number" && typeof m.lng === "number"
+        )
+        .map((m) => ({
+          id: String(m.id),
+          kakaoId: String(m.id),
+          name: m.name || "내 주차장",
+          lat: m.lat,
+          lng: m.lng,
+          price: Number(m.charge || 0),
+          address: m.address || "",
+          type: "PRIVATE",
+          distanceKm: null,
+          etaMin: null,
+          leavingSoon: false,
+          _localOnly: m.origin === "local",
+        }));
+
+      // 중복 제거 (서버 우선)
+      const byId = new Map();
+      rows.forEach((r) => byId.set(String(r.id), r));
+      mine.forEach((m) => {
+        const key = String(m.id);
+        if (!byId.has(key)) byId.set(key, m);
+      });
+
+      const merged = Array.from(byId.values());
+
+      setPlaces(merged);
+      renderBubbles(merged);
+      setShowRequery(false);
+      maybeOpenOutModal(merged);
+    } catch (e) {
+      const code = e?.response?.status;
+      const msg =
+        e?.response?.data?.message ||
+        e?.message ||
+        "주변 주차장 조회에 실패했습니다.";
+      setErrorMsg(`[${code ?? "ERR"}] ${msg}`);
+    } finally {
+      setIsLoading(false);
+      loadingRef.current = false;
+    }
+  };
+
   const maybeOpenOutModal = (rows) => {
     const watched = getWatchedIds();
     const hit = rows.find((p) => watched.includes(p.id) && p.leavingSoon);
@@ -441,19 +451,50 @@ export default function Home() {
     }
   };
 
-  const refreshFromCurrentPosition = async () => {
-    const fallback = mapRef.current
-      ? {
-          lat: mapRef.current.getCenter().getLat(),
-          lng: mapRef.current.getCenter().getLng(),
-        }
-      : center;
+  const refreshFromCurrentPosition = () => {
+    const fallback = () => {
+      const c = mapRef.current?.getCenter?.()
+        ? {
+            lat: mapRef.current.getCenter().getLat(),
+            lng: mapRef.current.getCenter().getLng(),
+          }
+        : getCachedLoc() ?? center;
+      setCenter(c);
+      recenterMap(c.lat, c.lng);
+      showMyLocation(c.lat, c.lng);
+      syncAndFetch(c.lat, c.lng);
+    };
+
+    if (!navigator.geolocation) return fallback();
+
     setIsLoading(true);
-    const { lat, lng } = await getFastCoords(fallback);
-    setCenter({ lat, lng });
-    recenterMap(lat, lng);
-    showMyLocation(lat, lng);
-    await syncAndFetch(lat, lng);
+    let done = false;
+    const to = setTimeout(() => {
+      if (done) return;
+      done = true;
+      fallback();
+    }, 2500);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (done) return;
+        done = true;
+        clearTimeout(to);
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setCachedLoc(loc.lat, loc.lng);
+        setCenter(loc);
+        recenterMap(loc.lat, loc.lng);
+        showMyLocation(loc.lat, loc.lng);
+        syncAndFetch(loc.lat, loc.lng);
+      },
+      () => {
+        if (done) return;
+        done = true;
+        clearTimeout(to);
+        fallback();
+      },
+      { enableHighAccuracy: true, timeout: 2000, maximumAge: 60000 }
+    );
   };
 
   const requeryHere = () => {

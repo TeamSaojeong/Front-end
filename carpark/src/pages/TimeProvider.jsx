@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/TimeProvider.css";
-
 import backIcon from "../Assets/arrow.png";
 import closeSvg from "../Assets/close1.svg";
+import { useParkingForm } from "../store/ParkingForm";
 
 const ITEM_H = 44;
 const AMPM = ["오전", "오후"];
@@ -27,24 +27,24 @@ const makeSlot = () => ({
 
 export default function TimeProvider() {
   const navigate = useNavigate();
-  const { state, search } = useLocation() || {};
+  const { search, state } = useLocation() || {};
   const qs = new URLSearchParams(search || "");
   const placeId = state?.placeId ?? qs.get("placeId") ?? null;
-
-  const [loading] = useState(false);
-  const [error] = useState(null);
-  const [placeName] = useState(state?.placeName ?? "—");
+  const placeName = state?.placeName ?? "—";
 
   const [slots, setSlots] = useState([makeSlot()]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [picking, setPicking] = useState("start");
 
-  // 휠 refs & 타이머
+  // 전역 폼 스토어 (CompletePage에서 보기 위함)
+  const { setField } = useParkingForm();
+
+  // wheels
   const refA = useRef(null);
-  const tA = useRef(null);
   const refH = useRef(null);
-  const tH = useRef(null);
   const refM = useRef(null);
+  const tA = useRef(null);
+  const tH = useRef(null);
   const tM = useRef(null);
 
   const active = slots[activeIdx];
@@ -98,8 +98,8 @@ export default function TimeProvider() {
   };
 
   const allValid = useMemo(
-    () => slots.length > 0 && slots.every(isSlotValid) && !loading && !error,
-    [slots, loading, error]
+    () => slots.length > 0 && slots.every(isSlotValid),
+    [slots]
   );
 
   const addSlot = () => {
@@ -124,7 +124,10 @@ export default function TimeProvider() {
       start: fmt24(s.start),
       end: fmt24(s.end),
     }));
-    navigate("/paypage", {
+    // 전역 폼에 저장 → CompletePage에서 표시/서버 전송에 사용
+    setField("operateTimes", payload);
+
+    navigate("/registerpay", {
       state: { lotId: placeId ?? 0, lotName: placeName, timeRanges: payload },
     });
   };
@@ -147,7 +150,6 @@ export default function TimeProvider() {
         </div>
       </div>
 
-      {/* ✅ 고정 높이 부모에서도 스크롤 가능하도록 전용 영역 */}
       <div className="time-scroll">
         <div className="time-slots">
           {slots.map((s, idx) => {
@@ -300,7 +302,6 @@ export default function TimeProvider() {
             >
               다음
             </button>
-            {error && <div className="time-error">{error}</div>}
           </div>
         </div>
       </div>
