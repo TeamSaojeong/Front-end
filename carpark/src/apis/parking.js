@@ -26,6 +26,10 @@ export const getPublicDetailById = (parkingId) =>
 export const getPrivateDetail = (parkingId) =>
   client.get(`/api/parking/${parkingId}`);
 
+/** 개인 주차장 이미지(blob) */
+export const getPrivateImage = (parkingId) =>
+  client.get(`/api/parking/${parkingId}/image`, { responseType: "blob" });
+
 /** (유지) 혼잡도 예측 */
 export const getPredict = (parkingId, etaMinutes) =>
   client.get(`/api/parking/predict`, { params: { parkingId, etaMinutes } });
@@ -51,6 +55,6 @@ export const postSoonOut = (payload) =>
   // payload: { lat, lng, minute, provider?, externalId?, parkingId?, reservationId?, placeName, address }
   client.post(`/api/soonout`, payload);
 
-/** 🔹 주변 평균 요금 조회 (10분당 금액 등) */
+/** 주변 평균 요금 조회 (10분당 금액 등) */
 export const getAvgFee = (lat, lon) =>
   client.get("/api/parking/avg", { params: { lat, lon } });

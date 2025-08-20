@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/TimeProvider.css";
+
 import backIcon from "../Assets/arrow.png";
 import closeSvg from "../Assets/close1.svg";
-import { useParkingForm } from "../store/ParkingForm";
+import { useParkingForm } from "../store/ParkingForm"; // ✅ 추가
 
 const ITEM_H = 44;
 const AMPM = ["오전", "오후"];
@@ -27,24 +28,27 @@ const makeSlot = () => ({
 
 export default function TimeProvider() {
   const navigate = useNavigate();
-  const { search, state } = useLocation() || {};
+  const { state, search } = useLocation() || {};
   const qs = new URLSearchParams(search || "");
   const placeId = state?.placeId ?? qs.get("placeId") ?? null;
-  const placeName = state?.placeName ?? "—";
+
+  const [loading] = useState(false);
+  const [error] = useState(null);
+  const [placeName] = useState(state?.placeName ?? "—");
 
   const [slots, setSlots] = useState([makeSlot()]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [picking, setPicking] = useState("start");
 
-  // 전역 폼 스토어 (CompletePage에서 보기 위함)
-  const { setField } = useParkingForm();
+  // ✅ 등록 폼 저장소
+  const setField = useParkingForm((s) => s.setField);
 
-  // wheels
+  // 휠 refs & 타이머
   const refA = useRef(null);
-  const refH = useRef(null);
-  const refM = useRef(null);
   const tA = useRef(null);
+  const refH = useRef(null);
   const tH = useRef(null);
+  const refM = useRef(null);
   const tM = useRef(null);
 
   const active = slots[activeIdx];
@@ -98,8 +102,8 @@ export default function TimeProvider() {
   };
 
   const allValid = useMemo(
-    () => slots.length > 0 && slots.every(isSlotValid),
-    [slots]
+    () => slots.length > 0 && slots.every(isSlotValid) && !loading && !error,
+    [slots, loading, error]
   );
 
   const addSlot = () => {
@@ -124,7 +128,7 @@ export default function TimeProvider() {
       start: fmt24(s.start),
       end: fmt24(s.end),
     }));
-    // 전역 폼에 저장 → CompletePage에서 표시/서버 전송에 사용
+    // ✅ 스토어에 저장 (register 호출 시 사용)
     setField("operateTimes", payload);
 
     navigate("/registerpay", {
@@ -302,6 +306,7 @@ export default function TimeProvider() {
             >
               다음
             </button>
+            {error && <div className="time-error">{error}</div>}
           </div>
         </div>
       </div>

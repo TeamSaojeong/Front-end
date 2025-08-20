@@ -13,6 +13,7 @@ import {
   getPrivateDetail,
   getParkingStatus,
   subscribeAlert,
+  getPrivateImage,
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
 import { useMyParkings } from "../../store/MyParkings";
@@ -55,6 +56,18 @@ export default function PvPlaceDetail() {
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
 
+  // 이미지 URL 관리 (blob/objectURL 또는 로컬 url)
+  const [imageUrl, setImageUrl] = useState("");
+  useEffect(() => {
+    return () => {
+      if (imageUrl?.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(imageUrl);
+        } catch {}
+      }
+    };
+  }, [imageUrl]);
+
   const [primary, setPrimary] = useState({
     disabled: false,
     label: "주차장 이용하기",
@@ -92,6 +105,24 @@ export default function PvPlaceDetail() {
           _flags: { isLocal: false },
         };
         setDetail(normalized);
+
+        // 이미지 가져오기 (없거나 실패하면 무시)
+        try {
+          const imgRes = await getPrivateImage(normalized.id);
+          if (imgRes?.data && mounted) {
+            const url = URL.createObjectURL(imgRes.data);
+            setImageUrl((prev) => {
+              if (prev?.startsWith("blob:")) {
+                try {
+                  URL.revokeObjectURL(prev);
+                } catch {}
+              }
+              return url;
+            });
+          }
+        } catch {
+          // 이미지 없음/실패 → placeholder 유지
+        }
       } catch (e) {
         if (!mounted) return;
         setError(
@@ -105,7 +136,7 @@ export default function PvPlaceDetail() {
     function loadLocal() {
       setLoading(true);
       setError("");
-      // localItem 또는 세션으로 구성
+
       const src = localItem || fromSession || {};
       const lat = toNum(src.lat) ?? sessionLat ?? null;
       const lng = toNum(src.lng) ?? sessionLng ?? null;
@@ -126,6 +157,10 @@ export default function PvPlaceDetail() {
         _flags: { isLocal: true },
       };
       setDetail(normalized);
+
+      // 로컬 이미지 URL 있으면 표시
+      if (src.imageUrl) setImageUrl(src.imageUrl);
+
       setLoading(false);
 
       // 로컬은 항상 이용 버튼 가능
@@ -366,11 +401,29 @@ export default function PvPlaceDetail() {
       </section>
 
       <section className="pub-section">
-        <h2 className="pub-section-title">주차 장소 설명</h2>
+        <h2 className="pub-section-title">주차 장소 사진</h2>
         <div className="pub-photo-box" role="img" aria-label="주차 장소 사진">
-          <div className="pub-photo-placeholder">🖼️</div>
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt="주차 장소"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: 12,
+              }}
+            />
+          ) : (
+            <div className="pub-photo-placeholder">🖼️</div>
+          )}
         </div>
-        <pre className="pub-note">{note}</pre>
+
+        {/* 이미지 아래 설명 */}
+        <h2 className="pub-section-title" style={{ marginTop: 4 }}>
+          주차 장소 설명
+        </h2>
+        <pre className="pub-note">{note || "-"}</pre>
       </section>
 
       <div className="pub-actions">

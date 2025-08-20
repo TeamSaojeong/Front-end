@@ -13,7 +13,7 @@ import { postMyLocation } from "../apis/location";
 import { useMyParkings } from "../store/MyParkings";
 
 const SDK_SRC =
-  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
+  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
 
 const params = new URLSearchParams(window.location.search);
 const useMock =

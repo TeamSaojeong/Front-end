@@ -7,72 +7,44 @@ import rg_backspace from "../../Assets/rg-backspace.svg";
 import rg_location from "../../Assets/rg_location.svg";
 import { useParkingForm } from "../../store/ParkingForm";
 import { register } from "../../apis/register";
-import { useMyParkings } from "../../store/MyParkings";
 
-// 금액 표시
 const rg_price = (n) =>
   new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(n);
 
-export default function RegisterPayPage() {
-  const navigate = useNavigate();
-
-  const form = useParkingForm();
-  const { address, operateTimes, name, setField } = form;
-
-  const [digits, setDigits] = useState(() =>
-    String(Math.max(0, Number(form.charge || 0)))
-  );
+const RegisterPayPage = () => {
+  const [digits, setDigits] = useState("0");
+  const { address, setField } = useParkingForm();
   const amount = useMemo(() => Number(digits || "0"), [digits]);
+
+  const navigate = useNavigate();
   const isActive = amount !== 0;
 
   const push = (d) => {
     const next = digits === "0" ? d : digits + d;
-    if (next.replace(/^0+/, "").length > 7) return; // 최대 9,999,999
+    if (next.replace(/^0+/, "").length > 7) return; // 최대 7자리
     const cleaned = next.replace(/^0+(?=\d)/, "");
     setDigits(cleaned || "0");
   };
+
   const back = () => {
     const next = digits.length <= 1 ? "0" : digits.slice(0, -1);
     setDigits(next);
   };
 
-  const addMine = useMyParkings((s) => s.upsert);
-
   const handleSubmit = async () => {
     if (!isActive) return;
 
+    // ✅ 금액 저장
+    setField("charge", amount);
+
+    // ✅ 등록 호출
     try {
-      // 1) 스토어에 요금 반영
-      setField("charge", amount);
-
-      // 2) 서버 등록
       const token = localStorage.getItem("accessToken") || "";
-      const resp = await register(token);
-
-      // 3) 클라이언트 캐시에 내 주차장으로 반영(지도에 바로 뜨게)
-      const created =
-        resp?.data ??
-        resp; /* 서버 응답 스키마 차이를 흡수 (parking_id, name …) */
-
-      addMine({
-        id: String(created?.parking_id ?? created?.id ?? name),
-        origin: "server",
-        enabled: true,
-        name,
-        address: form.address,
-        charge: amount,
-        // 좌표는 없을 수 있으니 추후 홈에서 지오코딩/보간
-        lat: created?.lat ?? created?.y ?? null,
-        lng: created?.lon ?? created?.x ?? null,
-      });
-
+      await register(token);
       navigate("/complete");
     } catch (e) {
-      const msg =
-        e?.message ||
-        e?.response?.data?.message ||
-        "주차 장소 등록에 실패했습니다.";
-      alert(msg);
+      alert(`[${e.status ?? "ERR"}] ${e.message}`);
+      console.error("register failed:", e);
     }
   };
 
@@ -122,11 +94,11 @@ export default function RegisterPayPage() {
         </button>
       </div>
 
-      {/* (선택) 평균 비용 안내는 나중에 API 붙이면 채우면 됩니다 */}
+      {/* 평균 비용 풍선(원한다면 값 바인딩) */}
       <div className="rg-bubble-wrap">
         <div className="rg-bubble">
           <span className="rg-desc">주변 주차장 10분당 평균 비용은</span>
-          <span className="rg-desc-charge"></span>
+          <span className="rg-desc-charge" />
           <span className="rg-desc">원이에요!</span>
         </div>
         <div className="rg-bubble-bottom" />
@@ -144,4 +116,6 @@ export default function RegisterPayPage() {
       />
     </div>
   );
-}
+};
+
+export default RegisterPayPage;

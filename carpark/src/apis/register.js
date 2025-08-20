@@ -1,52 +1,47 @@
+// src/apis/register.js
 import { useParkingForm } from "../store/ParkingForm";
+import { client } from "./client";
 
-/**
- * 개인 주차장 등록
- * - multipart/form-data
- * - request: application/json (필드: name, zipcode, address, content, operateTimes, charge)
- * - image: File (선택 아님)
- */
 export async function register(accessToken) {
-  const { name, address, zipcode, content, operateTimes, charge, image } =
-    useParkingForm.getState();
+  const s = useParkingForm.getState();
+
+  const request = {
+    name: String(s.name || "").trim(),
+    zipcode: String(s.zipcode || "").trim(),
+    address: String(s.address || "").trim(),
+    content: String(s.content || "").trim(),
+    operateTimes: Array.isArray(s.operateTimes)
+      ? s.operateTimes.map(({ start, end }) => ({ start, end }))
+      : [],
+    charge: Number(s.charge || 0),
+  };
 
   const fd = new FormData();
-  const request = { name, address, zipcode, content, operateTimes, charge };
-
   fd.append(
     "request",
     new Blob([JSON.stringify(request)], { type: "application/json" })
   );
-  if (image) fd.append("image", image);
+  if (s.image) fd.append("image", s.image, s.image.name);
 
-  const res = await fetch("/api/parking", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body: fd,
-  });
-
-  if (res.ok) {
-    try {
-      return await res.json();
-    } catch {
-      return { status: res.status };
-    }
-  }
-
-  // --- 에러 처리 ---
-  let body = null;
-  let rawText = "";
   try {
-    body = await res.json();
-  } catch {
-    rawText = await res.text();
+    const { data } = await client.post("/api/parking", fd, {
+      headers: {
+        Authorization: accessToken
+          ? `Bearer ${accessToken}`
+          : client.defaults.headers.common.Authorization,
+        "Content-Type": "multipart/form-data",
+        Accept: "application/json, text/plain, */*",
+      },
+    });
+    return data;
+  } catch (e) {
+    const status = e?.response?.status;
+    const body = e?.response?.data;
+    const msg = body?.message || e.message || "요청이 실패했습니다.";
+    const err = new Error(msg);
+    err.status = status;
+    err.code = body?.code;
+    err.body = body;
+    throw err;
   }
-
-  const serverMsg = body?.message || rawText || "요청이 실패했습니다.";
-  const serverCode = body?.code;
-
-  const err = new Error(serverMsg);
-  err.status = res.status;
-  err.code = serverCode;
-  throw err;
 }
