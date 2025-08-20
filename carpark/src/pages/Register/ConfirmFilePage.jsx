@@ -3,17 +3,28 @@ import NextBtn from "../../components/Register/NextBtn";
 import "../../Styles/Register/ConfirmFilePage.css";
 import cf_plus from "../../Assets/cf-plus.svg";
 import folder from "../../Assets/folder.svg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useParkingForm } from "../../store/ParkingForm";
 
 const ConfirmFilePage = ({ onNext }) => {
   const [files, setFiles] = useState([]);
-  const handleUpload = (e) => {
-    const newFiles = Array.from(e.target.files);
-    setFiles((prev) => [...prev, ...newFiles]);
-  };
-
   const navigate = useNavigate();
+
+  const { image, setField } = useParkingForm();
+
+  // 돌아와도 저장했던 이미지 유지
+  useEffect(() => {
+    if (image instanceof File) setFiles([image]);
+  }, [image]);
+
+  const handleUpload = (e) => {
+    const newFiles = Array.from(e.target.files || []);
+    if (newFiles[0]) {
+      setField("image", newFiles[0]); // 스토어에 저장
+      setFiles([newFiles[0]]);        // 백엔드 스펙상 1장만 유지
+    }
+  };
 
   const handleNext = async () => {
     if (files.length > 0) {

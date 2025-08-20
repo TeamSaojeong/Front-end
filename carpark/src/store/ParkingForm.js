@@ -1,46 +1,32 @@
+// src/store/ParkingForm.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export const useParkingForm = create(
   persist(
     (set) => ({
+      // 입력값
       name: "",
-      address: "",
-      zipcode: "",
       content: "",
-      operateTimes: [], // [{ start: "HH:MM", end: "HH:MM" }]
+      address: "",       // string 또는 { roadAddress, jibunAddress, zonecode ... }
+      zipcode: "",
+      operateTimes: [],  // [{ start: "HH:MM", end: "HH:MM" }]
       charge: 0,
-      image: null,
+      image: null,       // File
 
-      setField: (key, value) => set((s) => ({ ...s, [key]: value })),
-      setImage: (file) => set(() => ({ image: file })),
-      addOperateTime: (ot) =>
-        set((s) => ({ operateTimes: [...s.operateTimes, ot] })),
-      removeOperateTime: (idx) =>
-        set((s) => ({
-          operateTimes: s.operateTimes.filter((_, i) => i !== idx),
-        })),
+      // 액션
+      setField: (key, value) => set(() => ({ [key]: value })),
       reset: () =>
         set({
           name: "",
+          content: "",
           address: "",
           zipcode: "",
-          content: "",
           operateTimes: [],
           charge: 0,
           image: null,
         }),
     }),
-    {
-      name: "parking-form",
-      partialize: (state) => ({
-        name: state.name,
-        address: state.address,
-        zipcode: state.zipcode,
-        content: state.content,
-        operateTimes: state.operateTimes,
-        charge: state.charge,
-      }),
-    }
+    { name: "parking-form" }
   )
 );

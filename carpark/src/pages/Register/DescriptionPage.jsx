@@ -1,29 +1,42 @@
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import PreviousBtn from "../../components/Register/PreviousBtn";
 import NextBtn from "../../components/Register/NextBtn";
 import Address from "../../components/Register/Address";
 import InputBox from "../../components/InputBox";
 import AddImg from "../../components/Register/AddImg";
 import { useParkingForm } from "../../store/ParkingForm";
-import { register } from "../../apis/register";
 import "../../Styles/Register/DescriptionPage.css";
+
 const DescriptionPage = () => {
   const form = useParkingForm();
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
-  const { name, address, content, image, setField, reset } = useParkingForm();
+  const { name, address, content, image, zipcode, setField } = useParkingForm();
+  const location = useLocation();
+
+  // ZipCodePage에서 돌아올 때 state 반영 (안전장치)
+  useEffect(() => {
+    const sel = location.state?.selectedAddress;
+    if (sel) {
+      setField("zipcode", sel.zonecode || sel.zipcode || "");
+      setField("address", sel);
+    }
+  }, [location.state, setField]);
 
   const hasAddress =
     typeof address === "string"
       ? !!address.trim()
       : !!address?.zip ||
         !!address?.zonecode ||
-        !!address.roa ||
+        !!address?.roa ||
         !!address?.roadAddress;
+
   const hasContent = !!content?.trim();
   const hasImage = image instanceof File || (!!image && !!image.name);
-  const isActive = hasAddress && hasContent && hasImage;
+  const hasZip = !!(zipcode || address?.zonecode);
+
+  const isActive = hasAddress && hasZip && hasContent && hasImage;
 
   const handleNext = () => {
     if (!isActive) return;
