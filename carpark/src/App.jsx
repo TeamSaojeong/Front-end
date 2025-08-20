@@ -35,8 +35,16 @@ import ReportPage from "./pages/ReportPage";
 import NFCTagPage from "./pages/Nfc/NFCTagPage";
 import PvTimeSelect from "./pages/Nfc/PvTimeSelect";
 import PubTimeSelect from "./pages/Nfc/PubTimeSelect";
+import Estate from "./pages/Nfc/estate";
+import Park from "./pages/Nfc/park";
+import Flower from "./pages/Nfc/Flower";
+import Village from "./pages/Nfc/village";
 import MapRoute from "./pages/Nfc/MapRoute";
 import PayPage from "./pages/Pay/PayPage";
+import EstatePayPage from "./pages/Pay/EstatePayPage";
+import ParkPayPage from "./pages/Pay/ParkPayPage";
+import FlowerPayPage from "./pages/Pay/FlowerPayPage";
+import VillagePayPage from "./pages/Pay/VillagePayPage";
 import PayLoading from "./pages/Pay/PayLoading";
 import PayComplete from "./pages/Pay/PayComplete";
 import ParkingPlaceManage from "./pages/ParkingPlaceManage";
@@ -93,10 +101,17 @@ function App() {
           {/* NFC/길안내/결제 */}
           <Route path="/nfc" element={<NFCTagPage />} />
           <Route path="/pv/time-select" element={<PvTimeSelect />} />
+          <Route path="/estate" element={<Estate />} />
+          <Route path="/park" element={<Park />} />
+          <Route path="/flower" element={<Flower />} />
+          <Route path="/village" element={<Village />} />
           <Route path="/pub/time-select" element={<PubTimeSelect />} />
           <Route path="/MapRoute" element={<MapRoute />} />
           <Route path="/PayPage" element={<PayPage />} />
-          <Route path="/paypage" element={<PayPage />} />
+          <Route path="/EstatePayPage" element={<EstatePayPage />} />
+          <Route path="/ParkPayPage" element={<ParkPayPage />} />
+          <Route path="/FlowerPayPage" element={<FlowerPayPage />} />
+          <Route path="/VillagePayPage" element={<VillagePayPage />} />
           <Route path="/payloading" element={<PayLoading />} />
           <Route path="/paycomplete" element={<PayComplete />} />
           {/* 설정/관리 */}

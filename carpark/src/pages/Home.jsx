@@ -102,14 +102,7 @@ export default function Home() {
   const isPrivate = (p) => String(p?.type || "").toUpperCase() === "PRIVATE";
 
   const onSelectPlace = (p) => {
-    // 로컬-only 항목은 상세 진입 제한
-    if (isPrivate(p) && p?._localOnly) {
-      alert(
-        "이 장소는 아직 서버에 등록 확인이 되지 않아 상세 페이지가 없어요."
-      );
-      return;
-    }
-
+    // ✅ 선택된 장소 세션 저장(상세에서 바로 사용)
     const payload = {
       ...p,
       kakaoId: p.kakaoId ?? p.id,
@@ -124,9 +117,17 @@ export default function Home() {
     setSelectedId(p.id);
     updateBubbleStyles(p.id);
 
+    // ✅ PRIVATE이면 PvPlaceDetail, 아니면 PlaceDetail
     setTimeout(() => {
       const path = isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`;
-      navigate(path, { state: { place: payload } });
+      navigate(path, {
+        state: {
+          place: payload,
+          // (선택) 상세에서 표기/분기용 플래그
+          localOnly: !!p._localOnly,
+          isMine: isPrivate(p),
+        },
+      });
     }, 120);
   };
 
