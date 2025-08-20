@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import PreviousBtn from "../components/Register/PreviousBtn";
 import AISearch from "../components/AISearch";
-import "../Styles/AIPredict.css"; // 파일명 대소문자 주의!
+import Keyword from "../components/Keyword";
+import "../Styles/AIPredict.css"; 
 import NextBtn from "../components/Register/NextBtn";
 import { useNavigate } from "react-router-dom";
 import TimeWheel from "../components/TimeWheel";
@@ -15,7 +16,7 @@ const AIPredict = () => {
   const navigate = useNavigate();
 
   const [time, setTime] = useState({ ampm: "오전", h12: 1, m: 0 });
-  const [address, setAddress] = useState(""); // ✅ 선택된 주소
+  const [address, setAddress] = useState(""); // 선택된 주소
 
   const label = useMemo(() => to24(time), [time]);
 
@@ -48,11 +49,13 @@ const AIPredict = () => {
 
       <div>
         <p className="ai-name">주차 장소 이름</p>
-        <AISearch
+        {/* <AISearch
           value={address}
-          onSelect={(v) => setAddress(v)} // ✅ 클릭 시 주소 확정
+          onSelect={(v) => setAddress(v)} // 클릭 시 주소 확정
           onChange={(v) => setAddress(v)} // 입력 중에도 주소 반영 원하면 유지
-        />
+        /> */}
+
+        <Keyword />
       </div>
 
       <div className="ai-time-wrap">
@@ -67,7 +70,7 @@ const AIPredict = () => {
       <NextBtn
         onClick={handleNext}
         className="ai-next"
-        isActive={isActive} // ✅ Next 활성/비활성
+        isActive={isActive} // Next 활성/비활성
       />
     </div>
   );
