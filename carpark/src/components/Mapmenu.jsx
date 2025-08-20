@@ -1,12 +1,13 @@
-// src/components/Mapmenu.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Mapmenu.css";
 import parkherelogo from "../Assets/phlogo.png";
+import { useParkingForm } from "../store/ParkingForm";
 
 export default function MapMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const resetForm = useParkingForm((s) => s.reset);
 
   return (
     <>
@@ -49,10 +50,13 @@ export default function MapMenu() {
           <div className="menu-section">
             <div className="menu-section-title">주차 장소</div>
 
-            {/* ✅ 등록 진입 */}
+            {/* ✅ 등록 진입 : 폼/세션 초기화 후 시작 */}
             <button
               className="menu-row"
               onClick={() => {
+                // 이전 등록 잔여값(특히 lat/lng, 이미지) 제거
+                resetForm();
+                sessionStorage.clear();
                 setOpen(false);
                 navigate("/confirm");
               }}

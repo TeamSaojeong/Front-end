@@ -1,3 +1,4 @@
+// src/pages/Register/RegisterPayPage.jsx
 import React, { useMemo, useState } from "react";
 import NextBtn from "../../components/Register/NextBtn";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +22,7 @@ const RegisterPayPage = () => {
 
   const push = (d) => {
     const next = digits === "0" ? d : digits + d;
-    if (next.replace(/^0+/, "").length > 7) return; // 최대 7자리
+    if (next.replace(/^0+/, "").length > 7) return;
     const cleaned = next.replace(/^0+(?=\d)/, "");
     setDigits(cleaned || "0");
   };
@@ -33,15 +34,12 @@ const RegisterPayPage = () => {
 
   const handleSubmit = async () => {
     if (!isActive) return;
-
-    // ✅ 금액 저장
     setField("charge", amount);
 
-    // ✅ 등록 호출
     try {
       const token = localStorage.getItem("accessToken") || "";
-      await register(token);
-      navigate("/complete");
+      const { parkingId } = await register(token);
+      navigate("/complete", { state: { parkingId } });
     } catch (e) {
       alert(`[${e.status ?? "ERR"}] ${e.message}`);
       console.error("register failed:", e);
@@ -75,18 +73,13 @@ const RegisterPayPage = () => {
 
       <div className="rg-paypad" role="group" aria-label="숫자 패드">
         {keypad.slice(0, 9).map((k) => (
-          <button
-            className="rg-num-key"
-            key={k}
-            onClick={() => push(k)}
-            aria-label={`${k}`}
-          >
+          <button className="rg-num-key" key={k} onClick={() => push(k)}>
             {k}
           </button>
         ))}
 
         <div className="rg-spacer" aria-hidden="true" />
-        <button className="rg-zero" onClick={() => push("0")} aria-label="0">
+        <button className="rg-zero" onClick={() => push("0")}>
           0
         </button>
         <button className="rg-backspace" onClick={back} aria-label="지우기">
@@ -94,7 +87,6 @@ const RegisterPayPage = () => {
         </button>
       </div>
 
-      {/* 평균 비용 풍선(원한다면 값 바인딩) */}
       <div className="rg-bubble-wrap">
         <div className="rg-bubble">
           <span className="rg-desc">주변 주차장 10분당 평균 비용은</span>
@@ -106,7 +98,9 @@ const RegisterPayPage = () => {
 
       <div className="rg-address-wrap">
         <img src={rg_location} alt="" />
-        <span className="rg_address">{address}</span>
+        <span className="rg_address">
+          {typeof address === "string" ? address : address?.roadAddress || ""}
+        </span>
       </div>
 
       <NextBtn

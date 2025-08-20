@@ -109,6 +109,7 @@ export default function Home() {
       lat: p.lat,
       lon: p.lng,
       lng: p.lng,
+      imageUrl: p.imageUrl || p.image || null,
     };
     try {
       sessionStorage.setItem("selectedPlace", JSON.stringify(payload));
@@ -408,6 +409,8 @@ export default function Home() {
           lng: m.lng,
           price: Number(m.charge || 0),
           address: m.address || "",
+          content: m.content || "",
+          imageUrl: m.imageUrl || null, //이미지 넣어줌
           type: "PRIVATE",
           distanceKm: null,
           etaMin: null,

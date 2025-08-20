@@ -1,4 +1,3 @@
-// src/pages/Register/DescriptionPage.jsx
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PreviousBtn from "../../components/Register/PreviousBtn";
@@ -9,29 +8,31 @@ import AddImg from "../../components/Register/AddImg";
 import { useParkingForm } from "../../store/ParkingForm";
 import "../../Styles/Register/DescriptionPage.css";
 
+/* ===== Kakao 지오코딩 ===== */
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
 
 async function ensureKakao() {
   if (window.kakao?.maps?.services) return;
   await new Promise((resolve, reject) => {
-    const s = document.getElementById("kakao-map-sdk-services");
-    if (s) {
-      s.onload = resolve;
-      s.onerror = reject;
+    const prev = document.getElementById("kakao-map-sdk-services");
+    if (prev) {
+      prev.onload = resolve;
+      prev.onerror = reject;
       return;
     }
-    const el = document.createElement("script");
-    el.src = SDK_SRC;
-    el.async = true;
-    el.id = "kakao-map-sdk-services";
-    el.onload = resolve;
-    el.onerror = reject;
-    document.head.appendChild(el);
+    const s = document.createElement("script");
+    s.src = SDK_SRC;
+    s.async = true;
+    s.id = "kakao-map-sdk-services";
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
   });
+  await new Promise((r) => window.kakao.maps.load(r));
 }
 
-async function geocodeAddress(address) {
+async function geocodeAddressToXY(address) {
   if (!address || !address.trim()) return null;
   await ensureKakao();
   const geocoder = new window.kakao.maps.services.Geocoder();
@@ -39,9 +40,7 @@ async function geocodeAddress(address) {
     geocoder.addressSearch(address, (res, status) => {
       if (status === window.kakao.maps.services.Status.OK && res?.[0]) {
         resolve({ lng: Number(res[0].x), lat: Number(res[0].y) });
-      } else {
-        resolve(null);
-      }
+      } else resolve(null);
     });
   });
 }
@@ -49,48 +48,15 @@ async function geocodeAddress(address) {
 export default function DescriptionPage() {
   const navigate = useNavigate();
   const { address, content, image, setField } = useParkingForm();
-  const [busy, setBusy] = useState(false);
+  const [errors] = useState({});
 
-  // 주소/설명/이미지 모두 있어야 다음 활성화
   const hasAddress =
     typeof address === "string"
       ? !!address.trim()
       : !!address?.roadAddress || !!address?.address;
   const hasContent = !!(content || "").trim();
   const hasImage = image instanceof File || (!!image && !!image.name);
-  const isActive = hasAddress && hasContent && hasImage && !busy;
-
-  const onAddressChange = async (addr) => {
-    // 주소 저장
-    const zip = addr?.zonecode || addr?.zip || addr?.zipcode || addr?.postCode;
-    const full = addr?.roadAddress || addr?.address || addr?.jibunAddress || "";
-    if (zip) setField("zipcode", zip);
-    setField("address", full);
-
-    // 우선 전달 좌표 그대로 저장
-    const x = Number(addr?.x ?? addr?.lng ?? addr?.lon);
-    const y = Number(addr?.y ?? addr?.lat);
-    const hasXY = Number.isFinite(x) && Number.isFinite(y);
-    if (hasXY) {
-      setField("lng", x);
-      setField("lat", y);
-      return;
-    }
-
-    // 좌표가 없으면 즉시 지오코딩으로 보완
-    if (full) {
-      try {
-        setBusy(true);
-        const geo = await geocodeAddress(full);
-        if (geo) {
-          setField("lng", geo.lng);
-          setField("lat", geo.lat);
-        }
-      } finally {
-        setBusy(false);
-      }
-    }
-  };
+  const isActive = hasAddress && hasContent && hasImage;
 
   const handleNext = () => {
     if (!isActive) return;
@@ -113,8 +79,26 @@ export default function DescriptionPage() {
       <div>
         <p className="ds-address-title">주차 장소과 가장 근접한 위치</p>
 
-        {/* ✅ 주소 선택 시 좌표까지 확보 */}
-        <Address onChange={onAddressChange} />
+        {/* ✅ 주소 변경 시마다 lat/lng 재계산 & 이전 좌표 폐기 */}
+        <Address
+          onChange={async (addr) => {
+            const zip =
+              addr?.zonecode || addr?.zip || addr?.zipcode || addr?.postCode;
+            const full =
+              addr?.roadAddress || addr?.address || addr?.jibunAddress || "";
+
+            if (zip) setField("zipcode", zip);
+            setField("address", full);
+
+            // 이전 좌표 재사용 방지
+            setField("lat", null);
+            setField("lng", null);
+
+            const xy = await geocodeAddressToXY(full);
+            setField("lat", xy?.lat ?? null);
+            setField("lng", xy?.lng ?? null);
+          }}
+        />
       </div>
 
       <div>
@@ -141,7 +125,7 @@ export default function DescriptionPage() {
         isActive={isActive}
         onClick={handleNext}
         className="ds-nextBtn"
-        label={busy ? "좌표 확인 중..." : "다음"}
+        label="다음"
       />
     </div>
   );

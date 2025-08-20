@@ -1,13 +1,13 @@
-// src/pages/Register/CompletePage.jsx
 import NextBtn from "../../components/Register/NextBtn";
 import PreviousBtn from "../../components/Register/PreviousBtn";
 import check from "../../Assets/check.svg";
 import complete_logo from "../../Assets/complete_logo.svg";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useParkingForm } from "../../store/ParkingForm";
 import { useEffect, useMemo, useRef } from "react";
 import { useMyParkings } from "../../store/MyParkings";
 import "../../Styles/Register/CompletePage.css";
+import { getPrivateDetail, getPrivateImage } from "../../apis/parking";
 
 const formatPrice = (n) =>
   new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(
@@ -17,25 +17,29 @@ const formatPrice = (n) =>
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
 
-async function ensureKakao() {
-  if (window.kakao?.maps?.services) return;
-  await new Promise((resolve, reject) => {
-    const s = document.getElementById("kakao-map-sdk-services");
-    if (s) {
-      s.onload = resolve;
-      s.onerror = reject;
+function loadScriptOnce(src, id) {
+  return new Promise((resolve, reject) => {
+    const prev = document.getElementById(id);
+    if (prev) {
+      if (window.kakao?.maps) return resolve();
+      prev.onload = resolve;
+      prev.onerror = reject;
       return;
     }
-    const el = document.createElement("script");
-    el.src = SDK_SRC;
-    el.async = true;
-    el.id = "kakao-map-sdk-services";
-    el.onload = resolve;
-    el.onerror = reject;
-    document.head.appendChild(el);
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    s.id = id;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
   });
 }
-
+async function ensureKakao() {
+  if (window.kakao?.maps?.services) return;
+  await loadScriptOnce(SDK_SRC, "kakao-map-sdk");
+  await new Promise((r) => window.kakao.maps.load(r));
+}
 async function geocodeAddress(address) {
   if (!address || !address.trim()) return null;
   await ensureKakao();
@@ -44,21 +48,32 @@ async function geocodeAddress(address) {
     geocoder.addressSearch(address, (res, status) => {
       if (status === window.kakao.maps.services.Status.OK && res?.[0]) {
         resolve({ lng: Number(res[0].x), lat: Number(res[0].y) });
-      } else {
-        resolve(null);
-      }
+      } else resolve(null);
     });
   });
 }
 
 const CompletePage = () => {
-  // ✅ lat/lng 포함
-  const { name, charge, operateTimes, address, lat, lng, setField } =
-    useParkingForm();
+  const { state } = useLocation();
+  const parkingId = state?.parkingId || null;
+
+  const {
+    name,
+    charge,
+    operateTimes,
+    address,
+    lat,
+    lng,
+    content,
+    image,
+    setField,
+    reset,
+  } = useParkingForm();
   const { upsert } = useMyParkings();
   const navigate = useNavigate();
 
-  const didCommitRef = useRef(false); // 중복 방지
+  const didCommitRef = useRef(false);
+  const createdUrlRef = useRef(null);
 
   const timesText = useMemo(
     () =>
@@ -72,47 +87,73 @@ const CompletePage = () => {
     if (didCommitRef.current) return;
 
     async function commit() {
-      const key = `committed:${name}:${formatPrice(charge)}:${timesText}`;
+      const addrKey =
+        typeof address === "string"
+          ? address
+          : address?.roadAddress || address?.address || "";
+      // ✅ 중복 방지 키를 더 안전하게
+      const key = `committed:${parkingId || "noid"}:${name}:${formatPrice(
+        charge
+      )}:${timesText}:${addrKey}`;
       if (sessionStorage.getItem(key) === "1") return;
 
-      // 좌표가 없으면 주소로 지오코딩(최종 안전망)
+      // 좌표 보정(주소로 백업 지오코딩)
       let Lng = Number(lng);
       let Lat = Number(lat);
       const hasXY =
         Number.isFinite(Lng) && Number.isFinite(Lat) && Math.abs(Lng) > 0;
 
       if (!hasXY) {
-        const fullAddr =
-          typeof address === "string"
-            ? address
-            : address?.roadAddress || address?.address || "";
-        const geo = await geocodeAddress(fullAddr);
+        const geo = await geocodeAddress(addrKey);
         if (geo) {
           Lng = geo.lng;
           Lat = geo.lat;
-          // 스토어에도 반영
           setField("lng", Lng);
           setField("lat", Lat);
         }
       }
 
+      // 서버 상세/이미지 재조회(등록 직후 데이터 보강)
+      let server = null;
+      let serverImageUrl = null;
+      try {
+        if (parkingId) {
+          const { data } = await getPrivateDetail(parkingId);
+          server = data?.data ?? data ?? null;
+          try {
+            const imgRes = await getPrivateImage(parkingId);
+            if (imgRes?.data) serverImageUrl = URL.createObjectURL(imgRes.data);
+          } catch {}
+        }
+      } catch {}
+
+      if (!serverImageUrl && image instanceof File) {
+        serverImageUrl = URL.createObjectURL(image);
+        createdUrlRef.current = serverImageUrl;
+      }
+
       const genId =
+        parkingId ||
         (typeof crypto !== "undefined" && crypto.randomUUID?.()) ||
         String(Date.now());
 
       upsert({
         id: genId,
-        name: name || "내 주차장",
+        name: server?.name ?? name ?? "내 주차장",
         enabled: true,
-        charge: Number(charge || 0),
-        operateTimes: Array.isArray(operateTimes) ? operateTimes : [],
-        address:
-          typeof address === "string" ? address : address?.roadAddress || "",
-        // ✅ 최종 좌표
-        lat: Number.isFinite(Lat) ? Lat : null,
-        lng: Number.isFinite(Lng) ? Lng : null,
+        charge: Number(server?.charge ?? charge ?? 0),
+        operateTimes: Array.isArray(server?.operateTimes)
+          ? server.operateTimes
+          : Array.isArray(operateTimes)
+          ? operateTimes
+          : [],
+        address: server?.address ?? addrKey,
+        content: String(server?.content ?? content ?? "").trim(),
+        lat: Number.isFinite(server?.lat) ? server.lat : Lat ?? null,
+        lng: Number.isFinite(server?.lng) ? server.lng : Lng ?? null,
+        imageUrl: serverImageUrl || null,
         type: "PRIVATE",
-        origin: "local",
+        origin: parkingId ? "server" : "local",
         createdAt: Date.now(),
       });
 
@@ -121,7 +162,14 @@ const CompletePage = () => {
     }
 
     commit();
-    // 의존성: 주요 필드 변경 시 재시도되지만 key로 한 번만 수행
+
+    return () => {
+      if (createdUrlRef.current?.startsWith?.("blob:")) {
+        try {
+          URL.revokeObjectURL(createdUrlRef.current);
+        } catch {}
+      }
+    };
   }, [
     name,
     charge,
@@ -131,6 +179,8 @@ const CompletePage = () => {
     lat,
     lng,
     setField,
+    parkingId,
+    image,
     upsert,
   ]);
 
@@ -174,7 +224,11 @@ const CompletePage = () => {
           <NextBtn
             label="홈으로 가기"
             isActive
-            onClick={() => navigate("/home")}
+            onClick={() => {
+              // 다음 등록을 위해 폼을 한번 더 초기화
+              reset();
+              navigate("/home");
+            }}
           />
         </div>
       </div>

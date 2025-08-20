@@ -26,7 +26,6 @@ export default function PvPlaceDetail() {
   const location = useLocation();
   const myParks = useMyParkings((s) => s.items);
 
-  // 세션에 저장해둔 선택 정보
   const fromSession = useMemo(() => {
     try {
       const raw = sessionStorage.getItem("selectedPlace");
@@ -36,7 +35,6 @@ export default function PvPlaceDetail() {
     }
   }, []);
 
-  // 로컬 여부 판단 (state → session → 내 저장소)
   const isLocal =
     !!location.state?.place?.isLocal ||
     !!fromSession?.isLocal ||
@@ -44,7 +42,6 @@ export default function PvPlaceDetail() {
       (p) => String(p.id) === String(placeId) && p.origin === "local"
     );
 
-  // 로컬 데이터 찾기
   const localItem = isLocal
     ? myParks.find((p) => String(p.id) === String(placeId))
     : null;
@@ -56,7 +53,6 @@ export default function PvPlaceDetail() {
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
 
-  // 이미지 URL 관리 (blob/objectURL 또는 로컬 url)
   const [imageUrl, setImageUrl] = useState("");
   useEffect(() => {
     return () => {
@@ -74,7 +70,6 @@ export default function PvPlaceDetail() {
     onClick: () => {},
   });
 
-  // 상세 로딩
   useEffect(() => {
     let mounted = true;
 
@@ -99,14 +94,20 @@ export default function PvPlaceDetail() {
           availableTimes: Array.isArray(d.operateTimes)
             ? d.operateTimes.map((t) => `${t.start} ~ ${t.end}`).join("  |  ")
             : fromSession?.availableTimes ?? "00:00 ~ 00:00",
-          note: d.content ?? fromSession?.note ?? "",
+          note:
+            d.content ??
+            d.description ??
+            d.desc ??
+            fromSession?.content ??
+            fromSession?.note ??
+            "",
           lat,
           lng,
           _flags: { isLocal: false },
         };
         setDetail(normalized);
 
-        // 이미지 가져오기 (없거나 실패하면 무시)
+        // 서버 이미지
         try {
           const imgRes = await getPrivateImage(normalized.id);
           if (imgRes?.data && mounted) {
@@ -120,9 +121,7 @@ export default function PvPlaceDetail() {
               return url;
             });
           }
-        } catch {
-          // 이미지 없음/실패 → placeholder 유지
-        }
+        } catch {}
       } catch (e) {
         if (!mounted) return;
         setError(
@@ -151,19 +150,24 @@ export default function PvPlaceDetail() {
         availableTimes: Array.isArray(src.operateTimes)
           ? src.operateTimes.map((t) => `${t.start} ~ ${t.end}`).join("  |  ")
           : fromSession?.availableTimes ?? "00:00 ~ 00:00",
-        note: src.content ?? "",
+        note:
+          src.content ??
+          src.description ??
+          src.desc ??
+          fromSession?.content ??
+          fromSession?.note ??
+          "",
         lat,
         lng,
         _flags: { isLocal: true },
       };
       setDetail(normalized);
 
-      // 로컬 이미지 URL 있으면 표시
+      // 로컬/세션 이미지
       if (src.imageUrl) setImageUrl(src.imageUrl);
 
       setLoading(false);
 
-      // 로컬은 항상 이용 버튼 가능
       setPrimary({
         disabled: false,
         label: "주차장 이용하기",
@@ -183,13 +187,10 @@ export default function PvPlaceDetail() {
     return () => {
       mounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [placeId, isLocal]);
+  }, [placeId, isLocal]); // eslint-disable-line
 
-  // 원격(status)만 폴링
   useEffect(() => {
     if (!placeId || isLocal) return;
-
     let mounted = true;
 
     async function pullStatus() {
@@ -213,7 +214,7 @@ export default function PvPlaceDetail() {
     }
 
     pullStatus();
-    const timer = setInterval(pullStatus, 10_000);
+    const timer = setInterval(pullStatus, 10000);
     return () => {
       mounted = false;
       clearInterval(timer);
@@ -322,7 +323,6 @@ export default function PvPlaceDetail() {
           ✕
         </button>
 
-        {/* 로컬은 알림/신고 비활성(원한다면 숨김) */}
         {!isLocal && (
           <>
             <button
@@ -387,7 +387,6 @@ export default function PvPlaceDetail() {
           <button
             className="pub-copy-btn"
             onClick={copyAddress}
-            aria-label="주소 복사"
             title="주소 복사"
           >
             <img src={copyIcon} alt="복사" />
@@ -419,7 +418,6 @@ export default function PvPlaceDetail() {
           )}
         </div>
 
-        {/* 이미지 아래 설명 */}
         <h2 className="pub-section-title" style={{ marginTop: 4 }}>
           주차 장소 설명
         </h2>
