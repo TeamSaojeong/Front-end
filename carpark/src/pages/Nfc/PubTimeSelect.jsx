@@ -1,3 +1,4 @@
+// src/pages/Nfc/PubTimeSelect.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../../Styles/Nfc/PubTimeSelect.css";
@@ -7,18 +8,31 @@ import clockIcon from "../../Assets/clock.svg";
 
 const ITEM_H = 44; // CSS의 .pub-item 높이와 반드시 동일
 
+const readSelectedPlace = () => {
+  try {
+    const raw = sessionStorage.getItem("selectedPlace");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 export default function PubTimeSelect() {
   const navigate = useNavigate();
   const { state, search } = useLocation() || {};
   const qs = new URLSearchParams(search || "");
+  const placeFromSession = readSelectedPlace();
 
   // Home/상세/NFC에서 전달되는 placeId (없으면 null)
-  const placeId = state?.placeId ?? qs.get("placeId") ?? null;
+  const placeId =
+    state?.placeId ?? qs.get("placeId") ?? placeFromSession?.id ?? null;
 
   // ------- (공영/민영) 백엔드에서 받아올 값들 -------
   const [loading, setLoading] = useState(!state?.prefetched);
   const [error, setError] = useState(null);
-  const [placeName, setPlaceName] = useState(state?.placeName ?? "—");
+  const [placeName, setPlaceName] = useState(
+    state?.placeName ?? placeFromSession?.name ?? "—"
+  );
   const [openRangesText, setOpenRangesText] = useState(
     state?.openRangesText ?? "—"
   );
@@ -34,17 +48,12 @@ export default function PubTimeSelect() {
         setLoading(true);
         setError(null);
 
-        // TODO: 실제 API로 교체
-        // const res = await fetch(`/api/public-places/${placeId}`);
-        // const data = await res.json();
-
-        // ----- mock (삭제 가능) -----
+        // TODO: 실제 API(getPublicDetail)로 교체
         await new Promise((r) => setTimeout(r, 200));
         const data = {
-          placeName: "르메르시 DDP 앞 주차장",
+          placeName: placeFromSession?.name ?? "주차장",
           openRangesText: "00:00 ~ 00:00",
         };
-        // ---------------------------
 
         if (aborted) return;
         setPlaceName(data.placeName);
@@ -59,7 +68,7 @@ export default function PubTimeSelect() {
     return () => {
       aborted = true;
     };
-  }, [placeId, state?.prefetched]);
+  }, [placeId, state?.prefetched, placeFromSession]);
 
   // ===== 시간/분 (10분 단위) =====
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -87,10 +96,13 @@ export default function PubTimeSelect() {
     const wh = wheelHRef.current;
     const wm = wheelMRef.current;
     if (wh) wh.scrollTop = h * ITEM_H;
-    if (wm)
-      wm.scrollTop =
-        (minutes.indexOf(m) >= 0 ? minutes.indexOf(m) : 0) * ITEM_H;
-  }, []); // mount only
+    if (wm) {
+      const idx = Math.max(0, minutes.indexOf(m));
+      wm.scrollTop = idx * ITEM_H;
+    }
+    // mount only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const snapToIndex = (el, idx) => {
     if (!el) return;
@@ -119,22 +131,31 @@ export default function PubTimeSelect() {
     }
   };
 
-  // 시작(결제/입차) — 현재는 PayPage로 연결 (데모 플래그)
-  const handleStart = () => {
-    if (isDisabled) return;
+  // 시작(결제/입차) — 현재는 OutSoon으로 연결
+  const [submitting, setSubmitting] = useState(false);
+  const handleStart = async () => {
+    if (isDisabled || submitting) return;
 
-    const now = new Date();
-    const end = new Date(now.getTime() + totalMinutes * 60000);
+    setSubmitting(true);
+    try {
+      const now = new Date();
+      const end = new Date(now.getTime() + totalMinutes * 60000);
 
-    navigate("/PayPage", {
-      state: {
-        demo: true, // PayPage에서 API 생략
-        lotId: placeId ?? 0,
-        startAt: now.toISOString(),
-        endAt: end.toISOString(),
-        lotName: placeName,
-      },
-    });
+      navigate("/outsoon", {
+        state: {
+          inUseByOther: true, // 2번째 스샷처럼 ‘이용중…’ 화면
+          placeId: placeId ?? null,
+          placeName,
+          address: state?.address ?? placeFromSession?.address ?? "",
+          provider: "kakao",
+          externalId: placeId,
+          startAt: now.toISOString(),
+          endAt: end.toISOString(),
+        },
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -175,7 +196,7 @@ export default function PubTimeSelect() {
         </div>
       </div>
 
-      {/* 휠 (두 줄 가이드, 2e80ec) */}
+      {/* 휠 (가이드 라인 포함) */}
       <div className="pub-wheel-wrap">
         <div
           className="pub-wheel"
@@ -217,11 +238,11 @@ export default function PubTimeSelect() {
       {/* 하단 버튼 */}
       <div className="pub-bottom">
         <button
-          className={`pub-pay ${isDisabled ? "disabled" : ""}`}
+          className={`pub-pay ${isDisabled || submitting ? "disabled" : ""}`}
           onClick={handleStart}
-          disabled={isDisabled}
+          disabled={isDisabled || submitting}
         >
-          주차장 이용 시작
+          {submitting ? "이동 중..." : "주차장 이용 시작"}
         </button>
         {error && <div className="pub-error">{error}</div>}
       </div>

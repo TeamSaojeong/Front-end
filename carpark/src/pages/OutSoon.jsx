@@ -1,3 +1,4 @@
+// src/pages/OutSoon.jsx
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/OutSoon.css";
@@ -5,9 +6,10 @@ import "../Styles/OutSoon.css";
 import car_icon from "../Assets/car.png";
 import clock_icon from "../Assets/clock.svg";
 import info_icon from "../Assets/info.svg";
+import { postSoonOut } from "../apis/parking";
 
-const ITEM_H = 44; // 휠 아이템 높이 (CSS와 동일)
-const TOL_MIN = 0.5; // 10/5분 근처 허용 오차(±30초)
+const ITEM_H = 44;
+const TOL_MIN = 0.5;
 
 const pad2 = (n) => String(n).padStart(2, "0");
 const formatHHMM = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
@@ -21,19 +23,47 @@ const formatDiff = (start, end) => {
   return `${mm}분`;
 };
 
+// ===== helpers =====
+const readSelectedPlace = () => {
+  try {
+    const raw = sessionStorage.getItem("selectedPlace");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+const getCachedLoc = () => {
+  try {
+    const raw = localStorage.getItem("lastKnownLoc");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+const setCachedLoc = (lat, lng) => {
+  try {
+    localStorage.setItem(
+      "lastKnownLoc",
+      JSON.stringify({ lat, lng, ts: Date.now() })
+    );
+  } catch {}
+};
+
 export default function OutSoon() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  const placeName = state?.placeName ?? "주차장";
-  const placeId = state?.placeId ?? placeName;
+  const selectedPlace = useMemo(readSelectedPlace, []);
+  const placeName = state?.placeName ?? selectedPlace?.name ?? "주차장";
+  const placeId = state?.placeId ?? selectedPlace?.id ?? placeName;
+  const address = state?.address ?? selectedPlace?.address ?? "";
+  const provider = "kakao";
 
-  // ✅ “다른 사용자가 이미 이용 중인지” 여부 (기본 false)
   const inUseByOther = !!state?.inUseByOther;
 
   const now0 = useMemo(() => new Date(), []);
 
-  // 데모 기본값: 시작=30분 전, 종료=현재+11분 (10분 전 테스트 용이)
+  // 데모 기본값: 시작=30분 전, 종료=현재+11분
   const [startAt] = useState(() =>
     state?.startAt
       ? new Date(state.startAt)
@@ -45,7 +75,6 @@ export default function OutSoon() {
       : new Date(now0.getTime() + 11 * 60 * 1000)
   );
 
-  // 남은 시간 갱신
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -53,12 +82,10 @@ export default function OutSoon() {
   }, []);
   const minsLeft = Math.max(0, (endAt.getTime() - now) / 60000);
 
-  // 10분/5분 근처에서만 버튼 활성
   const near10 = Math.abs(minsLeft - 10) <= TOL_MIN;
   const near5 = Math.abs(minsLeft - 5) <= TOL_MIN;
   const canPressOutSoon = inUseByOther && (near10 || near5);
 
-  // ‘이번 세션’ 기준 눌렀는지 저장
   const pressedKey = useMemo(
     () => `outsoon-pressed-${placeId}-${startAt.getTime()}`,
     [placeId, startAt]
@@ -78,7 +105,7 @@ export default function OutSoon() {
 
   const bubbleMinuteLabel = near5 ? "5분" : "10분";
 
-  // ===== 연장하기(휠 타임피커) =====
+  // ===== 연장 바텀시트 =====
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
   const minutes = useMemo(() => [0, 10, 20, 30, 40, 50], []);
   const [open, setOpen] = useState(false);
@@ -138,16 +165,100 @@ export default function OutSoon() {
     setExtM(0);
   };
 
-  const onPressOutSoon = () => {
+  // ===== 위치 얻기 (타임아웃/캐시/장소좌표 폴백) =====
+  const fallbackFromPlace = selectedPlace
+    ? { lat: selectedPlace.lat, lng: selectedPlace.lng }
+    : null;
+
+  const getCoords = () =>
+    new Promise((resolve, reject) => {
+      const cached = getCachedLoc() || fallbackFromPlace;
+
+      if (!navigator.geolocation) {
+        return cached
+          ? resolve({ ...cached, _source: "fallback:no-geo" })
+          : reject(new Error("geolocation unsupported"));
+      }
+
+      const hardTimeout = setTimeout(() => {
+        if (cached) return resolve({ ...cached, _source: "fallback:timeout" });
+        reject(Object.assign(new Error("geo timeout"), { code: 3 }));
+      }, 8000);
+
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          clearTimeout(hardTimeout);
+          const coords = { lat: p.coords.latitude, lng: p.coords.longitude };
+          setCachedLoc(coords.lat, coords.lng);
+          resolve({ ...coords, _source: "gps" });
+        },
+        (err) => {
+          clearTimeout(hardTimeout);
+          if (cached)
+            return resolve({
+              ...cached,
+              _source: `fallback:error:${err?.code}`,
+            });
+          reject(err);
+        },
+        { enableHighAccuracy: false, timeout: 7000, maximumAge: 60_000 }
+      );
+    });
+
+  // ===== 곧 나감 전송 =====
+  const onPressOutSoon = async () => {
     if (!canPressOutSoon) return;
+
     setPressedOutSoon(true);
     try {
       sessionStorage.setItem(pressedKey, "1");
     } catch {}
-    navigate("/outsoon_cancel", { state: { openModal: true } });
+
+    try {
+      const { lat, lng } = await getCoords();
+      const minute = near5 ? 5 : 10;
+
+      const payload = {
+        lat,
+        lng,
+        minute,
+        provider,
+        externalId: placeId, // kakao id
+        placeName,
+        address,
+      };
+
+      await postSoonOut(payload);
+
+      // ✅ cancel 화면/자동 종료를 위해 시간 & 장소를 함께 전달 + 세션에도 저장
+      const startISO = startAt.toISOString();
+      const endISO = endAt.toISOString();
+      try {
+        sessionStorage.setItem(
+          "parkingSession",
+          JSON.stringify({ placeName, startAt: startISO, endAt: endISO })
+        );
+      } catch {}
+
+      navigate("/outsoon_cancel", {
+        state: {
+          openModal: true,
+          placeName,
+          startAt: startISO,
+          endAt: endISO,
+        },
+      });
+    } catch (e) {
+      console.error("[soonout] failed", e);
+      alert("‘곧 나감’ 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      setPressedOutSoon(false);
+      try {
+        sessionStorage.removeItem(pressedKey);
+      } catch {}
+    }
   };
 
-  // 사용 중이 아니라면 CTA만 보여주기
+  // 사용 중이 아니라면 CTA만
   if (!inUseByOther) {
     return (
       <div className="outsoon-container">
@@ -155,7 +266,6 @@ export default function OutSoon() {
           <div className="outsoon-text">
             {placeName}
             <br />
-            {/* 이용중 문구 제거 */}
           </div>
         </div>
 
@@ -185,7 +295,7 @@ export default function OutSoon() {
     );
   }
 
-  // ===== 여기부터는 '다른 사용자가 이용 중'일 때만 노출 =====
+  // ===== '다른 사용자가 이용 중' 화면 =====
   return (
     <div className="outsoon-container">
       <div className="outsoon-header">

@@ -1,4 +1,3 @@
-// src/pages/Place/PlaceDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../../Styles/Place/PlaceDetail.css";
@@ -16,6 +15,8 @@ import {
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
 
+const toNum = (v) => (v == null || v === "" ? null : Number(v));
+
 export default function PlaceDetail() {
   const navigate = useNavigate();
   const { placeId: placeIdFromParam } = useParams();
@@ -29,16 +30,15 @@ export default function PlaceDetail() {
     }
   }, []);
 
-  // kakaoId / 좌표가 세션에 있어야 상세 가능(백엔드 스펙)
+  // ✅ kakaoId(=kakaold) & 좌표(fallback용)
   const kakaoId = placeFromSession?.id ?? placeIdFromParam ?? null;
-  const lat = placeFromSession?.lat ?? null;
-  const lon = placeFromSession?.lng ?? null;
+  const sessionLat = toNum(placeFromSession?.lat);
+  const sessionLng = toNum(placeFromSession?.lng);
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
 
-  const [isAvailable, setIsAvailable] = useState(true);
   const [primary, setPrimary] = useState({
     disabled: false,
     label: "주차장 이용하기",
@@ -49,19 +49,35 @@ export default function PlaceDetail() {
     let mounted = true;
 
     async function load() {
-      // 좌표/카카오ID 없으면 상세 불가
-      if (!kakaoId || lat == null || lon == null) {
-        setError("좌표 정보가 없어 상세를 불러올 수 없습니다.");
+      if (!kakaoId) {
+        setError("장소 식별자가 없어 상세를 불러올 수 없습니다.");
         setLoading(false);
         return;
       }
       setLoading(true);
       setError("");
       try {
-        const { data } = await getPublicDetail(kakaoId, lat, lon);
+        // 서버에는 세션 좌표라도 넣어서 질의
+        const { data } = await getPublicDetail(
+          kakaoId,
+          sessionLat ?? 0,
+          sessionLng ?? 0
+        );
         if (!mounted) return;
 
-        const d = data?.data ?? data; // 백엔드 응답 래핑 대응
+        // { status, data: { subscribed, soonOutExists, parking: {...} } }
+        const payload = data?.data ?? data;
+        const flags = {
+          subscribed: payload?.subscribed ?? false,
+          soonOutExists: payload?.soonOutExists ?? false,
+        };
+        const d = payload?.parking ?? payload;
+
+        // 좌표: 모든 키 커버 + 숫자 변환 + 세션 fallback
+        const lat = toNum(d?.y ?? d?.lat ?? d?.latitude) ?? sessionLat ?? null;
+        const lng =
+          toNum(d?.x ?? d?.lon ?? d?.lng ?? d?.longitude) ?? sessionLng ?? null;
+
         const normalized = {
           id: d.id ?? d.parkingId ?? kakaoId,
           name: d.placeName ?? d.name ?? placeFromSession?.name ?? "주차 장소",
@@ -82,9 +98,11 @@ export default function PlaceDetail() {
             placeFromSession?.available ??
             "00:00 ~ 00:00  |  00:00 ~ 00:00",
           note: d.note ?? placeFromSession?.note ?? "",
-          lat: d.y ?? d.lat ?? d.latitude ?? lat,
-          lng: d.x ?? d.lon ?? d.lng ?? d.longitude ?? lon,
+          lat,
+          lng,
+          _flags: flags,
         };
+
         setDetail(normalized);
       } catch (e) {
         if (!mounted) return;
@@ -101,14 +119,12 @@ export default function PlaceDetail() {
       try {
         const { data } = await getParkingStatus(kakaoId);
         const ui = mapStatusToUI(data?.data);
-        setIsAvailable(ui.isAvailable);
         setPrimary({
           disabled: !ui.isAvailable,
           label: ui.isAvailable ? "주차장 이용하기" : "이용 중...",
           onClick: ui.isAvailable ? startUse : undefined,
         });
       } catch {
-        // 상태 실패 시 버튼은 기본값(이용하기) 유지
         setPrimary({
           disabled: false,
           label: "주차장 이용하기",
@@ -125,7 +141,7 @@ export default function PlaceDetail() {
       clearInterval(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kakaoId, lat, lon]);
+  }, [kakaoId]);
 
   const goBack = () => navigate(-1);
 
@@ -140,20 +156,38 @@ export default function PlaceDetail() {
     }
   };
 
-  // 공영: NFC 플로우로 진입
+  // ✅ 최종 좌표 검증 + 시간선택 화면으로 이동 (쿼리에도 placeId 넣기)
   const startUse = () => {
-    if (!detail?.lat || !detail?.lng) {
+    const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
+    const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
+
+    if (
+      targetLat == null ||
+      Number.isNaN(targetLat) ||
+      targetLng == null ||
+      Number.isNaN(targetLng)
+    ) {
       alert("목적지 좌표가 없어 진행할 수 없습니다.");
       return;
     }
-    navigate("/nfc", {
-      state: {
-        dest: { lat: detail.lat, lng: detail.lng },
-        name: detail.name,
-        address: detail.address,
-        parkingId: kakaoId,
+
+    navigate(
+      {
+        pathname: "/pub/time-select",
+        search: `?placeId=${encodeURIComponent(kakaoId ?? "")}`,
       },
-    });
+      {
+        state: {
+          prefetched: true,
+          placeId: kakaoId,
+          placeName: detail?.name,
+          address: detail?.address,
+          openRangesText: detail?.availableTimes,
+          // ▼ 경로 안내 화면에서 다시 상세로 돌아올 때 사용할 메타
+          isPrivate: false, // 공영이면 false
+        },
+      }
+    );
   };
 
   if (loading) {
@@ -297,15 +331,24 @@ export default function PlaceDetail() {
         <button
           className="pub-btn pub-btn-outline"
           onClick={() => {
-            if (!detail?.lat || !detail?.lng) {
+            const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
+            const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
+            if (
+              targetLat == null ||
+              Number.isNaN(targetLat) ||
+              targetLng == null ||
+              Number.isNaN(targetLng)
+            ) {
               alert("목적지 좌표가 없어 경로를 열 수 없습니다.");
               return;
             }
             navigate("/MapRoute", {
               state: {
-                dest: { lat: detail.lat, lng: detail.lng },
+                dest: { lat: targetLat, lng: targetLng },
                 name: detail.name,
                 address: detail.address,
+                placeId: kakaoId,
+                isPrivate: false, // 공영
               },
             });
           }}

@@ -1,12 +1,13 @@
 // src/apis/parking.js
 import { client } from "./client";
 
-/** 주변 주차장 검색 : Query => lat, lon */
-export const getNearby = (lat, lng) => {
+/** 주변 주차장 검색 : Query => lat, lon (+ axios abort signal 지원) */
+export const getNearby = (lat, lng, config = {}) => {
   const _lat = typeof lat === "number" ? lat : Number(lat);
   const _lon = typeof lng === "number" ? lng : Number(lng);
   return client.get("/api/parking/nearby", {
     params: { lat: _lat, lon: _lon },
+    signal: config.signal, // ← AbortController로 타임아웃 취소 지원
   });
 };
 

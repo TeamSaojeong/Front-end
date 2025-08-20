@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import BottomSheet from "../components/BottomSheet";
 import "../Styles/app-frame.css";
 import Mapmenu from "../components/Mapmenu";
@@ -46,6 +46,133 @@ function getWatchedIds() {
   return ["1021815417"];
 }
 
+// 좌표 캐시 유틸
+const getCachedLoc = () => {
+  try {
+    const raw = localStorage.getItem("lastKnownLoc");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+const setCachedLoc = (lat, lng) => {
+  try {
+    localStorage.setItem(
+      "lastKnownLoc",
+      JSON.stringify({ lat, lng, ts: Date.now() })
+    );
+  } catch {}
+};
+
+// 1) 빠른 좌표 폴백: 1.5초 내 미수신 시 캐시/지도중심 사용
+const getFastCoords = (fallback) =>
+  new Promise((resolve) => {
+    const cached = getCachedLoc();
+    const timer = setTimeout(() => resolve(cached || fallback), 1500);
+    if (!navigator.geolocation) return; // 타이머가 해결
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        clearTimeout(timer);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setCachedLoc(lat, lng);
+        resolve({ lat, lng });
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(cached || fallback);
+      },
+      { enableHighAccuracy: false, timeout: 3000, maximumAge: 60_000 }
+    );
+  });
+
+// 2) nearby 5초 타임아웃 + AbortController
+async function fetchNearbyWithTimeout({
+  lat,
+  lng,
+  useMockFlag,
+  setPlaces,
+  renderBubbles,
+  setShowRequery,
+  maybeOpenOutModal,
+  setIsLoading,
+  setErrorMsg,
+  overlaysRef,
+  setSelectedId,
+  loadingRef,
+}) {
+  if (loadingRef.current) return;
+  loadingRef.current = true;
+  setIsLoading(true);
+  setErrorMsg("");
+  setSelectedId(null);
+  overlaysRef.current.forEach((o) => o.overlay?.setMap(null));
+  overlaysRef.current = [];
+
+  const ctrl = new AbortController();
+  const timeoutId = setTimeout(() => ctrl.abort("timeout"), 5000);
+
+  try {
+    let rows;
+    if (useMockFlag) {
+      rows = MOCK_PLACES;
+    } else {
+      const { data } = await getNearby(lat, lng, { signal: ctrl.signal });
+      const rowsRaw = Array.isArray(data)
+        ? data
+        : data?.data ?? data?.items ?? [];
+      rows = rowsRaw.map((r, idx) => {
+        const id =
+          r.id ?? r.kakaoId ?? r.placeId ?? r.parkingId ?? String(idx + 1);
+        const x = r.x ?? r.lon ?? r.longitude ?? r.lng;
+        const y = r.y ?? r.lat ?? r.latitude;
+        const unitMin = r.timerate ?? r.timeRate ?? null;
+        const unitPrice = r.addrate ?? r.addRate ?? null;
+        const price =
+          unitMin && unitPrice
+            ? Math.round((unitPrice * 10) / unitMin)
+            : r.price ?? 0;
+        return {
+          id,
+          kakaoId: id, // ✅ 상세 요청용
+          name: r.placeName ?? r.name ?? "주차장",
+          lat: y,
+          lng: x,
+          price,
+          address: r.addressName ?? r.address ?? "",
+          type: (r.type || r.category || "PUBLIC").toUpperCase(),
+          distanceKm:
+            r.distance != null
+              ? Number(r.distance) / 1000
+              : r.distanceMeters != null
+              ? r.distanceMeters / 1000
+              : r.distanceKm,
+          etaMin: r.etaMin ?? r.etaMinutes,
+          leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut),
+        };
+      });
+    }
+
+    setPlaces(rows);
+    renderBubbles(rows);
+    setShowRequery(false);
+    maybeOpenOutModal(rows);
+  } catch (e) {
+    const msg =
+      e?.message === "timeout" || e?.name === "CanceledError"
+        ? "추천 서버 응답이 느려요. 잠시 후 다시 시도해 주세요."
+        : e?.response?.data?.message ||
+          e?.message ||
+          "주변 주차장 조회에 실패했습니다.";
+    setErrorMsg(msg);
+  } finally {
+    clearTimeout(timeoutId);
+    setIsLoading(false);
+    loadingRef.current = false;
+  }
+}
+
 export default function Home() {
   const wrapRef = useRef(null);
   const mapEl = useRef(null);
@@ -72,6 +199,8 @@ export default function Home() {
   const [modalMinutes, setModalMinutes] = useState(5);
 
   const navigate = useNavigate();
+  const { state: navState } = useLocation();
+
   const isPrivate = (p) => String(p?.type || "").toUpperCase() === "PRIVATE";
 
   const onSelectPlace = (p) => {
@@ -141,30 +270,55 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const detectAndLoad = () => {
-    if (!navigator.geolocation) {
-      syncAndFetch(center.lat, center.lng);
-      return;
+  // 다른 화면에서 복귀 시 자동 재탐지
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        refreshFromCurrentPosition();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
+  // MapRoute 등에서 { state:{ recenter:true } }로 돌아오면 즉시 재조회
+  useEffect(() => {
+    if (navState?.recenter) {
+      refreshFromCurrentPosition();
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setCenter({ lat, lng });
-        recenterMap(lat, lng);
-        showMyLocation(lat, lng);
-        syncAndFetch(lat, lng);
-      },
-      () => syncAndFetch(center.lat, center.lng),
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
-    );
+  }, [navState?.recenter]);
+
+  const detectAndLoad = async () => {
+    const fallback = mapRef.current
+      ? {
+          lat: mapRef.current.getCenter().getLat(),
+          lng: mapRef.current.getCenter().getLng(),
+        }
+      : center;
+    setIsLoading(true);
+    const { lat, lng } = await getFastCoords(fallback);
+    setCenter({ lat, lng });
+    recenterMap(lat, lng);
+    showMyLocation(lat, lng);
+    await syncAndFetch(lat, lng);
   };
 
   const syncAndFetch = async (lat, lng) => {
-    try {
-      await postMyLocation({ lat, lng });
-    } catch {}
-    await fetchNearby(lat, lng);
+    postMyLocation({ lat, lng }).catch(() => {}); // fire-and-forget
+    await fetchNearbyWithTimeout({
+      lat,
+      lng,
+      useMockFlag: useMock,
+      setPlaces,
+      renderBubbles,
+      setShowRequery,
+      maybeOpenOutModal,
+      setIsLoading,
+      setErrorMsg,
+      overlaysRef,
+      setSelectedId,
+      loadingRef,
+    });
   };
 
   const recenterMap = (lat, lng) => {
@@ -277,73 +431,6 @@ export default function Home() {
     });
   };
 
-  const fetchNearby = async (lat, lng) => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
-    setIsLoading(true);
-    setErrorMsg("");
-    setSelectedId(null);
-    overlaysRef.current.forEach((o) => o.overlay?.setMap(null));
-    overlaysRef.current = [];
-
-    try {
-      let rows;
-      if (useMock) {
-        rows = MOCK_PLACES;
-      } else {
-        const { data } = await getNearby(lat, lng);
-        const rowsRaw = Array.isArray(data)
-          ? data
-          : data?.data ?? data?.items ?? [];
-        rows = rowsRaw.map((r, idx) => {
-          const id =
-            r.id ?? r.kakaoId ?? r.placeId ?? r.parkingId ?? String(idx + 1);
-          const x = r.x ?? r.lon ?? r.longitude ?? r.lng;
-          const y = r.y ?? r.lat ?? r.latitude;
-          const unitMin = r.timerate ?? r.timeRate ?? null;
-          const unitPrice = r.addrate ?? r.addRate ?? null;
-          const price =
-            unitMin && unitPrice
-              ? Math.round((unitPrice * 10) / unitMin)
-              : r.price ?? 0;
-          return {
-            id,
-            kakaoId: id, // ✅ 상세 요청용
-            name: r.placeName ?? r.name ?? "주차장",
-            lat: y,
-            lng: x,
-            price,
-            address: r.addressName ?? r.address ?? "",
-            type: (r.type || r.category || "PUBLIC").toUpperCase(),
-            distanceKm:
-              r.distance != null
-                ? Number(r.distance) / 1000
-                : r.distanceMeters != null
-                ? r.distanceMeters / 1000
-                : r.distanceKm,
-            etaMin: r.etaMin ?? r.etaMinutes,
-            leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut),
-          };
-        });
-      }
-
-      setPlaces(rows);
-      renderBubbles(rows);
-      setShowRequery(false);
-      maybeOpenOutModal(rows);
-    } catch (e) {
-      const code = e?.response?.status;
-      const msg =
-        e?.response?.data?.message ||
-        e?.message ||
-        "주변 주차장 조회에 실패했습니다.";
-      setErrorMsg(`[${code ?? "ERR"}] ${msg}`);
-    } finally {
-      setIsLoading(false);
-      loadingRef.current = false;
-    }
-  };
-
   const maybeOpenOutModal = (rows) => {
     const watched = getWatchedIds();
     const hit = rows.find((p) => watched.includes(p.id) && p.leavingSoon);
@@ -354,35 +441,19 @@ export default function Home() {
     }
   };
 
-  const refreshFromCurrentPosition = () => {
-    if (!navigator.geolocation) {
-      if (mapRef.current) {
-        const c = mapRef.current.getCenter();
-        syncAndFetch(c.getLat(), c.getLng());
-      } else {
-        syncAndFetch(center.lat, center.lng);
-      }
-      return;
-    }
-    setIsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setCenter({ lat, lng });
-        recenterMap(lat, lng);
-        showMyLocation(lat, lng);
-        syncAndFetch(lat, lng);
-      },
-      () => {
-        if (mapRef.current) {
-          const c = mapRef.current.getCenter();
-          syncAndFetch(c.getLat(), c.getLng());
-        } else {
-          syncAndFetch(center.lat, center.lng);
+  const refreshFromCurrentPosition = async () => {
+    const fallback = mapRef.current
+      ? {
+          lat: mapRef.current.getCenter().getLat(),
+          lng: mapRef.current.getCenter().getLng(),
         }
-      }
-    );
+      : center;
+    setIsLoading(true);
+    const { lat, lng } = await getFastCoords(fallback);
+    setCenter({ lat, lng });
+    recenterMap(lat, lng);
+    showMyLocation(lat, lng);
+    await syncAndFetch(lat, lng);
   };
 
   const requeryHere = () => {

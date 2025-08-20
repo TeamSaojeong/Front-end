@@ -2,8 +2,8 @@ import { useEffect, useRef } from "react";
 
 /**
  * BottomSheet drag logic
- * - 레이아웃을 읽어 MIN_Y/MAX_Y를 동적으로 계산
- * - 방향 + 이동량 + 속도(플링) 기준으로 스냅
+ * - 동적 MIN_Y/MAX_Y 계산
+ * - 방향/이동량/속도(플링) 기준 스냅
  * - 헤더 탭(거의 이동 0) 시 토글
  */
 export default function useBottomSheet({
@@ -73,8 +73,7 @@ export default function useBottomSheet({
     const canMove = () => {
       if (!m.current.startedOnHeader) return false;
 
-      // 컨텐츠 쪽을 잡고 있는 제스처라면:
-      // 완전 펼침 + 아래로 끌기 + scrollTop==0 일 때만 시트를 내리게 허용
+      // 컨텐츠 쪽 제스처면: 완전 펼침 + 아래로 끌기 + scrollTop==0 일 때만 시트 내리기 허용
       const { MIN_Y } = m.current.bounds;
       if (m.current.isContentTouched) {
         const atTop = sheet.getBoundingClientRect().y === MIN_Y;
@@ -130,16 +129,16 @@ export default function useBottomSheet({
       const dy = m.current.lastMove.y - m.current.touchStart.touchY;
       const velocity = dy / dt; // 음수면 위로 휙
 
-      // 1) 거의 이동이 없으면 헤더 탭으로 간주 → 토글 (열기 쪽 우선)
+      // 1) 거의 이동이 없으면 헤더 탭 → 열기 우선 토글
       if (Math.abs(moved) < TAP_THRESHOLD) {
-        setOpenState(!m.current.isOpen || true); // 닫혀있으면 열기, 열려있어도 유지
+        setOpenState(!m.current.isOpen || true);
         reset();
         return;
       }
 
-      // 2) 플링(속도) 기준 스냅: 작은 움직임이어도 쉽게 열림/닫힘
-      const OPEN_FLING_V = -0.35; // 위로 0.35px/ms 이상
-      const CLOSE_FLING_V = 0.35; // 아래로 0.35px/ms 이상
+      // 2) 플링 기준 스냅
+      const OPEN_FLING_V = -0.35; // 위로
+      const CLOSE_FLING_V = 0.35; // 아래로
       if (velocity <= OPEN_FLING_V) {
         setOpenState(true);
         reset();
@@ -151,12 +150,12 @@ export default function useBottomSheet({
         return;
       }
 
-      // 3) 거리 기준 스냅: 임계값 이상이면 방향대로
+      // 3) 거리 기준 스냅
       if (Math.abs(moved) >= DIST_THRESHOLD) {
         if (m.current.touchMove.moving === "up") setOpenState(true);
         else setOpenState(false);
       } else {
-        // 4) 임계 미만: 가까운 쪽으로 스냅 (열기 쪽 약간 가중)
+        // 가까운 쪽
         const toOpen = Math.abs(currY - MIN_Y) <= Math.abs(currY - MAX_Y) + 6;
         setOpenState(toOpen);
       }
