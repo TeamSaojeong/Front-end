@@ -33,6 +33,13 @@ const Address = () => {
       setField("zipcode", zipStr);
       setField("address", roadStr);
 
+      // ✅ lat/lng도 저장
+      if (sel.lat && sel.lng) {
+        setField("lat", sel.lat);
+        setField("lng", sel.lng);
+        console.log("[Address] 좌표 저장:", sel.lat, sel.lng);
+      }
+
       // state 비우기: 뒤로가기/새로고침 시 중복 세팅 방지
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -44,6 +51,7 @@ const Address = () => {
     setZip(v);
     setField("zipcode", v);
   };
+
   const handleRoad = (e) => {
     const v = e.target.value;
     setRoad(v);
@@ -62,7 +70,7 @@ const Address = () => {
           type="text"
           placeholder="우편번호"
           value={zip}
-          onChange={handleZip} /* readOnly 원하면 이 줄 지우고 readOnly 추가 */
+          onChange={handleZip} // readOnly 원하면 이 줄 지우고 readOnly 추가
         />
         <button className="address-btn" type="button" onClick={goSearch}>
           주소 검색
@@ -74,7 +82,7 @@ const Address = () => {
         type="text"
         placeholder="주소"
         value={road}
-        onChange={handleRoad} /* readOnly 원하면 이 줄 지우고 readOnly 추가 */
+        onChange={handleRoad} // readOnly 원하면 이 줄 지우고 readOnly 추가
       />
     </div>
   );

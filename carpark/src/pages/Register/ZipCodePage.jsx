@@ -3,21 +3,69 @@ import { DaumPostcodeEmbed } from "react-daum-postcode";
 import PreviousBtn from "../../components/Register/PreviousBtn";
 import styled, { createGlobalStyle } from "styled-components";
 
+/* ===== Kakao 지오코딩 유틸 ===== */
+const SDK_SRC =
+  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=여기에_카카오REST키&autoload=false&libraries=services";
+
+async function ensureKakao() {
+  if (window.kakao?.maps?.services) return;
+  await new Promise((resolve, reject) => {
+    const prev = document.getElementById("kakao-map-sdk-services");
+    if (prev) {
+      prev.onload = resolve;
+      prev.onerror = reject;
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = SDK_SRC;
+    s.async = true;
+    s.id = "kakao-map-sdk-services";
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  await new Promise((r) => window.kakao.maps.load(r));
+}
+
+async function geocodeAddressToXY(address) {
+  if (!address || !address.trim()) return null;
+  await ensureKakao();
+  const geocoder = new window.kakao.maps.services.Geocoder();
+  return new Promise((resolve) => {
+    geocoder.addressSearch(address, (res, status) => {
+      if (status === window.kakao.maps.services.Status.OK && res?.[0]) {
+        resolve({ lng: Number(res[0].x), lat: Number(res[0].y) });
+      } else {
+        console.warn("[Geocode] 주소 변환 실패:", address, status);
+        resolve(null);
+      }
+    });
+  });
+}
+
 const ZipCodePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const returnTo = location.state?.returnTo || -1;
 
-  const handleComplete = (data) => {
+  const handleComplete = async (data) => {
     const addr =
       data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
+
+    // ✅ 좌표 구하기
+    const full = data.roadAddress || data.jibunAddress || addr;
+    const xy = await geocodeAddressToXY(full);
 
     const selectedAddress = {
       zipcode: data.zonecode || "",
       address: addr || "",
       roadAddress: data.roadAddress || "",
       jibunAddress: data.jibunAddress || "",
+      lat: xy?.lat ?? null,
+      lng: xy?.lng ?? null,
     };
+
+    console.log("[ZipCodePage] 선택된 주소:", selectedAddress);
 
     if (typeof returnTo === "string") {
       navigate(returnTo, { state: { selectedAddress }, replace: true });
@@ -29,7 +77,6 @@ const ZipCodePage = () => {
   return (
     <>
       <ZipOverrides />
-
       <Wrapper className="zip-page">
         <Back className="zip-back">
           <Backinner>
@@ -49,6 +96,8 @@ const ZipCodePage = () => {
 };
 
 export default ZipCodePage;
+
+/* 스타일 */
 const Wrapper = styled.div`
   background-color: rgba(255, 255, 255, 1);
   width: 24.375rem;

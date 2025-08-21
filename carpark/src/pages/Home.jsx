@@ -418,12 +418,12 @@ export default function Home() {
           _localOnly: m.origin === "local",
         }));
 
-      // 중복 제거 (서버 우선)
+      // 중복 제거 (내 주차장 우선)
       const byId = new Map();
-      rows.forEach((r) => byId.set(String(r.id), r));
-      mine.forEach((m) => {
-        const key = String(m.id);
-        if (!byId.has(key)) byId.set(key, m);
+      mine.forEach((m) => byId.set(String(m.id), m)); // 내 주차장 먼저
+      rows.forEach((r) => {
+        const key = String(r.id);
+        if (!byId.has(key)) byId.set(key, r); // 서버 데이터도 추가 (없을 때만)
       });
 
       const merged = Array.from(byId.values());
@@ -517,6 +517,13 @@ export default function Home() {
         : `/place/${modalPlace.id}`;
     navigate(path, { state: { from: "modal" } });
   };
+
+  useEffect(() => {
+    if (!mapRef.current) return; // 지도 준비 안 됐으면 패스
+    const c = mapRef.current.getCenter();
+    if (!c) return;
+    fetchNearby(c.getLat(), c.getLng());
+  }, [myParks]);
 
   return (
     <div ref={wrapRef} className="map-wrap">

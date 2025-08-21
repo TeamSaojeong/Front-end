@@ -1,12 +1,15 @@
+// src/apis/register.js
 import { useParkingForm } from "../store/ParkingForm";
 import { client } from "./client";
-import { shrinkImageFile } from "../utils/imageShrink"; // 413 방지 유틸(없으면 제거 가능)
-import { getMyParkingDetail } from "./parking";
+import { shrinkImageFile } from "../utils/imageShrink";
+import { useMyParkings } from "../store/MyParkings"; // ✅ 내 주차장 저장소
 
 const pad2 = (n) => String(n ?? "").padStart(2, "0");
 
 export async function register(accessToken) {
   const s = useParkingForm.getState();
+
+  console.log("[REGISTER] 함수 진입");
 
   const addressStr =
     typeof s.address === "string"
@@ -28,6 +31,7 @@ export async function register(accessToken) {
       }))
     : [];
 
+  // ✅ lat/lng 그대로 전달
   const request = {
     name: String(s.name || "").trim(),
     zipcode: String(s.zipcode || "").trim(),
@@ -35,7 +39,11 @@ export async function register(accessToken) {
     content: String(s.content || "").trim(),
     operateTimes,
     charge: Number(s.charge || 0),
+    lat: s.lat ?? null,
+    lng: s.lng ?? null,
   };
+
+  console.log("[REGISTER] 전송할 JSON:", request);
 
   let file = s.image;
   if (!(file instanceof File)) {
@@ -44,7 +52,6 @@ export async function register(accessToken) {
     throw err;
   }
 
-  // 1차 축소(대부분 413 회피)
   if (shrinkImageFile) {
     file = await shrinkImageFile(file, {
       maxW: 1600,
@@ -61,37 +68,52 @@ export async function register(accessToken) {
       new Blob([JSON.stringify(request)], { type: "application/json" })
     );
     fd.append("image", f, f.name || "parking.jpg");
+
+    console.log("[REGISTER] 서버로 요청 보냄…");
+
     const { data } = await client.post("/api/parking", fd, {
       headers: {
         Authorization:
           accessToken || client.defaults.headers.common.Authorization,
-        // Content-Type는 자동(boundary)
-        Accept: "application/json, text/plain, */*",
       },
     });
+
+    console.log("[REGISTER] raw 서버 응답:", JSON.stringify(data, null, 2));
+
     return data;
   }
 
   try {
-    // 1) 등록
     const data = await postOnce(file);
-    const created = data?.data ?? data ?? {};
-    const parkingId = String(created?.id ?? created?.parkingId ?? "");
+    const created = data?.data ?? {};
 
-    // 2) 상세 재조회
-    let detail = null;
-    if (parkingId) {
-      try {
-        detail = await getMyParkingDetail(parkingId, accessToken);
-      } catch {
-        detail = null;
-      }
-    }
+    const parkingId = String(
+      created?.id || created?.parkingId || created?.parking_id || ""
+    );
+    console.log("[REGISTER] 생성된 주차장 ID:", parkingId);
+
+    // ✅ 개인 주차장 → 상세조회(getPublicDetail) 필요 없음
+    const detail = {
+      id: parkingId,
+      name: created?.name ?? request.name, // 서버 name 없으면 내가 입력한 값
+      zipcode: created?.zipcode ?? request.zipcode,
+      address: created?.address ?? request.address,
+      content: created?.content ?? request.content,
+      operateTimes: created?.operateTimes ?? request.operateTimes,
+      charge: created?.charge ?? request.charge,
+      lat: created?.lat ?? request.lat,
+      lng: created?.lng ?? request.lng,
+      imageUrl: created?.imageUrl ?? null,
+      origin: "server",
+    };
+
+    // ✅ 내 주차장 store 반영
+    useMyParkings.getState().upsert(detail);
 
     return { parkingId, detail };
   } catch (e) {
-    // 413 → 더 줄여서 재시도
     if (e?.response?.status === 413 && shrinkImageFile) {
+      console.warn("[REGISTER] 413 발생 → 이미지 더 줄여서 재시도");
       const smaller = await shrinkImageFile(file, {
         maxW: 1200,
         maxH: 1200,
@@ -99,16 +121,31 @@ export async function register(accessToken) {
         targetBytes: 600 * 1024,
       });
       const data = await postOnce(smaller);
-      const created = data?.data ?? data ?? {};
-      const parkingId = String(created?.id ?? created?.parkingId ?? "");
-      let detail = null;
-      if (parkingId) {
-        try {
-          detail = await getMyParkingDetail(parkingId, accessToken);
-        } catch {}
-      }
+      const created = data?.data ?? {};
+      const parkingId = String(
+        created?.id || created?.parkingId || created?.parking_id || ""
+      );
+      console.log("[REGISTER] 재시도 후 주차장 ID:", parkingId);
+
+      const detail = {
+        id: parkingId,
+        name: created?.name ?? request.name,
+        zipcode: created?.zipcode ?? request.zipcode,
+        address: created?.address ?? request.address,
+        content: created?.content ?? request.content,
+        operateTimes: created?.operateTimes ?? request.operateTimes,
+        charge: created?.charge ?? request.charge,
+        lat: created?.lat ?? request.lat,
+        lng: created?.lng ?? request.lng,
+        imageUrl: created?.imageUrl ?? null,
+        origin: "server",
+      };
+
+      useMyParkings.getState().upsert(detail);
+
       return { parkingId, detail };
     }
+
     const status = e?.response?.status;
     const body = e?.response?.data;
     const msg = body?.message || e.message || "요청이 실패했습니다.";

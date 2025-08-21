@@ -40,7 +40,10 @@ async function geocodeAddressToXY(address) {
     geocoder.addressSearch(address, (res, status) => {
       if (status === window.kakao.maps.services.Status.OK && res?.[0]) {
         resolve({ lng: Number(res[0].x), lat: Number(res[0].y) });
-      } else resolve(null);
+      } else {
+        console.warn("[Geocode] 주소 변환 실패:", address, status);
+        resolve(null);
+      }
     });
   });
 }
@@ -77,9 +80,8 @@ export default function DescriptionPage() {
       </div>
 
       <div>
-        <p className="ds-address-title">주차 장소과 가장 근접한 위치</p>
+        <p className="ds-address-title">주차 장소와 가장 근접한 위치</p>
 
-        {/* ✅ 주소 변경 시마다 lat/lng 재계산 & 이전 좌표 폐기 */}
         <Address
           onChange={async (addr) => {
             const zip =
@@ -90,11 +92,26 @@ export default function DescriptionPage() {
             if (zip) setField("zipcode", zip);
             setField("address", full);
 
-            // 이전 좌표 재사용 방지
+            // 좌표 초기화
             setField("lat", null);
             setField("lng", null);
 
+            // ✅ 검색결과에서 좌표 제공 시 그대로 사용
+            if (addr?.x && addr?.y) {
+              console.log(
+                "[DescriptionPage] 검색결과 좌표 사용:",
+                addr.y,
+                addr.x
+              );
+              setField("lat", Number(addr.y));
+              setField("lng", Number(addr.x));
+              return;
+            }
+
+            // ✅ 없으면 geocode fallback
             const xy = await geocodeAddressToXY(full);
+            console.log("[DescriptionPage] 주소 → 좌표 변환:", full, xy);
+
             setField("lat", xy?.lat ?? null);
             setField("lng", xy?.lng ?? null);
           }}

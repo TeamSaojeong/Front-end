@@ -27,7 +27,8 @@ export default function ParkingPlaceManage() {
   };
 
   const onDelete = (p) => {
-    if (!window.confirm(`'${p.name || "내 주차장"}'을(를) 삭제할까요?`)) return;
+    if (!window.confirm(`'${p.name || "(이름 없음)"}'을(를) 삭제할까요?`))
+      return;
     remove(p.id);
     removeWatched(p.id);
     // 선택된 상세가 남아있을 수 있어 정리
@@ -61,7 +62,8 @@ export default function ParkingPlaceManage() {
             <li key={p.id} className="ppm-item">
               <div className="ppm-left">
                 <div className={`ppm-name ${!p.enabled ? "disabled" : ""}`}>
-                  {p.name || "내 주차장"}
+                  {/* ✅ 이름 표시 (없으면 (이름 없음 #id) 로 fallback) */}
+                  {p.name?.trim() || `(이름 없음 #${p.id})`}
                   {!hasCoord && <span className="ppm-badge">좌표 없음</span>}
                 </div>
 
