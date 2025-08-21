@@ -1,4 +1,3 @@
-// src/pages/Register/RegisterPayPage.jsx
 import React, { useMemo, useState } from "react";
 import NextBtn from "../../components/Register/NextBtn";
 import { useNavigate } from "react-router-dom";
@@ -38,8 +37,9 @@ const RegisterPayPage = () => {
 
     try {
       const token = localStorage.getItem("accessToken") || "";
-      const { parkingId } = await register(token);
-      navigate("/complete", { state: { parkingId } });
+      const { parkingId, detail } = await register(token);
+      // ✅ 등록 직후 상세를 함께 넘김
+      navigate("/complete", { state: { parkingId, detail } });
     } catch (e) {
       alert(`[${e.status ?? "ERR"}] ${e.message}`);
       console.error("register failed:", e);
@@ -77,7 +77,6 @@ const RegisterPayPage = () => {
             {k}
           </button>
         ))}
-
         <div className="rg-spacer" aria-hidden="true" />
         <button className="rg-zero" onClick={() => push("0")}>
           0

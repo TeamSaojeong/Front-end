@@ -1,36 +1,48 @@
-// src/apis/parking.js
 import { client } from "./client";
 
-/** 주변 주차장 검색 : Query => lat, lon (+ axios abort signal 지원) */
+/** 주변 주차장 검색 : Query => lat, lon */
 export const getNearby = (lat, lng, config = {}) => {
   const _lat = typeof lat === "number" ? lat : Number(lat);
   const _lon = typeof lng === "number" ? lng : Number(lng);
   return client.get("/api/parking/nearby", {
     params: { lat: _lat, lon: _lon },
-    signal: config.signal, // ← AbortController로 타임아웃 취소 지원
+    signal: config.signal, // AbortController 지원
   });
 };
 
-/**
- * [공영 상세] kakaoId(nearby의 id), lat(y), lon(x)
- * 예) GET /api/parking/detail?kakaoId=1021815417&lat=37.46&lon=127.04
- */
+/** [공영 상세] kakaoId(nearby의 id), lat(y), lon(x) */
 export const getPublicDetail = (kakaoId, lat, lon) =>
   client.get("/api/parking/detail", { params: { kakaoId, lat, lon } });
 
-/** (호환용) id로 상세 - 백엔드가 parkingId 방식 지원할 때만 사용 */
+/** (호환) id로 상세 */
 export const getPublicDetailById = (parkingId) =>
   client.get("/api/parking/detail", { params: { parkingId } });
 
-/** 개인 주차장 상세 */
+/** 개인 주차장 상세(관리/수정/내 주차장) */
 export const getPrivateDetail = (parkingId) =>
   client.get(`/api/parking/${parkingId}`);
+
+/** (추가) 방금 등록한 내 주차장 상세 */
+export async function getMyParkingDetail(parkingId, accessToken) {
+  if (!parkingId) throw new Error("parkingId가 필요합니다.");
+  const { data } = await client.get(
+    `/api/parking/${encodeURIComponent(parkingId)}`,
+    {
+      headers: {
+        Authorization:
+          accessToken || client.defaults.headers.common.Authorization,
+      },
+    }
+  );
+  // API: { status, data: {...}, message }
+  return data?.data ?? data ?? {};
+}
 
 /** 개인 주차장 이미지(blob) */
 export const getPrivateImage = (parkingId) =>
   client.get(`/api/parking/${parkingId}/image`, { responseType: "blob" });
 
-/** (유지) 혼잡도 예측 */
+/** 혼잡도 예측 */
 export const getPredict = (parkingId, etaMinutes) =>
   client.get(`/api/parking/predict`, { params: { parkingId, etaMinutes } });
 
@@ -38,23 +50,17 @@ export const getPredict = (parkingId, etaMinutes) =>
 export const subscribeAlert = (parkingId) =>
   client.post(`/api/alerts`, { parkingId });
 
-/** 주차장 상태 조회 (이용중/대기중 여부 등) */
+/** 상태 조회 */
 export const getParkingStatus = (parkingId) =>
   client.get(`/api/parking/${parkingId}/status`);
 
-/**
- * 예약(주차장 이용 시간 추가/시작)
- * POST /api/parking/{parkingId}/reservation
- * body: { usingMinutes: number }
- */
+/** 예약 시작 */
 export const createReservation = (parkingId, usingMinutes) =>
   client.post(`/api/parking/${parkingId}/reservation`, { usingMinutes });
 
-/** ‘곧 나감’ 알림 (공영/민영 공통) */
-export const postSoonOut = (payload) =>
-  // payload: { lat, lng, minute, provider?, externalId?, parkingId?, reservationId?, placeName, address }
-  client.post(`/api/soonout`, payload);
+/** ‘곧 나감’ 신고 */
+export const postSoonOut = (payload) => client.post(`/api/soonout`, payload);
 
-/** 주변 평균 요금 조회 (10분당 금액 등) */
+/** 주변 평균 요금(10분당) */
 export const getAvgFee = (lat, lon) =>
   client.get("/api/parking/avg", { params: { lat, lon } });

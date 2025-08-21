@@ -1,6 +1,7 @@
 import { useParkingForm } from "../store/ParkingForm";
 import { client } from "./client";
-import { shrinkImageFile } from "../utils/imageShrink";
+import { shrinkImageFile } from "../utils/imageShrink"; // 413 방지 유틸(없으면 제거 가능)
+import { getMyParkingDetail } from "./parking";
 
 const pad2 = (n) => String(n ?? "").padStart(2, "0");
 
@@ -17,7 +18,7 @@ export async function register(accessToken) {
           ""
         ).trim();
 
-  const times = Array.isArray(s.operateTimes)
+  const operateTimes = Array.isArray(s.operateTimes)
     ? s.operateTimes.map(({ start, end }) => ({
         start:
           typeof start === "string"
@@ -32,7 +33,7 @@ export async function register(accessToken) {
     zipcode: String(s.zipcode || "").trim(),
     address: addressStr,
     content: String(s.content || "").trim(),
-    operateTimes: times,
+    operateTimes,
     charge: Number(s.charge || 0),
   };
 
@@ -43,13 +44,15 @@ export async function register(accessToken) {
     throw err;
   }
 
-  // 1차 축소(대부분 여기서 413 회피)
-  file = await shrinkImageFile(file, {
-    maxW: 1600,
-    maxH: 1600,
-    quality: 0.82,
-    targetBytes: 900 * 1024,
-  });
+  // 1차 축소(대부분 413 회피)
+  if (shrinkImageFile) {
+    file = await shrinkImageFile(file, {
+      maxW: 1600,
+      maxH: 1600,
+      quality: 0.82,
+      targetBytes: 900 * 1024,
+    });
+  }
 
   async function postOnce(f) {
     const fd = new FormData();
@@ -60,10 +63,9 @@ export async function register(accessToken) {
     fd.append("image", f, f.name || "parking.jpg");
     const { data } = await client.post("/api/parking", fd, {
       headers: {
-        Authorization: accessToken
-          ? `Bearer ${accessToken}`
-          : client.defaults.headers.common.Authorization,
-        // Content-Type 지정하지 않음 (boundary 자동)
+        Authorization:
+          accessToken || client.defaults.headers.common.Authorization,
+        // Content-Type는 자동(boundary)
         Accept: "application/json, text/plain, */*",
       },
     });
@@ -71,12 +73,25 @@ export async function register(accessToken) {
   }
 
   try {
+    // 1) 등록
     const data = await postOnce(file);
     const created = data?.data ?? data ?? {};
-    return { parkingId: String(created?.id ?? created?.parkingId ?? "") };
+    const parkingId = String(created?.id ?? created?.parkingId ?? "");
+
+    // 2) 상세 재조회
+    let detail = null;
+    if (parkingId) {
+      try {
+        detail = await getMyParkingDetail(parkingId, accessToken);
+      } catch {
+        detail = null;
+      }
+    }
+
+    return { parkingId, detail };
   } catch (e) {
-    // 413이면 더 세게 줄여 재시도
-    if (e?.response?.status === 413) {
+    // 413 → 더 줄여서 재시도
+    if (e?.response?.status === 413 && shrinkImageFile) {
       const smaller = await shrinkImageFile(file, {
         maxW: 1200,
         maxH: 1200,
@@ -85,7 +100,14 @@ export async function register(accessToken) {
       });
       const data = await postOnce(smaller);
       const created = data?.data ?? data ?? {};
-      return { parkingId: String(created?.id ?? created?.parkingId ?? "") };
+      const parkingId = String(created?.id ?? created?.parkingId ?? "");
+      let detail = null;
+      if (parkingId) {
+        try {
+          detail = await getMyParkingDetail(parkingId, accessToken);
+        } catch {}
+      }
+      return { parkingId, detail };
     }
     const status = e?.response?.status;
     const body = e?.response?.data;

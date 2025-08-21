@@ -7,7 +7,6 @@ import { useParkingForm } from "../../store/ParkingForm";
 import { useEffect, useMemo, useRef } from "react";
 import { useMyParkings } from "../../store/MyParkings";
 import "../../Styles/Register/CompletePage.css";
-import { getPrivateDetail, getPrivateImage } from "../../apis/parking";
 
 const formatPrice = (n) =>
   new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(
@@ -56,6 +55,7 @@ async function geocodeAddress(address) {
 const CompletePage = () => {
   const { state } = useLocation();
   const parkingId = state?.parkingId || null;
+  const detailFromState = state?.detail || null;
 
   const {
     name,
@@ -73,7 +73,6 @@ const CompletePage = () => {
   const navigate = useNavigate();
 
   const didCommitRef = useRef(false);
-  const createdUrlRef = useRef(null);
 
   const timesText = useMemo(
     () =>
@@ -91,13 +90,14 @@ const CompletePage = () => {
         typeof address === "string"
           ? address
           : address?.roadAddress || address?.address || "";
-      // ✅ 중복 방지 키를 더 안전하게
+
+      // 중복방지 키(등록id/주소 포함)
       const key = `committed:${parkingId || "noid"}:${name}:${formatPrice(
         charge
       )}:${timesText}:${addrKey}`;
       if (sessionStorage.getItem(key) === "1") return;
 
-      // 좌표 보정(주소로 백업 지오코딩)
+      // 좌표 보정(서버 응답에 없으면 주소 지오코딩)
       let Lng = Number(lng);
       let Lat = Number(lat);
       const hasXY =
@@ -113,45 +113,33 @@ const CompletePage = () => {
         }
       }
 
-      // 서버 상세/이미지 재조회(등록 직후 데이터 보강)
-      let server = null;
-      let serverImageUrl = null;
-      try {
-        if (parkingId) {
-          const { data } = await getPrivateDetail(parkingId);
-          server = data?.data ?? data ?? null;
-          try {
-            const imgRes = await getPrivateImage(parkingId);
-            if (imgRes?.data) serverImageUrl = URL.createObjectURL(imgRes.data);
-          } catch {}
-        }
-      } catch {}
+      // 서버 상세(state.detail) 우선 사용
+      const d = detailFromState || {};
+      const serverName = d.parkingName || d.name;
+      const serverCharge = d.charge;
+      const serverAddress = d.address;
+      const serverContent = d.content || d.description || d.desc;
+      const serverTimes = Array.isArray(d.operateTimes) ? d.operateTimes : null;
+      // 서버가 image URL을 같이 주면 사용
+      const serverImageUrl = typeof d.image === "string" ? d.image : null;
 
-      if (!serverImageUrl && image instanceof File) {
-        serverImageUrl = URL.createObjectURL(image);
-        createdUrlRef.current = serverImageUrl;
-      }
-
-      const genId =
+      const id =
         parkingId ||
         (typeof crypto !== "undefined" && crypto.randomUUID?.()) ||
         String(Date.now());
 
       upsert({
-        id: genId,
-        name: server?.name ?? name ?? "내 주차장",
+        id,
+        name: serverName || name || "내 주차장",
         enabled: true,
-        charge: Number(server?.charge ?? charge ?? 0),
-        operateTimes: Array.isArray(server?.operateTimes)
-          ? server.operateTimes
-          : Array.isArray(operateTimes)
-          ? operateTimes
-          : [],
-        address: server?.address ?? addrKey,
-        content: String(server?.content ?? content ?? "").trim(),
-        lat: Number.isFinite(server?.lat) ? server.lat : Lat ?? null,
-        lng: Number.isFinite(server?.lng) ? server.lng : Lng ?? null,
-        imageUrl: serverImageUrl || null,
+        charge: Number(serverCharge ?? charge ?? 0),
+        operateTimes:
+          serverTimes || (Array.isArray(operateTimes) ? operateTimes : []),
+        address: serverAddress || addrKey,
+        content: String(serverContent ?? content ?? "").trim(),
+        lat: Lat ?? null,
+        lng: Lng ?? null,
+        imageUrl: serverImageUrl || null, // 서버 이미지 URL 있으면 저장
         type: "PRIVATE",
         origin: parkingId ? "server" : "local",
         createdAt: Date.now(),
@@ -162,14 +150,6 @@ const CompletePage = () => {
     }
 
     commit();
-
-    return () => {
-      if (createdUrlRef.current?.startsWith?.("blob:")) {
-        try {
-          URL.revokeObjectURL(createdUrlRef.current);
-        } catch {}
-      }
-    };
   }, [
     name,
     charge,
@@ -179,9 +159,9 @@ const CompletePage = () => {
     lat,
     lng,
     setField,
-    parkingId,
-    image,
     upsert,
+    parkingId,
+    detailFromState,
   ]);
 
   return (
@@ -225,8 +205,7 @@ const CompletePage = () => {
             label="홈으로 가기"
             isActive
             onClick={() => {
-              // 다음 등록을 위해 폼을 한번 더 초기화
-              reset();
+              reset(); // 다음 등록 대비 폼 리셋
               navigate("/home");
             }}
           />
