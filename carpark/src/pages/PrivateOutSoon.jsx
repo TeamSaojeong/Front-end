@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/PrivateOutSoon.css";
 
@@ -6,7 +6,9 @@ import car_icon from "../Assets/car.png";
 import clock_icon from "../Assets/clock.svg";
 import infoyellow_icon from "../Assets/info-yellow.svg";
 
-const TOL_SEC = 30; // 10분/5분 '근처' 허용 오차(±30초)
+import { postSoonOut } from "../apis/parking";
+
+const TOL_SEC = 30; // 10/5분 '근처' 허용 오차(±30초)
 
 const pad2 = (n) => String(n).padStart(2, "0");
 const formatHHMM = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
@@ -20,14 +22,78 @@ const formatDiff = (start, end) => {
   return `${mm}분`;
 };
 
+// 선택된 장소 세션에서 읽기
+const readSelectedPlace = () => {
+  try {
+    const raw = sessionStorage.getItem("selectedPlace");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+// 마지막 좌표 캐시
+const getCachedLoc = () => {
+  try {
+    const raw = localStorage.getItem("lastKnownLoc");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+const setCachedLoc = (lat, lng) => {
+  try {
+    localStorage.setItem(
+      "lastKnownLoc",
+      JSON.stringify({ lat, lng, ts: Date.now() })
+    );
+  } catch {}
+};
+
+// 8초 내 GPS 실패 시 캐시/장소 좌표로 폴백
+const getCoords = (fallback) =>
+  new Promise((resolve, reject) => {
+    const cached = getCachedLoc() || fallback;
+
+    if (!navigator.geolocation) {
+      return cached
+        ? resolve({ ...cached, _source: "no-geo" })
+        : reject(new Error("no geolocation"));
+    }
+
+    const hardTimeout = setTimeout(() => {
+      if (cached) return resolve({ ...cached, _source: "timeout" });
+      reject(Object.assign(new Error("geo timeout"), { code: 3 }));
+    }, 8000);
+
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        clearTimeout(hardTimeout);
+        const coords = { lat: p.coords.latitude, lng: p.coords.longitude };
+        setCachedLoc(coords.lat, coords.lng);
+        resolve({ ...coords, _source: "gps" });
+      },
+      (err) => {
+        clearTimeout(hardTimeout);
+        if (cached)
+          return resolve({ ...cached, _source: `error:${err?.code}` });
+        reject(err);
+      },
+      { enableHighAccuracy: false, timeout: 7000, maximumAge: 60_000 }
+    );
+  });
+
 export default function PrivateOutSoon() {
   const navigate = useNavigate();
   const { state } = useLocation() || {};
 
-  const placeName = state?.placeName ?? "콘하스 DDP 앞 주차장";
-  const placeKey = state?.placeId ?? placeName; // 세션 키
+  const selectedPlace = useMemo(readSelectedPlace, []);
+  const placeName =
+    state?.placeName ?? selectedPlace?.name ?? "콘하스 DDP 앞 주차장";
+  const placeId = state?.placeId ?? selectedPlace?.id ?? placeName;
+  const address = state?.address ?? selectedPlace?.address ?? "";
 
-  // 데모 기본값: 시작=30분 전, 종료=현재+11분
+  // 데모 기본값: 시작=30분 전, 종료=현재+11분(10분 테스트 용)
   const now0 = useMemo(() => new Date(), []);
   const [startAt] = useState(() =>
     state?.startAt
@@ -40,39 +106,82 @@ export default function PrivateOutSoon() {
       : new Date(now0.getTime() + 11 * 60 * 1000)
   );
 
-  // 남은 시간 갱신
+  // 남은시간 1초 갱신
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
+  // 10/5분 근처 판별
   const endMs = endAt.getTime();
   const isNear = (min) =>
     Math.abs(now - (endMs - min * 60 * 1000)) <= TOL_SEC * 1000;
-
   const near10 = isNear(10);
   const near5 = isNear(5);
   const canPressOutSoon = near10 || near5;
+  const bubbleMinuteLabel = near5 ? "5분" : "10분";
 
-  // 말풍선: '곧 나감' 누를 때까지 유지
+  // 세션 기준 '누름' 유지
+  const pressedKey = `priv-outsoon-pressed-${placeId}-${startAt.getTime()}`;
   const [pressed, setPressed] = useState(() => {
     try {
-      return sessionStorage.getItem(`priv-outsoon-pressed-${placeKey}`) === "1";
+      return sessionStorage.getItem(pressedKey) === "1";
     } catch {
       return false;
     }
   });
-  const bubbleMinuteLabel = near5 ? "5분" : "10분";
+  useEffect(() => {
+    try {
+      setPressed(sessionStorage.getItem(pressedKey) === "1");
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pressedKey]);
 
-  const onPressOutSoon = () => {
+  // 곧나감 전송(개인 주차장: provider=private, parkingId 사용)
+  const onPressOutSoon = async () => {
     if (!canPressOutSoon) return;
+
     setPressed(true);
     try {
-      sessionStorage.setItem(`priv-outsoon-pressed-${placeKey}`, "1");
+      sessionStorage.setItem(pressedKey, "1");
     } catch {}
-    // 실제 플로우 연결 (취소/출차 안내 페이지)
-    navigate("/privateoutsoon_cancel", { state: { openModal: true } });
+
+    try {
+      const fallback =
+        selectedPlace?.lat && selectedPlace?.lng
+          ? { lat: selectedPlace.lat, lng: selectedPlace.lng }
+          : null;
+      const { lat, lng } = await getCoords(fallback);
+      const minute = near5 ? 5 : 10;
+
+      const payload = {
+        lat,
+        lng,
+        minute,
+        provider: "private",
+        parkingId: placeId, // ← private은 parkingId로 보냄
+        placeName,
+        address,
+      };
+
+      await postSoonOut(payload);
+      navigate("/privateoutsoon_cancel", {
+        state: {
+          openModal: true,
+          placeName,
+          startAt: startAt.toISOString(),
+          endAt: endAt.toISOString(),
+        },
+      });
+    } catch (e) {
+      console.error("[private soonout] failed", e);
+      alert("‘곧 나감’ 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      setPressed(false);
+      try {
+        sessionStorage.removeItem(pressedKey);
+      } catch {}
+    }
   };
 
   return (

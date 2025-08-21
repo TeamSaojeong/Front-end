@@ -1,29 +1,32 @@
+// src/pages/Place/PvPlaceDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import "../../Styles/Place/PvPlaceDetail.css";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import "../../Styles/Place/PlaceDetail.css";
 
 import reportIcon from "../../Assets/report.svg";
 import pinIcon from "../../Assets/emptypin.svg";
 import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
-import alarmIconOn from "../../Assets/alarm1.svg";
-import out5m from "../../Assets/out5m.svg";
 
 import {
   getPrivateDetail,
-  getPredict,
-  subscribeAlert,
   getParkingStatus,
+  subscribeAlert,
+  getPrivateImage,
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
+import { useMyParkings } from "../../store/MyParkings";
+
+const toNum = (v) => (v == null || v === "" ? null : Number(v));
 
 export default function PvPlaceDetail() {
   const navigate = useNavigate();
-  const { placeId: placeIdFromParam } = useParams();
-  const [alarmOn, setAlarmOn] = useState(false);
+  const { placeId } = useParams();
+  const location = useLocation();
+  const myParks = useMyParkings((s) => s.items);
 
-  const placeFromSession = useMemo(() => {
+  const fromSession = useMemo(() => {
     try {
       const raw = sessionStorage.getItem("selectedPlace");
       return raw ? JSON.parse(raw) : null;
@@ -32,79 +35,93 @@ export default function PvPlaceDetail() {
     }
   }, []);
 
-  const placeId = placeFromSession?.id ?? placeIdFromParam ?? null;
+  const isLocal =
+    !!location.state?.place?.isLocal ||
+    !!fromSession?.isLocal ||
+    !!myParks.find(
+      (p) => String(p.id) === String(placeId) && p.origin === "local"
+    );
+
+  const localItem = isLocal
+    ? myParks.find((p) => String(p.id) === String(placeId))
+    : null;
+
+  const sessionLat = toNum(fromSession?.lat);
+  const sessionLng = toNum(fromSession?.lng);
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
 
-  // 상태
-  const [queueOpen, setQueueOpen] = useState(false);
-  const [leavingEtaMin, setLeavingEtaMin] = useState(null);
-  const [isAvailable, setIsAvailable] = useState(true);
-
-  const startUse = () => {
-    if (!placeId) return;
-    navigate("/paypage", {
-      state: {
-        parkingId: placeId,
-        lotName: detail?.name ?? "개인 주차장",
-      },
-    });
-  };
-  const joinWait = () => {
-    if (!placeId) return;
-    // 선예약 플로우: PayPage에서 startInMinutes를 받아 예약 생성
-    navigate("/paypage", {
-      state: {
-        parkingId: placeId,
-        lotName: detail?.name ?? "개인 주차장",
-        startInMinutes:
-          typeof leavingEtaMin === "number" ? Math.max(1, leavingEtaMin) : 5,
-      },
-    });
-  };
+  const [imageUrl, setImageUrl] = useState("");
+  useEffect(() => {
+    return () => {
+      if (imageUrl?.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(imageUrl);
+        } catch {}
+      }
+    };
+  }, [imageUrl]);
 
   const [primary, setPrimary] = useState({
     disabled: false,
     label: "주차장 이용하기",
-    onClick: startUse,
+    onClick: () => {},
   });
 
   useEffect(() => {
     let mounted = true;
 
-    async function load() {
-      if (!placeId) return;
+    async function loadRemote() {
       setLoading(true);
       setError("");
       try {
         const { data } = await getPrivateDetail(placeId);
         if (!mounted) return;
 
-        const normalized = {
-          id: data.id ?? data.parkingId ?? placeId,
-          name: data.name ?? placeFromSession?.name ?? "개인 주차장",
-          distanceKm:
-            data.distanceMeters != null
-              ? data.distanceMeters / 1000
-              : data.distanceKm ?? placeFromSession?.distanceKm ?? null,
-          etaMin:
-            data.etaMin ?? data.etaMinutes ?? placeFromSession?.etaMin ?? null,
-          pricePer10m:
-            data.pricePer10m ?? data.price ?? placeFromSession?.price ?? 0,
-          address: data.address ?? placeFromSession?.address ?? "",
-          availableTimes:
-            data.availableTimes ??
-            data.openHours ??
-            placeFromSession?.available ??
-            "00:00 ~ 24:00",
-          note: data.note ?? placeFromSession?.note ?? "",
-          lat: data.lat ?? data.latitude ?? placeFromSession?.lat ?? null,
-          lng: data.lng ?? data.longitude ?? placeFromSession?.lng ?? null,
-        };
+        const d = data?.data ?? data ?? {};
+        const lat = toNum(d?.lat ?? d?.y) ?? sessionLat ?? null;
+        const lng = toNum(d?.lng ?? d?.x) ?? sessionLng ?? null;
 
+        const normalized = {
+          id: d.id ?? d.parkingId ?? placeId,
+          name: d.name ?? fromSession?.name ?? "주차 장소",
+          distanceKm: d.distanceKm ?? fromSession?.distanceKm ?? null,
+          etaMin: d.etaMin ?? fromSession?.etaMin ?? null,
+          pricePer10m: d.charge ?? fromSession?.price ?? 0,
+          address: d.address ?? fromSession?.address ?? "",
+          availableTimes: Array.isArray(d.operateTimes)
+            ? d.operateTimes.map((t) => `${t.start} ~ ${t.end}`).join("  |  ")
+            : fromSession?.availableTimes ?? "00:00 ~ 00:00",
+          note:
+            d.content ??
+            d.description ??
+            d.desc ??
+            fromSession?.content ??
+            fromSession?.note ??
+            "",
+          lat,
+          lng,
+          _flags: { isLocal: false },
+        };
         setDetail(normalized);
+
+        // 서버 이미지
+        try {
+          const imgRes = await getPrivateImage(normalized.id);
+          if (imgRes?.data && mounted) {
+            const url = URL.createObjectURL(imgRes.data);
+            setImageUrl((prev) => {
+              if (prev?.startsWith("blob:")) {
+                try {
+                  URL.revokeObjectURL(prev);
+                } catch {}
+              }
+              return url;
+            });
+          }
+        } catch {}
       } catch (e) {
         if (!mounted) return;
         setError(
@@ -115,38 +132,94 @@ export default function PvPlaceDetail() {
       }
     }
 
+    function loadLocal() {
+      setLoading(true);
+      setError("");
+
+      const src = localItem || fromSession || {};
+      const lat = toNum(src.lat) ?? sessionLat ?? null;
+      const lng = toNum(src.lng) ?? sessionLng ?? null;
+
+      const normalized = {
+        id: src.id ?? placeId,
+        name: src.name ?? "내 주차장",
+        distanceKm: null,
+        etaMin: null,
+        pricePer10m: Number(src.charge ?? src.price ?? 0),
+        address: src.address ?? "",
+        availableTimes: Array.isArray(src.operateTimes)
+          ? src.operateTimes.map((t) => `${t.start} ~ ${t.end}`).join("  |  ")
+          : fromSession?.availableTimes ?? "00:00 ~ 00:00",
+        note:
+          src.content ??
+          src.description ??
+          src.desc ??
+          fromSession?.content ??
+          fromSession?.note ??
+          "",
+        lat,
+        lng,
+        _flags: { isLocal: true },
+      };
+      setDetail(normalized);
+
+      // 로컬/세션 이미지
+      if (src.imageUrl) setImageUrl(src.imageUrl);
+
+      setLoading(false);
+
+      setPrimary({
+        disabled: false,
+        label: "주차장 이용하기",
+        onClick: startUse,
+      });
+    }
+
+    if (!placeId) {
+      setError("장소 식별자가 없어 상세를 불러올 수 없습니다.");
+      setLoading(false);
+      return;
+    }
+
+    if (isLocal) loadLocal();
+    else loadRemote();
+
+    return () => {
+      mounted = false;
+    };
+  }, [placeId, isLocal]); // eslint-disable-line
+
+  useEffect(() => {
+    if (!placeId || isLocal) return;
+    let mounted = true;
+
     async function pullStatus() {
-      if (!placeId) return;
       try {
         const { data } = await getParkingStatus(placeId);
-        const ui = mapStatusToUI(data?.data ?? data);
-        setIsAvailable(ui.isAvailable);
-        setQueueOpen(ui.queueOpen);
-        setLeavingEtaMin(ui.leavingEtaMin);
+        const ui = mapStatusToUI(data?.data);
+        if (!mounted) return;
         setPrimary({
-          disabled: ui.primaryDisabled,
-          label: ui.primaryLabel, // RESERVABLE이면 "미리 대기하기"
-          onClick: ui.primaryDisabled
-            ? undefined
-            : ui.queueOpen
-            ? joinWait
-            : startUse,
+          disabled: !ui.isAvailable,
+          label: ui.isAvailable ? "주차장 이용하기" : "이용 중...",
+          onClick: ui.isAvailable ? startUse : undefined,
         });
       } catch {
-        // 폴백: 기존 상태 유지
+        if (!mounted) return;
+        setPrimary({
+          disabled: false,
+          label: "주차장 이용하기",
+          onClick: startUse,
+        });
       }
     }
 
-    load();
     pullStatus();
-    const timer = setInterval(pullStatus, 10_000);
-
+    const timer = setInterval(pullStatus, 10000);
     return () => {
       mounted = false;
       clearInterval(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [placeId, leavingEtaMin]);
+  }, [placeId, isLocal]);
 
   const goBack = () => navigate(-1);
 
@@ -161,65 +234,60 @@ export default function PvPlaceDetail() {
     }
   };
 
-  const openRoute = () => {
-    const lat = detail?.lat;
-    const lng = detail?.lng;
-    if (lat == null || lng == null) {
-      alert("목적지 좌표가 없어 경로를 열 수 없습니다.");
+  const startUse = () => {
+    const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
+    const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
+
+    if (
+      targetLat == null ||
+      Number.isNaN(targetLat) ||
+      targetLng == null ||
+      Number.isNaN(targetLng)
+    ) {
+      alert("목적지 좌표가 없어 진행할 수 없습니다.");
       return;
     }
-    navigate("/MapRoute", {
-      state: {
-        dest: { lat, lng },
-        name: detail?.name,
-        address: detail?.address,
+
+    navigate(
+      {
+        pathname: "/nfc",
+        search: `?placeId=${encodeURIComponent(placeId ?? "")}`,
       },
-    });
-  };
-
-  const onSubscribeAlert = async () => {
-    if (!placeId) return;
-    try {
-      await subscribeAlert(placeId);
-      setAlarmOn(true);
-      alert("알림이 설정되었습니다.");
-    } catch {
-      alert("알림 설정에 실패했습니다.");
-    }
-  };
-
-  const onPredict = async () => {
-    if (!placeId) return;
-    try {
-      const { data } = await getPredict(placeId, 10);
-      alert("예측 결과: " + JSON.stringify(data));
-    } catch {
-      alert("혼잡도 예측을 불러오지 못했습니다.");
-    }
+      {
+        state: {
+          prefetched: true,
+          placeId,
+          placeName: detail?.name,
+          address: detail?.address,
+          openRangesText: detail?.availableTimes,
+          isLocal: !!detail?._flags?.isLocal,
+        },
+      }
+    );
   };
 
   if (loading) {
     return (
-      <div className="pd-wrap">
-        <div className="pd-topbar">
-          <button className="pd-close" onClick={goBack} aria-label="닫기">
+      <div className="pub-wrap">
+        <div className="pub-topbar">
+          <button className="pub-close" onClick={goBack} aria-label="닫기">
             ✕
           </button>
         </div>
-        <h1 className="pd-title">불러오는 중…</h1>
+        <h1 className="pub-title">불러오는 중…</h1>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="pd-wrap">
-        <div className="pd-topbar">
-          <button className="pd-close" onClick={goBack} aria-label="닫기">
+      <div className="pub-wrap">
+        <div className="pub-topbar">
+          <button className="pub-close" onClick={goBack} aria-label="닫기">
             ✕
           </button>
         </div>
-        <h1 className="pd-title">오류</h1>
+        <h1 className="pub-title">오류</h1>
         <p style={{ padding: "0 24px" }}>{error}</p>
       </div>
     );
@@ -227,13 +295,13 @@ export default function PvPlaceDetail() {
 
   if (!detail) {
     return (
-      <div className="pd-wrap">
-        <div className="pd-topbar">
-          <button className="pd-close" onClick={goBack} aria-label="닫기">
+      <div className="pub-wrap">
+        <div className="pub-topbar">
+          <button className="pub-close" onClick={goBack} aria-label="닫기">
             ✕
           </button>
         </div>
-        <h1 className="pd-title">데이터가 없습니다.</h1>
+        <h1 className="pub-title">데이터가 없습니다.</h1>
       </div>
     );
   }
@@ -248,73 +316,77 @@ export default function PvPlaceDetail() {
     note,
   } = detail;
 
-  const etaText =
-    typeof leavingEtaMin === "number"
-      ? `${Math.max(0, leavingEtaMin)}분`
-      : "잠시";
-
   return (
-    <div className="pd-wrap">
-      {/* 상단바 */}
-      <div className="pd-topbar">
-        <button className="pd-close" onClick={goBack} aria-label="닫기">
+    <div className="pub-wrap">
+      <div className="pub-topbar">
+        <button className="pub-close" onClick={goBack} aria-label="닫기">
           ✕
         </button>
 
-        <button
-          className="pd-alarm"
-          onClick={onSubscribeAlert}
-          aria-pressed={alarmOn}
-          aria-label={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
-          title={alarmOn ? "알림 켜짐" : "알림 꺼짐"}
-        >
-          <img src={alarmIconOn && alarmOn ? alarmIconOn : alarmIcon} alt="" />
-        </button>
-
-        <button
-          className="pd-bell"
-          onClick={() => alert("신고하기 준비 중")}
-          aria-label="신고하기"
-        >
-          <img src={reportIcon} alt="신고" />
-        </button>
+        {!isLocal && (
+          <>
+            <button
+              className="pub-alarm"
+              onClick={async () => {
+                try {
+                  await subscribeAlert(placeId);
+                  alert("알림이 설정되었습니다.");
+                } catch {
+                  alert("알림 설정에 실패했습니다.");
+                }
+              }}
+              aria-label="알림"
+              title="알림 설정"
+            >
+              <img src={alarmIcon} alt="알림" />
+            </button>
+            <button
+              className="pub-bell"
+              onClick={() => alert("신고하기 준비 중")}
+              aria-label="신고하기"
+            >
+              <img src={reportIcon} alt="신고" />
+            </button>
+          </>
+        )}
       </div>
 
-      <h1 className="pd-title">{name}</h1>
+      <h1 className="pub-title">{name || "주차 장소"}</h1>
 
-      {/* 정보 칩 */}
-      <div className="pd-chips">
-        <div className="pd-chip">
-          <div className="pd-chip-icon">
+      <div className="pub-chips">
+        <div className="pub-chip">
+          <div className="pub-chip-icon">
             <img src={pinIcon} alt="위치" />
           </div>
-          <div className="pd-chip-text">
-            <strong>{distanceKm ?? "-"}km</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
-            <strong>{etaMin ?? "-"}분</strong>
-            <div className="pd-chip-sub">주차 장소까지</div>
+          <div className="pub-chip-text">
+            <div className="pub-chip-value">
+              <strong>{distanceKm ?? "-"}km</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
+              <strong>{etaMin ?? "-"}분</strong>
+            </div>
+            <div className="pub-chip-sub">주차 장소까지</div>
           </div>
         </div>
 
-        <div className="pd-chip">
-          <div className="pd-chip-icon">
+        <div className="pub-chip">
+          <div className="pub-chip-icon">
             <img src={moneyIcon} alt="요금" />
           </div>
-          <div className="pd-chip-text">
-            <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
-            <div className="pd-chip-sub">10분당 주차 비용</div>
+          <div className="pub-chip-text">
+            <div className="pub-chip-value">
+              <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
+            </div>
+            <div className="pub-chip-sub">10분당 주차 비용</div>
           </div>
         </div>
       </div>
 
-      {/* 주소 */}
-      <section className="pd-section">
-        <h2 className="pd-section-title">주차 장소와 가장 근접한 위치</h2>
-        <div className="pd-address-row">
-          <div className="pd-address">{address || "-"}</div>
+      <section className="pub-section">
+        <h2 className="pub-section-title">주차 장소와 가장 근접한 위치</h2>
+        <div className="pub-address-row">
+          <div className="pub-address">{address || "-"}</div>
           <button
-            className="pd-copy-btn"
+            className="pub-copy-btn"
             onClick={copyAddress}
-            aria-label="주소 복사"
             title="주소 복사"
           >
             <img src={copyIcon} alt="복사" />
@@ -322,50 +394,73 @@ export default function PvPlaceDetail() {
         </div>
       </section>
 
-      {/* 시간 */}
-      <section className="pd-section">
-        <h2 className="pd-section-title">주차 가능 시간</h2>
-        <div className="pd-times">{availableTimes}</div>
+      <section className="pub-section">
+        <h2 className="pub-section-title">주차 가능 시간</h2>
+        <div className="pub-times">{availableTimes}</div>
       </section>
 
-      {/* 사진 + 설명 */}
-      <section className="pd-section">
-        <h2 className="pd-section-title">주차 장소 설명</h2>
-        <div className="pd-photo-box" role="img" aria-label="주차 장소 사진">
-          <div className="pd-photo-placeholder">🖼️</div>
+      <section className="pub-section">
+        <h2 className="pub-section-title">주차 장소 사진</h2>
+        <div className="pub-photo-box" role="img" aria-label="주차 장소 사진">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt="주차 장소"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: 12,
+              }}
+            />
+          ) : (
+            <div className="pub-photo-placeholder">🖼️</div>
+          )}
         </div>
-        <pre className="pd-note">{note}</pre>
+
+        <h2 className="pub-section-title" style={{ marginTop: 4 }}>
+          주차 장소 설명
+        </h2>
+        <pre className="pub-note">{note || "-"}</pre>
       </section>
 
-      {/* 하단 버튼 + 말풍선(곧 나감) */}
-      <div className="pd-actions">
-        <button className="pd-btn pd-btn-outline" onClick={openRoute}>
+      <div className="pub-actions">
+        <button
+          className="pub-btn pub-btn-outline"
+          onClick={() => {
+            const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
+            const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
+            if (
+              targetLat == null ||
+              Number.isNaN(targetLat) ||
+              targetLng == null ||
+              Number.isNaN(targetLng)
+            ) {
+              alert("목적지 좌표가 없어 경로를 열 수 없습니다.");
+              return;
+            }
+            navigate("/MapRoute", {
+              state: {
+                dest: { lat: targetLat, lng: targetLng },
+                name: detail.name,
+                address: detail.address,
+                placeId,
+                isPrivate: true,
+              },
+            });
+          }}
+        >
           경로 안내 보기
         </button>
 
-        <div className="pd-bubble-container">
-          {queueOpen && isAvailable && (
-            <div className="pd-bubble-box" role="status" aria-live="polite">
-              <img src={out5m} alt="" className="pd-bubble-icon" />
-              <span className="pd-bubble-text">
-                이전 이용자가 <strong>{etaText}</strong> 뒤 곧 나갈 예정이에요!
-              </span>
-            </div>
-          )}
-
-          <button
-            className={`pd-btn pd-btn-primary ${
-              queueOpen ? "pd-btn-wait" : ""
-            } ${primary.disabled ? "in-use" : ""}`}
-            disabled={primary.disabled}
-            onClick={primary.onClick}
-          >
-            {primary.label}
-          </button>
-        </div>
-
-        <button className="pd-btn pd-btn-ghost" onClick={onPredict}>
-          혼잡도 예측
+        <button
+          className={`pub-btn pub-btn-primary ${
+            primary.disabled ? "in-use" : ""
+          }`}
+          disabled={primary.disabled}
+          onClick={primary.onClick}
+        >
+          {primary.label}
         </button>
       </div>
     </div>

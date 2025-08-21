@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Mapmenu.css";
 import parkherelogo from "../Assets/phlogo.png";
+import { useParkingForm } from "../store/ParkingForm";
 
 export default function MapMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const resetForm = useParkingForm((s) => s.reset);
 
   return (
     <>
-      {!open && ( //메뉴가 열리면, 즉 open이 false일 때
+      {!open && (
         <button
           className="menu-fab"
           onClick={() => setOpen(true)}
@@ -21,13 +23,11 @@ export default function MapMenu() {
         </button>
       )}
 
-      {/* 딤드 */}
       <div
         className={`menu-backdrop ${open ? "show" : ""}`}
         onClick={() => setOpen(false)}
       />
 
-      {/* 슬라이드 패널 */}
       <aside className={`menu-drawer ${open ? "open" : ""}`}>
         <header className="menu-header">
           <img className="menu-logo" src={parkherelogo} alt="" />
@@ -44,15 +44,26 @@ export default function MapMenu() {
           <h1 className="menu-hello">
             안녕하세요,
             <br />
-            <strong>홍길동</strong>
-            님!
+            <strong>홍길동</strong>님!
           </h1>
 
           <div className="menu-section">
             <div className="menu-section-title">주차 장소</div>
-            <button className="menu-row">
+
+            {/* ✅ 등록 진입 : 폼/세션 초기화 후 시작 */}
+            <button
+              className="menu-row"
+              onClick={() => {
+                // 이전 등록 잔여값(특히 lat/lng, 이미지) 제거
+                resetForm();
+                sessionStorage.clear();
+                setOpen(false);
+                navigate("/confirm");
+              }}
+            >
               주차 장소 등록<span className="chev">›</span>
             </button>
+
             <button
               className="menu-row"
               onClick={() => {

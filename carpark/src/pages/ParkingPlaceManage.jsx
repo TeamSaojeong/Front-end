@@ -1,26 +1,43 @@
-import React, { useState } from "react";
+// src/pages/ParkingPlaceManage.jsx
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/ParkingPlaceManage.css";
 import backIcon from "../Assets/arrow.png";
+import { useMyParkings } from "../store/MyParkings";
 
 export default function ParkingPlaceManage() {
   const navigate = useNavigate();
 
-  // 임의 데이터
-  const [places, setPlaces] = useState([
-    { id: 1, name: "주차장소 이름", enabled: true },
-    { id: 2, name: "주차장소 이름", enabled: true },
-    { id: 3, name: "주차장소 이름", enabled: false },
-  ]);
-
-  const toggle = (id) =>
-    setPlaces((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p))
-    );
+  const places = useMyParkings((s) => s.items);
+  const toggleEnabled = useMyParkings((s) => s.toggleEnabled);
+  const remove = useMyParkings((s) => s.remove);
 
   const edit = (id) => {
-    // 나중에 여기에 '수정하기' 누르면 뜨는 페이지 등록
+    // 추후 수정 페이지 연결
     alert(`수정하기: ID ${id}`);
+  };
+
+  const removeWatched = (id) => {
+    try {
+      const raw = localStorage.getItem("watchedPlaceIds");
+      const ids = raw ? JSON.parse(raw) : [];
+      const next = ids.filter((x) => String(x) !== String(id));
+      localStorage.setItem("watchedPlaceIds", JSON.stringify(next));
+    } catch {}
+  };
+
+  const onDelete = (p) => {
+    if (!window.confirm(`'${p.name || "내 주차장"}'을(를) 삭제할까요?`)) return;
+    remove(p.id);
+    removeWatched(p.id);
+    // 선택된 상세가 남아있을 수 있어 정리
+    try {
+      const raw = sessionStorage.getItem("selectedPlace");
+      const sp = raw ? JSON.parse(raw) : null;
+      if (sp && String(sp.id) === String(p.id)) {
+        sessionStorage.removeItem("selectedPlace");
+      }
+    } catch {}
   };
 
   return (
@@ -36,34 +53,51 @@ export default function ParkingPlaceManage() {
         <h1 className="ppm-title">주차 장소 관리</h1>
       </header>
 
-      {/* 리스트 */}
       <ul className="ppm-list">
-        {places.map((p) => (
-          <li key={p.id} className="ppm-item">
-            <div className="ppm-left">
-              <div className={`ppm-name ${!p.enabled ? "disabled" : ""}`}>
-                {p.name}
-              </div>
-              <button
-                className={`ppm-edit ${!p.enabled ? "disabled" : ""}`}
-                onClick={() => edit(p.id)}
-              >
-                수정하기 <span className="ppm-chevron">›</span>
-              </button>
-            </div>
+        {(places || []).map((p) => {
+          const hasCoord =
+            typeof p.lat === "number" && typeof p.lng === "number";
+          return (
+            <li key={p.id} className="ppm-item">
+              <div className="ppm-left">
+                <div className={`ppm-name ${!p.enabled ? "disabled" : ""}`}>
+                  {p.name || "내 주차장"}
+                  {!hasCoord && <span className="ppm-badge">좌표 없음</span>}
+                </div>
 
-            {/* 토글 */}
-            <label className={`ppm-switch ${p.enabled ? "on" : "off"}`}>
-              <input
-                type="checkbox"
-                checked={p.enabled}
-                onChange={() => toggle(p.id)}
-                aria-label={`${p.name} 사용 여부`}
-              />
-              <span className="ppm-knob" />
-            </label>
-          </li>
-        ))}
+                <div className="ppm-actions">
+                  <button
+                    className={`ppm-edit ${!p.enabled ? "disabled" : ""}`}
+                    onClick={() => edit(p.id)}
+                    type="button"
+                  >
+                    수정하기 <span className="ppm-chevron">›</span>
+                  </button>
+
+                  {/* ✅ 삭제 버튼 */}
+                  <button
+                    className="ppm-delete"
+                    onClick={() => onDelete(p)}
+                    type="button"
+                    aria-label={`${p.name} 삭제`}
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+
+              <label className={`ppm-switch ${p.enabled ? "on" : "off"}`}>
+                <input
+                  type="checkbox"
+                  checked={!!p.enabled}
+                  onChange={() => toggleEnabled(p.id)}
+                  aria-label={`${p.name} 사용 여부`}
+                />
+                <span className="ppm-knob" />
+              </label>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

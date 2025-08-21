@@ -1,42 +1,6 @@
 import React, { useMemo, useState } from "react";
 import searchIcon from "../Assets/glasses.png";
 
-/* ========= 임시 데이터 ========= */
-const MOCK_PLACES = [
-  {
-    id: 1,
-    name: "신림 주차장",
-    distanceKm: 0.3,
-    etaMin: 2,
-    price: 1000,
-    leavingSoon: false,
-  },
-  {
-    id: 2,
-    name: "서울역 주차장",
-    distanceKm: 1.2,
-    etaMin: 6,
-    price: 2000,
-    leavingSoon: true,
-  },
-  {
-    id: 3,
-    name: "강남 센터 주차장",
-    distanceKm: 5.1,
-    etaMin: 15,
-    price: 5000,
-    leavingSoon: false,
-  },
-  {
-    id: 4,
-    name: "잠실 롯데 주차장",
-    distanceKm: 8.0,
-    etaMin: 20,
-    price: 8000,
-    leavingSoon: false,
-  },
-];
-
 /* ========= 초성 검색 유틸 ========= */
 const CHO_LIST = [
   "ㄱ",
@@ -80,31 +44,15 @@ export default function Content({
   errorMsg = "",
   onRefreshHere,
   onSelectPlace,
-  enableMock, // 외부에서 강제 목데이터 사용하고 싶을 때
 }) {
   const [q, setQ] = useState("");
 
-  // URL 쿼리로도 제어 가능: ?mock=1
-  let mockFromQuery = false;
-  try {
-    const qs = new URLSearchParams(window.location.search);
-    mockFromQuery = qs.get("mock") === "1";
-  } catch {}
-
-  // ✅ 목데이터 사용 조건
-  const useMock =
-    enableMock === true ||
-    mockFromQuery ||
-    (!isLoading && !errorMsg && (!places || places.length === 0));
-
-  const data = useMock ? MOCK_PLACES : places;
-
+  // 검색(초성/일반)
   const filtered = useMemo(() => {
     const nq = norm(q);
-    if (!nq) return data;
-
+    if (!nq) return places;
     const isChosungQuery = /^[ㄱ-ㅎ]+$/.test(q);
-    return data.filter((p) => {
+    return places.filter((p) => {
       const name = p?.name ?? "";
       const nname = norm(name);
       if (nname.includes(nq)) return true;
@@ -114,10 +62,14 @@ export default function Content({
       }
       return false;
     });
-  }, [q, data]);
+  }, [q, places]);
+
+  const showEmpty =
+    !isLoading && !errorMsg && Array.isArray(places) && places.length === 0;
 
   return (
     <div className="bs-body">
+      {/* 검색 */}
       <div className="bs-search">
         <img className="bs-search-icon" src={searchIcon} alt="" />
         <input
@@ -129,11 +81,7 @@ export default function Content({
 
       <div className="bs-section">
         <h2 className="bs-title">지금 주차 가능한 곳</h2>
-        <p className="bs-sub">
-          {useMock
-            ? "테스트용 목데이터입니다"
-            : "현재 위치 기반으로 추천해드려요!"}
-        </p>
+        <p className="bs-sub">현재 위치 기반으로 추천해드려요!</p>
       </div>
 
       {isLoading && (
@@ -147,6 +95,7 @@ export default function Content({
         </div>
       )}
 
+      {/* 결과 카드 */}
       {!isLoading &&
         !errorMsg &&
         filtered.map((p) => (
@@ -154,7 +103,9 @@ export default function Content({
             className="bs-card"
             key={p.id}
             role="button"
+            tabIndex={0}
             onClick={() => onSelectPlace?.(p)}
+            onKeyDown={(e) => e.key === "Enter" && onSelectPlace?.(p)}
           >
             <div className="bs-card-image" aria-hidden="true" />
             <div className="bs-info">
@@ -183,6 +134,15 @@ export default function Content({
           </div>
         ))}
 
+      {/* 빈 상태 */}
+      {showEmpty && (
+        <div style={{ padding: "4px 2px 12px", color: "#6b7280" }}>
+          주변에 추천할 주차장이 없어요. 아래 버튼으로 현 위치에서 다시 추천을
+          받아보세요.
+        </div>
+      )}
+
+      {/* 현 위치 재검색 */}
       <button
         className="bs-location"
         onClick={onRefreshHere}

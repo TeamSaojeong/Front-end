@@ -1,0 +1,188 @@
+:root {
+  --primary: #2e80ec;
+}
+
+.estate-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 390px;
+  min-height: 844px;
+  margin: 0 auto;
+  background: #fff;
+}
+
+.estate-back {
+  position: absolute;
+  top: 40px;
+  left: 24px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.estate-header {
+  margin-top: 96px;
+  padding: 0 24px;
+}
+
+.estate-title {
+  white-space: pre-line;
+  font-size: 24px;
+  font-weight: 700;
+  color: #303030;
+  line-height: 1.35;
+}
+
+.estate-meta {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.estate-row {
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start; 
+  gap: 4px; 
+  padding: 8px 0;
+}
+.estate-label {
+  min-width: auto; 
+  font-size: 12px; 
+  color: #8c8c8c;
+  line-height: 18px;
+}
+.estate-value {
+  font-size: 14px; 
+  color: #303030;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: normal; 
+  word-break: break-word;
+}
+
+
+.estate-chip {
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 40px;
+
+
+  border-radius: 6px;
+  border: 1px solid #eaeaea;
+  background: #f1f1f5;
+  color: #5c5c5c;
+  font-size: 13px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.estate-chip-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex: 0 0 18px;
+}
+
+.estate-wheel-wrap {
+  position: relative;
+  margin: 50px 24px 0;
+  height: 132px;
+  display: grid;
+  grid-template-columns: 1fr 20px 1fr; 
+  align-items: stretch;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.estate-wheel {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+.estate-wheel::-webkit-scrollbar {
+  display: none;
+}
+
+.estate-item {
+  height: 44px; 
+  line-height: 44px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: #9aa0a6;
+  scroll-snap-align: center;
+}
+.estate-item.active {
+  color: #303030;
+}
+
+.estate-spacer {
+  height: 44px;
+}
+
+.estate-col-suffix {
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #303030;
+}
+
+.estate-guide-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px solid var(--primary);
+  pointer-events: none;
+}
+.estate-guide-top {
+  top: calc(50% - 22px);
+}
+.estate-guide-bot {
+  top: calc(50% + 22px);
+}
+
+/* 하단 버튼 */
+.estate-bottom {
+  margin-top: 150px;
+  padding: 0 24px 24px;
+}
+
+.estate-pay {
+  width: 100%;
+  height: 56px;
+  border-radius: 6px;
+  border: 1px solid #a8a8a8;
+  font-size: 16px;
+  font-weight: 700;
+  background: #2e80ec;
+  color: #fff;
+  cursor: pointer;
+}
+
+.estate-pay.disabled,
+.estate-pay:disabled {
+  background: #e9e9e9;
+  color: #b5b5b5;
+  border-color: #e1e1e1;
+  cursor: not-allowed;
+}
+
+.estate-error {
+  margin-top: 10px;
+  color: #d32f2f;
+  font-size: 12px;
+}

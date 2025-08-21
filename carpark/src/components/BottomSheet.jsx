@@ -8,14 +8,13 @@ export default function BottomSheet({
   places = [],
   isLoading = false,
   errorMsg = "",
-  onRefresh,
-  onRefreshHere,
+  onRefreshHere, // ← 현 위치 재검색
   onSelectPlace,
   onOpenChange,
 }) {
   const sheetRef = useRef(null);
   const contentRef = useRef(null);
-  const headerRef = useRef(null); // ⬅️ 헤더 전용 드래그 타깃
+  const headerRef = useRef(null); // 헤더 전용 드래그 타깃
 
   useBottomSheet({ hostRef, sheetRef, contentRef, headerRef, onOpenChange });
 
@@ -30,7 +29,6 @@ export default function BottomSheet({
           places={places}
           isLoading={isLoading}
           errorMsg={errorMsg}
-          onRefresh={onRefresh}
           onRefreshHere={onRefreshHere}
           onSelectPlace={onSelectPlace}
         />
