@@ -13,6 +13,7 @@ import {
   getPublicDetail,
   getParkingStatus,
   subscribeAlert,
+  unsubscribeAlert,
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
 
@@ -221,13 +222,8 @@ export default function PlaceDetail() {
     };
   }, [parkingId]);
 
-  /** 🔔 알림 버튼 (등록만 가능) */
+  /** 🔔 알림 버튼 (등록/해지 가능) */
   const onClickAlarm = async () => {
-    if (isSubscribed) {
-      alert("이미 알림이 설정되어 있어요. 알림 해지는 현재 지원되지 않습니다.");
-      return;
-    }
-    
     const token = localStorage.getItem("accessToken");
     if (!token) {
       alert("로그인이 필요합니다.");
@@ -236,17 +232,64 @@ export default function PlaceDetail() {
     }
 
     try {
-      // 알림 등록
-      await subscribeAlert({ provider: "kakao", externalId });
-      addWatched(externalId, userKey);
+      if (isSubscribed) {
+        // 알림 해지 - alertId 필요
+        const alertIdsKey = `alertIds__${userKey}`;
+        const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
+        const alertId = alertIds[externalId];
+        
+        if (alertId) {
+          await unsubscribeAlert({ alertId });
+          
+          // 로컬에서 제거
+          const watchedIds = readWatched(userKey).filter(id => id !== externalId);
+          saveWatched(watchedIds, userKey);
+          
+          const nameKey = "watchedPlaceNames__" + userKey;
+          const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+          delete names[externalId];
+          localStorage.setItem(nameKey, JSON.stringify(names));
+          
+          // alertId도 제거
+          delete alertIds[externalId];
+          localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
+          
+          setIsSubscribed(false);
+          alert("알림이 해지되었습니다.");
+        } else {
+          alert("알림 ID를 찾을 수 없어 해지할 수 없습니다.");
+        }
+      } else {
+        // 알림 등록
+        console.log('알림 등록 파라미터:', { provider: "kakao", externalId, parkingId: parkingId ?? externalId });
+        const alertResponse = await subscribeAlert({ 
+          provider: "kakao", 
+          externalId,
+          parkingId: parkingId ?? externalId 
+        });
+        const alertId = alertResponse?.data?.data?.id;
+        
+        console.log('POST /api/alerts response:', alertResponse);
+        console.log('extracted alertId:', alertId);
+        
+        addWatched(externalId, userKey);
 
-      const nameKey = "watchedPlaceNames__" + userKey;
-      const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
-      names[externalId] = detail?.name || "주차장";
-      localStorage.setItem(nameKey, JSON.stringify(names));
+        const nameKey = "watchedPlaceNames__" + userKey;
+        const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+        names[externalId] = detail?.name || "주차장";
+        localStorage.setItem(nameKey, JSON.stringify(names));
 
-      setIsSubscribed(true);
-      alert("알림이 설정되었습니다.");
+        // alertId 저장
+        if (alertId) {
+          const alertIdsKey = `alertIds__${userKey}`;
+          const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
+          alertIds[externalId] = alertId;
+          localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
+        }
+
+        setIsSubscribed(true);
+        alert("알림이 설정되었습니다.");
+      }
     } catch (e) {
       if (e?.response?.status === 401) {
         alert("세션이 만료되었습니다. 다시 로그인해 주세요.");
@@ -314,7 +357,7 @@ export default function PlaceDetail() {
           className={`pub-alarm ${isSubscribed ? "is-on" : ""}`}
           onClick={onClickAlarm}
           aria-label="알림"
-          title={isSubscribed ? "알림 설정됨 (해지 불가)" : "알림 설정"}
+          title={isSubscribed ? "알림 해지" : "알림 설정"}
         >
           <img
             src={isSubscribed ? alarmFilledIcon : alarmIcon}
