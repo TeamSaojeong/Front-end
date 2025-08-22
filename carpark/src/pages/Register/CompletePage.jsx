@@ -16,7 +16,8 @@ const CompletePage = () => {
   const { state } = useLocation();
   const detailFromState = state?.detail || null;
 
-  const { name, charge, operateTimes, reset } = useParkingForm();
+  const { name, charge, operateTimes, reset, editingId } = useParkingForm();
+  const isEditing = !!editingId;
 
   const navigate = useNavigate();
 
@@ -46,7 +47,9 @@ const CompletePage = () => {
       </div>
 
       <div>
-        <h1 className="complete-title">주차 장소 등록 완료</h1>
+        <h1 className="complete-title">
+          {isEditing ? "주차 장소 수정 완료" : "주차 장소 등록 완료"}
+        </h1>
       </div>
 
       <div>

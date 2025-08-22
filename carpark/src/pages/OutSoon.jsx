@@ -232,6 +232,88 @@ export default function OutSoon() {
 
       await postSoonOut(payload);
 
+      // 🔔 같은 주차장을 구독한 다른 사용자들에게 알림 시뮬레이션
+      try {
+        // 현재 사용자 키
+        const currentUserKey = localStorage.getItem("userKey") || "guest";
+        console.log(`[알림] 현재 사용자: ${currentUserKey}`);
+        
+        // 모든 사용자 키 찾기 (실제로는 서버에서 처리해야 함)
+        const allUserKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("watchedPlaceIds__")) {
+            const userKey = key.replace("watchedPlaceIds__", "");
+            if (userKey !== currentUserKey) {
+              allUserKeys.push(userKey);
+            }
+          }
+        }
+        
+        console.log(`[알림] 발견된 다른 사용자들:`, allUserKeys);
+        
+        // 각 사용자가 이 주차장을 구독하고 있는지 확인
+        allUserKeys.forEach(userKey => {
+          const watchedIdsKey = `watchedPlaceIds__${userKey}`;
+          const watchedNamesKey = `watchedPlaceNames__${userKey}`;
+          
+          try {
+            const watchedIds = JSON.parse(localStorage.getItem(watchedIdsKey) || "[]");
+            const watchedNames = JSON.parse(localStorage.getItem(watchedNamesKey) || "{}");
+            
+            console.log(`[알림] 사용자 ${userKey}의 구독 정보:`, {
+              watchedIds,
+              watchedNames,
+              currentPlaceId: normalizeId(placeId)
+            });
+            
+            // 이 주차장을 구독하고 있는지 확인
+            if (watchedIds.includes(normalizeId(placeId))) {
+              console.log(`[알림] 사용자 ${userKey}가 이 주차장을 구독하고 있음!`);
+              
+              // 알림 데이터 생성
+              const notificationData = {
+                id: Date.now() + Math.random(), // 고유 ID
+                type: 'SOON_OUT',
+                parkingId: normalizeId(placeId),
+                placeName: watchedNames[normalizeId(placeId)] || placeName,
+                minutesAgo: minute,
+                timestamp: Date.now(),
+                targetUserKey: userKey
+              };
+              
+              console.log(`[알림] 생성된 알림 데이터:`, notificationData);
+              
+              // 해당 사용자의 알림 목록에 추가
+              const notificationsKey = `pendingNotifications__${userKey}`;
+              const existingNotifications = JSON.parse(localStorage.getItem(notificationsKey) || "[]");
+              existingNotifications.push(notificationData);
+              localStorage.setItem(notificationsKey, JSON.stringify(existingNotifications));
+              
+              console.log(`[알림] 사용자 ${userKey}의 알림 목록에 추가됨:`, {
+                key: notificationsKey,
+                count: existingNotifications.length,
+                notifications: existingNotifications
+              });
+              
+              console.log(`[알림] 사용자 ${userKey}에게 ${placeName} 곧 나감 알림 전송 완료`);
+            } else {
+              console.log(`[알림] 사용자 ${userKey}는 이 주차장을 구독하지 않음`);
+            }
+          } catch (error) {
+            console.error(`[알림] 사용자 ${userKey} 알림 처리 실패:`, error);
+          }
+        });
+        
+        // 개발 중에만 로그 출력 (테스트 알림은 제거)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[알림] 개발 모드: 현재 사용자 ${currentUserKey}에게는 테스트 알림을 추가하지 않음`);
+        }
+        
+      } catch (error) {
+        console.error("[알림] 알림 시뮬레이션 실패:", error);
+      }
+
       // ✅ cancel 화면/자동 종료를 위해 시간 & 장소를 함께 전달 + 세션에도 저장
       const startISO = startAt.toISOString();
       const endISO = endAt.toISOString();

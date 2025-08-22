@@ -221,19 +221,22 @@ export default function PlaceDetail() {
     };
   }, [parkingId]);
 
-  /** 🔔 알림 버튼 (해지 없이 ‘설정만’ 가능) */
+  /** 🔔 알림 버튼 (등록만 가능) */
   const onClickAlarm = async () => {
     if (isSubscribed) {
-      alert("이미 알림이 설정되어 있어요.");
+      alert("이미 알림이 설정되어 있어요. 알림 해지는 현재 지원되지 않습니다.");
       return;
     }
+    
     const token = localStorage.getItem("accessToken");
     if (!token) {
       alert("로그인이 필요합니다.");
       navigate("/login", { state: { from: location.pathname } });
       return;
     }
+
     try {
+      // 알림 등록
       await subscribeAlert({ provider: "kakao", externalId });
       addWatched(externalId, userKey);
 
@@ -311,7 +314,7 @@ export default function PlaceDetail() {
           className={`pub-alarm ${isSubscribed ? "is-on" : ""}`}
           onClick={onClickAlarm}
           aria-label="알림"
-          title={isSubscribed ? "알림 설정됨" : "알림 설정"}
+          title={isSubscribed ? "알림 설정됨 (해지 불가)" : "알림 설정"}
         >
           <img
             src={isSubscribed ? alarmFilledIcon : alarmIcon}
