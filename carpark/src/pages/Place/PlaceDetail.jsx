@@ -324,7 +324,14 @@ export default function PlaceDetail() {
 
         <button
           className="pub-bell"
-          onClick={() => alert("신고하기 준비 중")}
+          onClick={() => navigate("/report", {
+            state: {
+              placeId: kakaoId,
+              placeName: detail?.name || "주차장",
+              address: detail?.address || "",
+              isPrivate: false
+            }
+          })}
           aria-label="신고하기"
         >
           <img src={reportIcon} alt="신고" />

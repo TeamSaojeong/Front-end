@@ -74,13 +74,14 @@ export default function ParkingPlaceManage() {
         return {
           id: parkingId,
           name: parking.parkingName || parking.name || `주차장 ${parkingId}`,
-          // 서버에 좌표가 없으므로 기존 데이터 유지 (npm start 후에도 보존)
-          lat: existingItem?.lat ?? null,
-          lng: existingItem?.lng ?? null,
+          // 서버에서 좌표 제공됨!
+          lat: parking.lat != null ? Number(parking.lat) : existingItem?.lat ?? null,
+          lng: parking.lng != null ? Number(parking.lng) : existingItem?.lng ?? null,
+          // 나머지는 기존 데이터 유지 (서버에서 제공되지 않음)
           address: existingItem?.address ?? "",
           content: existingItem?.content ?? "",
           operateTimes: existingItem?.operateTimes ?? [],
-          charge: existingItem?.charge ?? 0,
+          charge: existingItem?.charge ?? 0, // 기존 값 완전 보존
           imageUrl: existingItem?.imageUrl ?? null,
           enabled: parking.operate ?? existingItem?.enabled ?? true,
           origin: "server"

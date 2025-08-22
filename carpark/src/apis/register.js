@@ -46,13 +46,10 @@ export async function register(accessToken) {
   console.log("[REGISTER] 전송할 JSON:", request);
 
   let file = s.image;
-  if (!(file instanceof File)) {
-    const err = new Error("이미지 파일이 필요합니다.");
-    err.code = "IMAGE_REQUIRED";
-    throw err;
-  }
-
-  if (shrinkImageFile) {
+  let hasImage = file instanceof File;
+  
+  // 이미지가 있는 경우에만 압축 처리
+  if (hasImage && shrinkImageFile) {
     file = await shrinkImageFile(file, {
       maxW: 1600,
       maxH: 1600,
@@ -61,13 +58,17 @@ export async function register(accessToken) {
     });
   }
 
-  async function postOnce(f) {
+  async function postOnce(f, hasImg) {
     const fd = new FormData();
     fd.append(
       "request",
       new Blob([JSON.stringify(request)], { type: "application/json" })
     );
-    fd.append("image", f, f.name || "parking.jpg");
+    
+    // 이미지가 있는 경우에만 추가
+    if (hasImg && f) {
+      fd.append("image", f, f.name || "parking.jpg");
+    }
 
     console.log("[REGISTER] 서버로 요청 보냄…");
 
@@ -84,7 +85,7 @@ export async function register(accessToken) {
   }
 
   try {
-    const data = await postOnce(file);
+    const data = await postOnce(file, hasImage);
     console.log("[REGISTER] 서버 응답:", JSON.stringify(data, null, 2));
     
     // API 명세서에 따라 data는 배열
@@ -123,7 +124,7 @@ export async function register(accessToken) {
         quality: 0.78,
         targetBytes: 600 * 1024,
       });
-      const data = await postOnce(smaller);
+      const data = await postOnce(smaller, true);
       const created = data?.data ?? {};
       const parkingId = String(
         created?.id || created?.parkingId || created?.parking_id || ""

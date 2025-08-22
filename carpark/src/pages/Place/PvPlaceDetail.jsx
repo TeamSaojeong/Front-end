@@ -237,21 +237,25 @@ export default function PvPlaceDetail() {
       if (src.imageUrl) {
         setImageUrl(src.imageUrl);
       } else {
-        // 서버에서 이미지 가져오기 시도
-        try {
-          const imgRes = await getPrivateImage(normalized.id);
-          if (imgRes?.data) {
-            const url = URL.createObjectURL(imgRes.data);
-            setImageUrl(url);
-            console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
+        // 임시 ID가 아닌 경우에만 서버에서 이미지 가져오기 시도
+        if (!String(normalized.id).startsWith('temp_')) {
+          try {
+            const imgRes = await getPrivateImage(normalized.id);
+            if (imgRes?.data) {
+              const url = URL.createObjectURL(imgRes.data);
+              setImageUrl(url);
+              console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
+            }
+          } catch (error) {
+            // 404 오류는 정상적인 상황 (이미지가 없는 경우)
+            if (error?.response?.status === 404) {
+              console.log("[PvPlaceDetail] 이미지 없음 (404)");
+            } else {
+              console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", error?.message);
+            }
           }
-        } catch (error) {
-          // 404 오류는 정상적인 상황 (이미지가 없는 경우)
-          if (error?.response?.status === 404) {
-            console.log("[PvPlaceDetail] 이미지 없음 (404)");
-          } else {
-            console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", error?.message);
-          }
+        } else {
+          console.log("[PvPlaceDetail] 임시 ID이므로 이미지 로드 건너뜀");
         }
       }
 
@@ -436,7 +440,14 @@ export default function PvPlaceDetail() {
             </button>
             <button
               className="pub-bell"
-              onClick={() => alert("신고하기 준비 중")}
+              onClick={() => navigate("/report", {
+                state: {
+                  placeId: placeId,
+                  placeName: detail?.name || "내 주차장",
+                  address: detail?.address || "",
+                  isPrivate: true
+                }
+              })}
               aria-label="신고하기"
             >
               <img src={reportIcon} alt="신고" />

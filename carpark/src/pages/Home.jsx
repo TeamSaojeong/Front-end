@@ -408,7 +408,7 @@ export default function Home() {
       if (p.id === selectedId) chip.classList.add("poi-chip--selected");
 
       const label =
-        p.price == null || Number.isNaN(Number(p.price))
+        p.price == null || Number.isNaN(Number(p.price)) || Number(p.price) === 0
           ? "P"
           : `₩ ${Number(p.price).toLocaleString()}원`;
       chip.textContent = label;
@@ -516,22 +516,27 @@ export default function Home() {
           (m) =>
             m.enabled && typeof m.lat === "number" && typeof m.lng === "number"
         )
-        .map((m) => ({
-          id: String(m.id),
-          kakaoId: String(m.id),
-          name: m.name || "내 주차장",
-          lat: m.lat,
-          lng: m.lng,
-          price: m.charge != null ? Number(m.charge) : null,
-          address: m.address || "",
-          content: m.content || "",
-          imageUrl: m.imageUrl || null,
-          type: "PRIVATE",
-          distanceKm: null,
-          etaMin: null,
-          leavingSoon: false,
-          _localOnly: m.origin === "local",
-        }));
+        .map((m) => {
+          // 현재 위치에서 주차장까지의 거리 계산
+          const distance = distKm({ lat, lng }, { lat: m.lat, lng: m.lng });
+          
+          return {
+            id: String(m.id),
+            kakaoId: String(m.id),
+            name: m.name || "내 주차장",
+            lat: m.lat,
+            lng: m.lng,
+            price: m.charge != null ? Number(m.charge) : null,
+            address: m.address || "",
+            content: m.content || "",
+            imageUrl: m.imageUrl || null,
+            type: "PRIVATE",
+            distanceKm: Math.round(distance * 10) / 10, // 소수점 첫째 자리까지
+            etaMin: null, // 시간 정보는 제거
+            leavingSoon: false,
+            _localOnly: m.origin === "local",
+          };
+        });
 
       const yg =
         forceYangjae || isNearYangjae(lat, lng) ? getYangjaeDummies() : [];
