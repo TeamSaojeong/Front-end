@@ -71,27 +71,26 @@ export const getPredict = (parkingId, etaMinutes) => {
 /** ✅ 알림 구독 (공영/민영 겸용) — 서버 스펙: 쿼리 파라미터 */
 export function subscribeAlert({ provider, externalId, parkingId }) {
   const params = {};
-  if (parkingId) {
-    // 개인 주차장
+  
+  if (parkingId && parkingId !== externalId) {
+    // 개인 주차장: parkingId만 전송
     params.parkingId = normalizeId(parkingId);
   } else {
-    // 공영/민영(kakao 등)
+    // 공용 주차장: provider + externalId만 전송
     params.provider = provider || "kakao";
     params.externalId = normalizeId(externalId);
   }
+  
+  console.log('subscribeAlert API 호출 파라미터:', params);
   return client.post(`/api/alerts`, null, { params, headers: authHeader() });
 }
 
-/** ✅ 알림 구독 해지 (토글 해제용) — DELETE /api/alerts */
-export function unsubscribeAlert({ provider, externalId, parkingId }) {
-  const params = {};
-  if (parkingId) {
-    params.parkingId = normalizeId(parkingId);
-  } else {
-    params.provider = provider || "kakao";
-    params.externalId = normalizeId(externalId);
-  }
-  return client.delete(`/api/alerts`, { params, headers: authHeader() });
+/** ✅ 알림 구독 해지 (새로운 DELETE API 사용) */
+export function unsubscribeAlert({ alertId }) {
+  return client.delete(`/api/alerts/delete`, { 
+    params: { alertId },
+    headers: authHeader() 
+  });
 }
 
 /** 상태 조회 */

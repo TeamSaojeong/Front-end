@@ -8,17 +8,43 @@ import pinIcon from "../../Assets/emptypin.svg";
 import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
+import alarmFilledIcon from "../../Assets/alarm1.svg";
 
 import {
   getPrivateDetail,
   getParkingStatus,
   subscribeAlert,
+  unsubscribeAlert,
   getPrivateImage,
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
 import { useMyParkings } from "../../store/MyParkings";
 
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
+const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
+
+/** 사용자별 로컬 키 (동일 브라우저 내 다른 계정 분리용) */
+const getUserKey = () => localStorage.getItem("userKey") || "guest";
+const lsk = (key) => `watchedPlaceIds__${key}`;
+const readWatched = (userKey = getUserKey()) => {
+  try {
+    const raw = localStorage.getItem(lsk(userKey));
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.map((x) => normalizeId(x)) : [];
+  } catch {
+    return [];
+  }
+};
+const saveWatched = (ids, userKey = getUserKey()) => {
+  try {
+    localStorage.setItem(lsk(userKey), JSON.stringify(ids));
+  } catch {}
+};
+const addWatched = (id, userKey = getUserKey()) => {
+  const set = new Set(readWatched(userKey));
+  set.add(normalizeId(id));
+  saveWatched([...set], userKey);
+};
 
 // 거리 계산 함수 (Haversine formula)
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -65,12 +91,20 @@ export default function PvPlaceDetail() {
 
   const sessionLat = toNum(fromSession?.lat);
   const sessionLng = toNum(fromSession?.lng);
+  
+  const userKey = getUserKey();
+  const externalId = normalizeId(placeId);
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [currentLocation, setCurrentLocation] = useState(null);
+  
+  /** 처음 진입 시: 로컬 기억값을 우선으로 아이콘 상태 결정 */
+  const [isSubscribed, setIsSubscribed] = useState(() =>
+    readWatched(userKey).includes(externalId)
+  );
 
   // 현재 위치 가져오기
   useEffect(() => {
@@ -237,8 +271,8 @@ export default function PvPlaceDetail() {
       if (src.imageUrl) {
         setImageUrl(src.imageUrl);
       } else {
-        // 임시 ID가 아닌 경우에만 서버에서 이미지 가져오기 시도
-        if (!String(normalized.id).startsWith('temp_')) {
+        // 실제 등록된 주차장인 경우 서버에서 이미지 가져오기 시도
+        if (String(normalized.id) && !String(normalized.id).startsWith('temp_')) {
           try {
             const imgRes = await getPrivateImage(normalized.id);
             if (imgRes?.data) {
@@ -309,7 +343,7 @@ export default function PvPlaceDetail() {
     }
 
     pullStatus();
-    const timer = setInterval(pullStatus, 10000);
+    const timer = setInterval(pullStatus, 3000); // 3초마다 확인
     return () => {
       mounted = false;
       clearInterval(timer);
@@ -343,6 +377,17 @@ export default function PvPlaceDetail() {
       return;
     }
 
+    console.log('PvPlaceDetail에서 NFC로 전달하는 정보:', {
+      placeId,
+      placeName: detail?.name,
+      address: detail?.address,
+      openRangesText: detail?.availableTimes,
+      isLocal: !!detail?._flags?.isLocal,
+      lat: targetLat,
+      lng: targetLng,
+      pricePer10Min: Math.round((detail?.pricePer10m || 0) / 10) * 10,
+    });
+    
     navigate(
       {
         pathname: "/nfc",
@@ -426,17 +471,86 @@ export default function PvPlaceDetail() {
             <button
               className="pub-alarm"
               onClick={async () => {
+                if (!placeId) {
+                  alert("주차장 정보를 불러올 수 없어 알림을 설정할 수 없습니다.");
+                  return;
+                }
+
                 try {
-                  await subscribeAlert(placeId);
-                  alert("알림이 설정되었습니다.");
-                } catch {
-                  alert("알림 설정에 실패했습니다.");
+                  if (isSubscribed) {
+                    // 알림 해지 - alertId 필요
+                    const alertIdsKey = `alertIds__${userKey}`;
+                    const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
+                    const alertId = alertIds[externalId];
+                    
+                    if (alertId) {
+                      await unsubscribeAlert({ alertId });
+                      
+                      // 로컬에서 제거
+                      const watchedIds = readWatched(userKey).filter(id => id !== externalId);
+                      saveWatched(watchedIds, userKey);
+                      
+                      const nameKey = "watchedPlaceNames__" + userKey;
+                      const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+                      delete names[externalId];
+                      localStorage.setItem(nameKey, JSON.stringify(names));
+                      
+                      // alertId도 제거
+                      delete alertIds[externalId];
+                      localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
+                      
+                      setIsSubscribed(false);
+                      alert("알림이 해지되었습니다.");
+                    } else {
+                      alert("알림 ID를 찾을 수 없어 해지할 수 없습니다.");
+                    }
+                  } else {
+                    // 알림 등록
+                    console.log('개인주차장 알림 등록 파라미터:', { provider: "kakao", externalId, parkingId: placeId });
+                    const alertResponse = await subscribeAlert({ 
+                      provider: "kakao", 
+                      externalId,
+                      parkingId: placeId 
+                    });
+                    const alertId = alertResponse?.data?.data?.id;
+                    
+                    console.log('POST /api/alerts response:', alertResponse);
+                    console.log('extracted alertId:', alertId);
+                    
+                    addWatched(externalId, userKey);
+
+                    const nameKey = "watchedPlaceNames__" + userKey;
+                    const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+                    names[externalId] = detail?.name || "개인 주차장";
+                    localStorage.setItem(nameKey, JSON.stringify(names));
+
+                    // alertId 저장
+                    if (alertId) {
+                      const alertIdsKey = `alertIds__${userKey}`;
+                      const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
+                      alertIds[externalId] = alertId;
+                      localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
+                    }
+
+                    setIsSubscribed(true);
+                    alert("알림이 설정되었습니다.");
+                  }
+                } catch (e) {
+                  if (e?.response?.status === 401) {
+                    alert("세션이 만료되었습니다. 다시 로그인해 주세요.");
+                    try {
+                      localStorage.removeItem("accessToken");
+                    } catch {}
+                    navigate("/login", { state: { from: location.pathname } });
+                    return;
+                  }
+                  alert(e?.response?.data?.message || "처리 중 오류가 발생했어요.");
                 }
               }}
-              aria-label="알림"
-              title="알림 설정"
+              aria-label={isSubscribed ? "알림 해지" : "알림 설정"}
+              title={isSubscribed ? "알림 해지" : "알림 설정"}
             >
-              <img src={alarmIcon} alt="알림" />
+              <img src={isSubscribed ? alarmFilledIcon : alarmIcon} alt="알림" />
             </button>
             <button
               className="pub-bell"

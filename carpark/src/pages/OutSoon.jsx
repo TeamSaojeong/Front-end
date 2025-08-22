@@ -58,6 +58,16 @@ export default function OutSoon() {
   const placeId = state?.placeId ?? selectedPlace?.id ?? placeName;
   const address = state?.address ?? selectedPlace?.address ?? "";
   const provider = "kakao";
+  
+  // 예약 ID 가져오기 (PayPage에서 전달되거나 sessionStorage에서)
+  const reservationId = state?.reservationId ?? 
+    (() => {
+      try {
+        return sessionStorage.getItem('currentReservationId');
+      } catch {
+        return null;
+      }
+    })();
 
   const inUseByOther = !!state?.inUseByOther;
 
@@ -154,12 +164,54 @@ export default function OutSoon() {
   const disabledExtend = totalMinutes === 0;
   const selectedText = `${extH}시간 ${pad2(extM)}분 연장`;
 
-  const applyExtend = () => {
+  const applyExtend = async () => {
     if (disabledExtend) return;
-    const next = new Date(endAt);
-    next.setHours(next.getHours() + extH);
-    next.setMinutes(next.getMinutes() + extM);
-    setEndAt(next);
+    
+    // 예약 ID 확인
+    if (!reservationId) {
+      alert('예약 정보를 찾을 수 없어 연장할 수 없습니다.');
+      return;
+    }
+    
+    const totalMinutes = extH * 60 + extM;
+    
+    try {
+      console.log('연장하기 API 호출:', { reservationId, totalMinutes });
+      
+      // 백엔드 API 호출
+      const response = await fetch(`https://api.parkhere.store/api/reservation/${reservationId}/extend`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          usingMinutes: totalMinutes
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API 오류 ${response.status}: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('연장하기 성공:', result);
+      
+      // 로컬 상태 업데이트
+      const next = new Date(endAt);
+      next.setHours(next.getHours() + extH);
+      next.setMinutes(next.getMinutes() + extM);
+      setEndAt(next);
+      
+      alert(`${extH}시간 ${extM}분 연장되었습니다.`);
+      
+    } catch (error) {
+      console.error('연장하기 실패:', error);
+      alert(`연장하기에 실패했습니다: ${error.message}`);
+      return;
+    }
+    
     setOpen(false);
     setExtH(0);
     setExtM(0);
