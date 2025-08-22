@@ -1,7 +1,12 @@
+// src/apis/parking.js
 import { client } from "./client";
 
 /** 🔧 공통: id 정제 함수 (kakao:123 → 123) */
-const normalizeId = (id) => String(id).replace(/^kakao:/, "");
+const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
+const authHeader = () => {
+  const t = localStorage.getItem("accessToken");
+  return t ? { Authorization: `Bearer ${t}` } : {};
+};
 
 /** 주변 주차장 검색 : Query => lat, lon */
 export const getNearby = (lat, lng, config = {}) => {
@@ -9,7 +14,7 @@ export const getNearby = (lat, lng, config = {}) => {
   const _lon = typeof lng === "number" ? lng : Number(lng);
   return client.get("/api/parking/nearby", {
     params: { lat: _lat, lon: _lon },
-    signal: config.signal, // AbortController 지원
+    signal: config.signal,
   });
 };
 
@@ -46,7 +51,6 @@ export async function getMyParkingDetail(parkingId, accessToken) {
       },
     }
   );
-  // API: { status, data: {...}, message }
   return data?.data ?? data ?? {};
 }
 
@@ -64,11 +68,31 @@ export const getPredict = (parkingId, etaMinutes) => {
   });
 };
 
-/** 알림 구독 */
-export const subscribeAlert = (parkingId) => {
-  const cleanId = normalizeId(parkingId);
-  return client.post(`/api/alerts`, { parkingId: cleanId });
-};
+/** ✅ 알림 구독 (공영/민영 겸용) — 서버 스펙: 쿼리 파라미터 */
+export function subscribeAlert({ provider, externalId, parkingId }) {
+  const params = {};
+  if (parkingId) {
+    // 개인 주차장
+    params.parkingId = normalizeId(parkingId);
+  } else {
+    // 공영/민영(kakao 등)
+    params.provider = provider || "kakao";
+    params.externalId = normalizeId(externalId);
+  }
+  return client.post(`/api/alerts`, null, { params, headers: authHeader() });
+}
+
+/** ✅ 알림 구독 해지 (토글 해제용) — DELETE /api/alerts */
+export function unsubscribeAlert({ provider, externalId, parkingId }) {
+  const params = {};
+  if (parkingId) {
+    params.parkingId = normalizeId(parkingId);
+  } else {
+    params.provider = provider || "kakao";
+    params.externalId = normalizeId(externalId);
+  }
+  return client.delete(`/api/alerts`, { params, headers: authHeader() });
+}
 
 /** 상태 조회 */
 export const getParkingStatus = (parkingId) => {

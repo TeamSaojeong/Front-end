@@ -205,6 +205,8 @@ export default function OutSoon() {
       );
     });
 
+  const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
+
   // ===== 곧 나감 전송 =====
   const onPressOutSoon = async () => {
     if (!canPressOutSoon) return;
@@ -223,7 +225,7 @@ export default function OutSoon() {
         lng,
         minute,
         provider,
-        externalId: placeId, // kakao id
+        externalId: normalizeId(placeId), // kakao id
         placeName,
         address,
       };

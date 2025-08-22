@@ -1,3 +1,4 @@
+// src/pages/OutSoon_cancel.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/OutSoon_cancel.css";

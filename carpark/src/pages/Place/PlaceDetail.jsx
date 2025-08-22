@@ -1,6 +1,5 @@
-// src/pages/Place/PlaceDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../../Styles/Place/PlaceDetail.css";
 
 import reportIcon from "../../Assets/report.svg";
@@ -8,6 +7,7 @@ import pinIcon from "../../Assets/emptypin.svg";
 import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
+import alarmFilledIcon from "../../Assets/alarm1.svg";
 
 import {
   getPublicDetail,
@@ -17,9 +17,34 @@ import {
 import { mapStatusToUI } from "../../utils/parkingStatus";
 
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
+const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
+
+/** 사용자별 로컬 키 (동일 브라우저 내 다른 계정 분리용) */
+const getUserKey = () => localStorage.getItem("userKey") || "guest";
+const lsk = (key) => `watchedPlaceIds__${key}`;
+const readWatched = (userKey = getUserKey()) => {
+  try {
+    const raw = localStorage.getItem(lsk(userKey));
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.map((x) => normalizeId(x)) : [];
+  } catch {
+    return [];
+  }
+};
+const saveWatched = (ids, userKey = getUserKey()) => {
+  try {
+    localStorage.setItem(lsk(userKey), JSON.stringify(ids));
+  } catch {}
+};
+const addWatched = (id, userKey = getUserKey()) => {
+  const set = new Set(readWatched(userKey));
+  set.add(normalizeId(id));
+  saveWatched([...set], userKey);
+};
 
 export default function PlaceDetail() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { placeId: placeIdFromParam } = useParams();
 
   const placeFromSession = useMemo(() => {
@@ -33,18 +58,23 @@ export default function PlaceDetail() {
 
   // kakaoId (조회용, nearby의 id)
   const kakaoId = placeFromSession?.id ?? placeIdFromParam ?? null;
+  const externalId = useMemo(() => normalizeId(kakaoId), [kakaoId]);
   const sessionLat = toNum(placeFromSession?.lat);
   const sessionLng = toNum(placeFromSession?.lng);
+
+  const userKey = getUserKey();
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
-  const [parkingId, setParkingId] = useState(null); // status 조회용 parkingId
+  const [parkingId, setParkingId] = useState(null);
 
-  // ▶ 버튼의 클릭은 항상 startUse로 고정, 폴링은 라벨만 갱신
-  const [primary, setPrimary] = useState({
-    label: "주차장 이용하기",
-  });
+  const [primary, setPrimary] = useState({ label: "주차장 이용하기" });
+
+  /** 처음 진입 시: 로컬 기억값을 우선으로 아이콘 상태 결정 */
+  const [isSubscribed, setIsSubscribed] = useState(() =>
+    readWatched(userKey).includes(externalId)
+  );
 
   const goBack = () => navigate(-1);
 
@@ -59,11 +89,9 @@ export default function PlaceDetail() {
     }
   };
 
-  // 시간 선택 화면으로 이동
   const startUse = () => {
     const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
     const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
-
     if (
       targetLat == null ||
       Number.isNaN(targetLat) ||
@@ -73,9 +101,6 @@ export default function PlaceDetail() {
       alert("목적지 좌표가 없어 진행할 수 없습니다.");
       return;
     }
-
-    console.log("✅ startUse 실행", { parkingId, kakaoId });
-
     navigate("/pub/time-select", {
       state: {
         prefetched: true,
@@ -88,10 +113,9 @@ export default function PlaceDetail() {
     });
   };
 
-  // 상세 불러오기
+  // 상세
   useEffect(() => {
     let mounted = true;
-
     async function load() {
       if (!kakaoId) {
         setError("장소 식별자가 없어 상세를 불러올 수 없습니다.");
@@ -109,10 +133,6 @@ export default function PlaceDetail() {
         if (!mounted) return;
 
         const payload = data?.data ?? data;
-        const flags = {
-          subscribed: payload?.subscribed ?? false,
-          soonOutExists: payload?.soonOutExists ?? false,
-        };
         const d = payload?.parking ?? payload;
 
         const pid = d.id ?? d.parkingId ?? null;
@@ -143,10 +163,23 @@ export default function PlaceDetail() {
           note: d.note ?? placeFromSession?.note ?? "",
           lat,
           lng,
-          _flags: flags,
         };
-
         setDetail(normalized);
+
+        /** 서버가 이미 구독중인 것으로 응답했다면 로컬에도 반영 */
+        if (payload?.subscribed) {
+          addWatched(externalId, userKey);
+
+          const key =
+            "watchedPlaceNames__" +
+            (localStorage.getItem("userKey") || "guest");
+          const obj = JSON.parse(localStorage.getItem(key) || "{}");
+          obj[externalId] = normalized.name || "주차장";
+          localStorage.setItem(key, JSON.stringify(obj));
+
+          setIsSubscribed(true);
+          alert("알림이 설정되었습니다.");
+        }
       } catch (e) {
         if (!mounted) return;
         setError(
@@ -156,7 +189,6 @@ export default function PlaceDetail() {
         if (mounted) setLoading(false);
       }
     }
-
     load();
     return () => {
       mounted = false;
@@ -164,11 +196,10 @@ export default function PlaceDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kakaoId]);
 
-  // 상태 폴링(라벨만 갱신; 클릭 가능 여부는 막지 않음)
+  // 상태 폴링(라벨만 갱신)
   useEffect(() => {
     if (!parkingId) return;
     let mounted = true;
-
     async function pullStatus() {
       try {
         const { data } = await getParkingStatus(parkingId);
@@ -182,14 +213,49 @@ export default function PlaceDetail() {
         setPrimary({ label: "주차장 이용하기" });
       }
     }
-
     pullStatus();
-    const timer = setInterval(pullStatus, 10_000);
+    const t = setInterval(pullStatus, 10_000);
     return () => {
       mounted = false;
-      clearInterval(timer);
+      clearInterval(t);
     };
   }, [parkingId]);
+
+  /** 🔔 알림 버튼 (해지 없이 ‘설정만’ 가능) */
+  const onClickAlarm = async () => {
+    if (isSubscribed) {
+      alert("이미 알림이 설정되어 있어요.");
+      return;
+    }
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+    try {
+      await subscribeAlert({ provider: "kakao", externalId });
+      addWatched(externalId, userKey);
+
+      const nameKey = "watchedPlaceNames__" + userKey;
+      const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+      names[externalId] = detail?.name || "주차장";
+      localStorage.setItem(nameKey, JSON.stringify(names));
+
+      setIsSubscribed(true);
+      alert("알림이 설정되었습니다.");
+    } catch (e) {
+      if (e?.response?.status === 401) {
+        alert("세션이 만료되었습니다. 다시 로그인해 주세요.");
+        try {
+          localStorage.removeItem("accessToken");
+        } catch {}
+        navigate("/login", { state: { from: location.pathname } });
+        return;
+      }
+      alert(e?.response?.data?.message || "처리 중 오류가 발생했어요.");
+    }
+  };
 
   if (loading) {
     return (
@@ -240,21 +306,19 @@ export default function PlaceDetail() {
         <button className="pub-close" onClick={goBack} aria-label="닫기">
           ✕
         </button>
+
         <button
-          className="pub-alarm"
-          onClick={async () => {
-            try {
-              await subscribeAlert(parkingId ?? kakaoId);
-              alert("알림이 설정되었습니다.");
-            } catch {
-              alert("알림 설정에 실패했습니다.");
-            }
-          }}
+          className={`pub-alarm ${isSubscribed ? "is-on" : ""}`}
+          onClick={onClickAlarm}
           aria-label="알림"
-          title="알림 설정"
+          title={isSubscribed ? "알림 설정됨" : "알림 설정"}
         >
-          <img src={alarmIcon} alt="알림" />
+          <img
+            src={isSubscribed ? alarmFilledIcon : alarmIcon}
+            alt={isSubscribed ? "알림 설정됨" : "알림"}
+          />
         </button>
+
         <button
           className="pub-bell"
           onClick={() => alert("신고하기 준비 중")}
@@ -349,7 +413,6 @@ export default function PlaceDetail() {
           경로 안내 보기
         </button>
 
-        {/* onClick은 항상 startUse로 직접 연결, disabled 사용 안 함 */}
         <button className="pub-btn pub-btn-primary" onClick={startUse}>
           {primary.label}
         </button>
