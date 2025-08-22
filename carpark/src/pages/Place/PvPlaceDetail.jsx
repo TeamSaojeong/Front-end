@@ -20,6 +20,23 @@ import { useMyParkings } from "../../store/MyParkings";
 
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
 
+// 거리 계산 함수 (Haversine formula)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  if (!lat1 || !lng1 || !lat2 || !lng2) return null;
+  
+  const R = 6371; // 지구 반지름 (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  
+  return Math.round(distance * 10) / 10; // 소수점 첫째 자리까지
+};
+
 export default function PvPlaceDetail() {
   const navigate = useNavigate();
   const { placeId } = useParams();
@@ -53,6 +70,32 @@ export default function PvPlaceDetail() {
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [currentLocation, setCurrentLocation] = useState(null);
+
+  // 현재 위치 가져오기
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('위치 가져오기 실패:', error);
+          // 캐시된 위치 사용
+          try {
+            const cached = JSON.parse(localStorage.getItem("lastKnownLoc") || "{}");
+            if (cached.lat && cached.lng) {
+              setCurrentLocation({ lat: cached.lat, lng: cached.lng });
+            }
+          } catch {}
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+      );
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -84,10 +127,15 @@ export default function PvPlaceDetail() {
         const lat = toNum(d?.lat ?? d?.y) ?? sessionLat ?? null;
         const lng = toNum(d?.lng ?? d?.x) ?? sessionLng ?? null;
 
+        // 현재 위치 기준 거리 계산
+        const calculatedDistance = currentLocation && lat && lng 
+          ? calculateDistance(currentLocation.lat, currentLocation.lng, lat, lng)
+          : null;
+
         const normalized = {
           id: d.id ?? d.parkingId ?? placeId,
           name: d.name ?? fromSession?.name ?? "주차 장소",
-          distanceKm: d.distanceKm ?? fromSession?.distanceKm ?? null,
+          distanceKm: calculatedDistance ?? d.distanceKm ?? fromSession?.distanceKm ?? null,
           etaMin: d.etaMin ?? fromSession?.etaMin ?? null,
           pricePer10m:
             d.charge != null
@@ -140,7 +188,7 @@ export default function PvPlaceDetail() {
       }
     }
 
-    function loadLocal() {
+    async function loadLocal() {
       setLoading(true);
       setError("");
 
@@ -148,10 +196,15 @@ export default function PvPlaceDetail() {
       const lat = toNum(src.lat) ?? sessionLat ?? null;
       const lng = toNum(src.lng) ?? sessionLng ?? null;
 
+      // 현재 위치 기준 거리 계산
+      const calculatedDistance = currentLocation && lat && lng 
+        ? calculateDistance(currentLocation.lat, currentLocation.lng, lat, lng)
+        : null;
+
       const normalized = {
         id: src.id ?? placeId,
         name: src.name ?? "내 주차장",
-        distanceKm: null,
+        distanceKm: calculatedDistance,
         etaMin: null,
         pricePer10m:
           src.charge != null
@@ -180,7 +233,31 @@ export default function PvPlaceDetail() {
       };
       setDetail(normalized);
 
-      if (src.imageUrl) setImageUrl(src.imageUrl);
+      // 로컬 이미지가 있으면 사용, 없으면 서버에서 가져오기
+      if (src.imageUrl) {
+        setImageUrl(src.imageUrl);
+      } else {
+        // 임시 ID가 아닌 경우에만 서버에서 이미지 가져오기 시도
+        if (!String(normalized.id).startsWith('temp_')) {
+          try {
+            const imgRes = await getPrivateImage(normalized.id);
+            if (imgRes?.data) {
+              const url = URL.createObjectURL(imgRes.data);
+              setImageUrl(url);
+              console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
+            }
+          } catch (error) {
+            // 404 오류는 정상적인 상황 (이미지가 없는 경우)
+            if (error?.response?.status === 404) {
+              console.log("[PvPlaceDetail] 이미지 없음 (404)");
+            } else {
+              console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", error?.message);
+            }
+          }
+        } else {
+          console.log("[PvPlaceDetail] 임시 ID이므로 이미지 로드 건너뜀");
+        }
+      }
 
       setLoading(false);
       setPrimary({
@@ -196,13 +273,16 @@ export default function PvPlaceDetail() {
       return;
     }
 
-    if (isLocal) loadLocal();
-    else loadRemote();
+    if (isLocal) {
+      loadLocal();
+    } else {
+      loadRemote();
+    }
 
     return () => {
       mounted = false;
     };
-  }, [placeId, isLocal]); // eslint-disable-line
+  }, [placeId, isLocal, currentLocation]); // currentLocation 추가
 
   useEffect(() => {
     if (!placeId || isLocal) return;
@@ -276,6 +356,9 @@ export default function PvPlaceDetail() {
           address: detail?.address,
           openRangesText: detail?.availableTimes,
           isLocal: !!detail?._flags?.isLocal,
+          lat: targetLat,
+          lng: targetLng,
+          pricePer10Min: Math.round((detail?.pricePer10m || 0) / 10) * 10, // 10분당 가격으로 변환
         },
       }
     );
@@ -357,7 +440,14 @@ export default function PvPlaceDetail() {
             </button>
             <button
               className="pub-bell"
-              onClick={() => alert("신고하기 준비 중")}
+              onClick={() => navigate("/report", {
+                state: {
+                  placeId: placeId,
+                  placeName: detail?.name || "내 주차장",
+                  address: detail?.address || "",
+                  isPrivate: true
+                }
+              })}
               aria-label="신고하기"
             >
               <img src={reportIcon} alt="신고" />
@@ -375,8 +465,7 @@ export default function PvPlaceDetail() {
           </div>
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{distanceKm ?? "-"}km</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
-              <strong>{etaMin ?? "-"}분</strong>
+              <strong>{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
           </div>

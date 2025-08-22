@@ -8,7 +8,7 @@ import rg_backspace from "../../Assets/rg-backspace.svg";
 import rg_location from "../../Assets/rg_location.svg";
 import { useParkingForm } from "../../store/ParkingForm";
 import { client } from "../../apis/client";
-import { register } from "../../apis/register";
+import { register, modify } from "../../apis/register";
 import { useMyParkings } from "../../store/MyParkings";
 
 const rg_price = (n) =>
@@ -64,34 +64,12 @@ const RegisterPayPage = () => {
       let patched;
       if (editingId) {
         // --- 수정 모드 ---
-        const formData = new FormData();
-        const request = {
-          name,
-          address,
-          zipcode,
-          content,
-          operateTimes,
-          charge: amount,
-        };
-        formData.append(
-          "request",
-          new Blob([JSON.stringify(request)], { type: "application/json" })
-        );
-        if (image) {
-          formData.append("image", image);
-        }
-
-        const res = await client.patch(
-          `/api/parking/${editingId}/modify`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
+        const modifiedDetail = await modify(editingId, token);
         patched = {
-          ...(res.data || {}),
+          ...modifiedDetail,
           id: editingId,
-          lat: res.data?.lat ?? lat,
-          lng: res.data?.lng ?? lng,
+          lat: modifiedDetail?.lat ?? lat,
+          lng: modifiedDetail?.lng ?? lng,
         };
 
         alert("주차장이 수정되었습니다.");

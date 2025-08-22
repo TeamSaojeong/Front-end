@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import searchIcon from "../Assets/glasses.png";
+import ai_location from "../Assets/ai_location.svg";
+import money from "../Assets/money.svg";
 
 /* ========= 초성 검색 유틸 ========= */
 const CHO_LIST = [
@@ -114,14 +116,18 @@ export default function Content({
                 {p.leavingSoon && <span className="bs-badge">곧 나감</span>}
               </div>
               <div className="bs-card-details">
-                <span>{p.distanceKm ?? "—"}km</span>
-                <span>|</span>
-                <span>{p.etaMin ?? "—"}분</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <img src={ai_location} alt="위치" style={{ width: '12px', height: '12px' }} />
+                  <span>{p.distanceKm ?? "—"}km</span>
+                </div>
               </div>
-              <div className="bs-price">
-                {p.price == null || Number.isNaN(Number(p.price))
-                  ? "P"
-                  : `₩ ${Number(p.price).toLocaleString()}원`}
+              <div className="bs-price" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <img src={money} alt="요금" style={{ width: '12px', height: '12px' }} />
+                <span>
+                  {p.price == null || Number.isNaN(Number(p.price)) || Number(p.price) === 0
+                    ? "P"
+                    : `₩ ${Number(p.price).toLocaleString()}원`}
+                </span>
               </div>
             </div>
             <button

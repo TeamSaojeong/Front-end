@@ -1,5 +1,5 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../../Styles/Nfc/NFCTagPage.css";
 
 import arrow from "../../Assets/arrow.png";
@@ -8,6 +8,37 @@ import pin_icon from "../../Assets/pin.svg";
 
 const NFCTagPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [parkingInfo, setParkingInfo] = useState(null);
+
+  useEffect(() => {
+    // PvPlaceDetail에서 전달된 주차장 정보 받기
+    const info = location.state;
+    if (info) {
+      setParkingInfo(info);
+      // NFC 태그용 정보를 sessionStorage에 저장
+      sessionStorage.setItem('nfcParkingInfo', JSON.stringify({
+        placeId: info.placeId,
+        placeName: info.placeName,
+        address: info.address,
+        openRangesText: info.openRangesText,
+        isLocal: info.isLocal,
+        lat: info.lat,
+        lng: info.lng,
+        pricePer10Min: info.pricePer10Min || 800 // 기본값
+      }));
+    } else {
+      // sessionStorage에서 기존 정보 불러오기
+      try {
+        const saved = sessionStorage.getItem('nfcParkingInfo');
+        if (saved) {
+          setParkingInfo(JSON.parse(saved));
+        }
+      } catch (error) {
+        console.error('주차장 정보 로드 실패:', error);
+      }
+    }
+  }, [location.state]);
 
   return (
     <div className="nfc-container">
@@ -37,15 +68,21 @@ const NFCTagPage = () => {
       <div className="nfc-button-section">
         <button
           className="nfc-outsoon"
-          onClick={() =>
-            navigate("/MapRoute", {
-              state: {
-                //임의로 좌표 넣어놧음. 나중에 백엔드 값으로 교체
-                dest: { lat: 37.579617, lng: 126.977041 }, //경복궁
-                name: "주차 장소 이름",
-              },
-            })
-          }
+          onClick={() => {
+            if (parkingInfo) {
+              navigate("/MapRoute", {
+                state: {
+                  dest: { lat: parkingInfo.lat, lng: parkingInfo.lng },
+                  name: parkingInfo.placeName,
+                  address: parkingInfo.address,
+                  placeId: parkingInfo.placeId,
+                  isPrivate: parkingInfo.isLocal,
+                },
+              });
+            } else {
+              alert("주차장 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+            }
+          }}
         >
           경로 다시보기
         </button>
@@ -54,7 +91,9 @@ const NFCTagPage = () => {
       <div className="nfc-time-box">
         <div className="nfc-time-inner">
           <img src={pin_icon} alt="핀 아이콘" className="pin-icon" />
-          <span className="nfc-time-text">주차 장소 api 가져오는 곳</span>
+          <span className="nfc-time-text">
+            {parkingInfo ? parkingInfo.placeName : "주차장 정보를 불러오는 중..."}
+          </span>
         </div>
       </div>
     </div>

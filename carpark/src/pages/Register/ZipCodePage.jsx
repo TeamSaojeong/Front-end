@@ -49,28 +49,41 @@ const ZipCodePage = () => {
   const returnTo = location.state?.returnTo || -1;
 
   const handleComplete = async (data) => {
-    const addr =
-      data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
+    try {
+      const addr =
+        data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
 
-    // ✅ 좌표 구하기
-    const full = data.roadAddress || data.jibunAddress || addr;
-    const xy = await geocodeAddressToXY(full);
+      console.log("[ZipCodePage] 주소 선택됨:", data);
 
-    const selectedAddress = {
-      zipcode: data.zonecode || "",
-      address: addr || "",
-      roadAddress: data.roadAddress || "",
-      jibunAddress: data.jibunAddress || "",
-      lat: xy?.lat ?? null,
-      lng: xy?.lng ?? null,
-    };
+      // ✅ 좌표 구하기 (오류 시 null 처리)
+      let xy = null;
+      try {
+        const full = data.roadAddress || data.jibunAddress || addr;
+        xy = await geocodeAddressToXY(full);
+        console.log("[ZipCodePage] 좌표 변환 결과:", xy);
+      } catch (geocodeError) {
+        console.warn("[ZipCodePage] 좌표 변환 실패:", geocodeError);
+      }
 
-    console.log("[ZipCodePage] 선택된 주소:", selectedAddress);
+      const selectedAddress = {
+        zipcode: data.zonecode || "",
+        address: addr || "",
+        roadAddress: data.roadAddress || "",
+        jibunAddress: data.jibunAddress || "",
+        lat: xy?.lat ?? null,
+        lng: xy?.lng ?? null,
+      };
 
-    if (typeof returnTo === "string") {
-      navigate(returnTo, { state: { selectedAddress }, replace: true });
-    } else {
-      navigate(-1, { state: { selectedAddress }, replace: true });
+      console.log("[ZipCodePage] 선택된 주소:", selectedAddress);
+
+      if (typeof returnTo === "string") {
+        navigate(returnTo, { state: { selectedAddress }, replace: true });
+      } else {
+        navigate(-1, { state: { selectedAddress }, replace: true });
+      }
+    } catch (error) {
+      console.error("[ZipCodePage] handleComplete 오류:", error);
+      alert("주소 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   };
 

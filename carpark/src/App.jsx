@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import "./Styles/app-frame.css";
 
 import LocationPinger from "./components/LocationPinger";
+import NotificationListener from "./components/NotificationListener";
 import { client } from "./apis/client";
 
 // --- pages (모두 최상단으로 이동) ---
@@ -62,6 +63,7 @@ function App() {
     <div className="app-outer">
       <div className="app-shell">
         {isAuthed && <LocationPinger intervalMinutes={10} />}
+        {isAuthed && <NotificationListener />}
         <Routes>
           {/* 시작 흐름 */}
           <Route path="/" element={<Splash />} />

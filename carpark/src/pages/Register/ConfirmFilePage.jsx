@@ -5,9 +5,13 @@ import cf_plus from "../../Assets/cf-plus.svg";
 import folder from "../../Assets/folder.svg";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useParkingForm } from "../../store/ParkingForm";
 
 const ConfirmFilePage = ({ onNext }) => {
   const [files, setFiles] = useState([]);
+  const editingId = useParkingForm((s) => s.editingId);
+  const isEditing = !!editingId;
+
   const handleUpload = (e) => {
     const newFiles = Array.from(e.target.files || []);
     setFiles((prev) => [...prev, ...newFiles]);
@@ -28,8 +32,17 @@ const ConfirmFilePage = ({ onNext }) => {
 
       <div>
         <h1 className="cf-title">
-          내 주차 장소 등록을 위한 <br />
-          필수 확인
+          {isEditing ? (
+            <>
+              내 주차 장소 수정을 위한 <br />
+              필수 확인
+            </>
+          ) : (
+            <>
+              내 주차 장소 등록을 위한 <br />
+              필수 확인
+            </>
+          )}
         </h1>
         <p className="cf-desc">
           개인 소유 주차 장소인지 확인할 수 있도록
