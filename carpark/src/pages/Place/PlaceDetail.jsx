@@ -1,3 +1,4 @@
+// src/pages/Place/PlaceDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../../Styles/Place/PlaceDetail.css";
@@ -30,7 +31,7 @@ export default function PlaceDetail() {
     }
   }, []);
 
-  // ✅ kakaoId(=kakaold) & 좌표(fallback용)
+  // kakaoId (조회용, nearby의 id)
   const kakaoId = placeFromSession?.id ?? placeIdFromParam ?? null;
   const sessionLat = toNum(placeFromSession?.lat);
   const sessionLng = toNum(placeFromSession?.lng);
@@ -38,13 +39,56 @@ export default function PlaceDetail() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
+  const [parkingId, setParkingId] = useState(null); // status 조회용 parkingId
 
+  // ▶ 버튼의 클릭은 항상 startUse로 고정, 폴링은 라벨만 갱신
   const [primary, setPrimary] = useState({
-    disabled: false,
     label: "주차장 이용하기",
-    onClick: () => {},
   });
 
+  const goBack = () => navigate(-1);
+
+  const copyAddress = async () => {
+    const text = detail?.address || "";
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("주소가 복사되었습니다.");
+    } catch {
+      alert("복사에 실패했습니다.");
+    }
+  };
+
+  // 시간 선택 화면으로 이동
+  const startUse = () => {
+    const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
+    const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
+
+    if (
+      targetLat == null ||
+      Number.isNaN(targetLat) ||
+      targetLng == null ||
+      Number.isNaN(targetLng)
+    ) {
+      alert("목적지 좌표가 없어 진행할 수 없습니다.");
+      return;
+    }
+
+    console.log("✅ startUse 실행", { parkingId, kakaoId });
+
+    navigate("/pub/time-select", {
+      state: {
+        prefetched: true,
+        placeId: parkingId ?? kakaoId,
+        placeName: detail?.name,
+        address: detail?.address,
+        openRangesText: detail?.availableTimes,
+        isPrivate: false,
+      },
+    });
+  };
+
+  // 상세 불러오기
   useEffect(() => {
     let mounted = true;
 
@@ -57,7 +101,6 @@ export default function PlaceDetail() {
       setLoading(true);
       setError("");
       try {
-        // 서버에는 세션 좌표라도 넣어서 질의
         const { data } = await getPublicDetail(
           kakaoId,
           sessionLat ?? 0,
@@ -65,7 +108,6 @@ export default function PlaceDetail() {
         );
         if (!mounted) return;
 
-        // { status, data: { subscribed, soonOutExists, parking: {...} } }
         const payload = data?.data ?? data;
         const flags = {
           subscribed: payload?.subscribed ?? false,
@@ -73,19 +115,20 @@ export default function PlaceDetail() {
         };
         const d = payload?.parking ?? payload;
 
-        // 좌표: 모든 키 커버 + 숫자 변환 + 세션 fallback
+        const pid = d.id ?? d.parkingId ?? null;
+        setParkingId(pid);
+
         const lat = toNum(d?.y ?? d?.lat ?? d?.latitude) ?? sessionLat ?? null;
         const lng =
           toNum(d?.x ?? d?.lon ?? d?.lng ?? d?.longitude) ?? sessionLng ?? null;
 
         const normalized = {
-          id: d.id ?? d.parkingId ?? kakaoId,
+          id: pid ?? kakaoId,
           name: d.placeName ?? d.name ?? placeFromSession?.name ?? "주차 장소",
           distanceKm:
             d.distanceMeters != null
               ? d.distanceMeters / 1000
               : d.distanceKm ?? placeFromSession?.distanceKm ?? null,
-          etaMin: d.etaMin ?? d.etaMinutes ?? placeFromSession?.etaMin ?? null,
           pricePer10m:
             d.timerate && d.addrate
               ? Math.round((d.addrate * 10) / d.timerate)
@@ -114,81 +157,39 @@ export default function PlaceDetail() {
       }
     }
 
+    load();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kakaoId]);
+
+  // 상태 폴링(라벨만 갱신; 클릭 가능 여부는 막지 않음)
+  useEffect(() => {
+    if (!parkingId) return;
+    let mounted = true;
+
     async function pullStatus() {
-      if (!kakaoId) return;
       try {
-        const { data } = await getParkingStatus(kakaoId);
+        const { data } = await getParkingStatus(parkingId);
+        if (!mounted) return;
         const ui = mapStatusToUI(data?.data);
         setPrimary({
-          disabled: !ui.isAvailable,
-          label: ui.isAvailable ? "주차장 이용하기" : "이용 중...",
-          onClick: ui.isAvailable ? startUse : undefined,
+          label: ui.isAvailable ? "주차장 이용하기" : "이용 중…(계속 진행)",
         });
       } catch {
-        setPrimary({
-          disabled: false,
-          label: "주차장 이용하기",
-          onClick: startUse,
-        });
+        if (!mounted) return;
+        setPrimary({ label: "주차장 이용하기" });
       }
     }
 
-    load();
     pullStatus();
     const timer = setInterval(pullStatus, 10_000);
     return () => {
       mounted = false;
       clearInterval(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kakaoId]);
-
-  const goBack = () => navigate(-1);
-
-  const copyAddress = async () => {
-    const text = detail?.address || "";
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      alert("주소가 복사되었습니다.");
-    } catch {
-      alert("복사에 실패했습니다.");
-    }
-  };
-
-  // ✅ 최종 좌표 검증 + 시간선택 화면으로 이동 (쿼리에도 placeId 넣기)
-  const startUse = () => {
-    const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
-    const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
-
-    if (
-      targetLat == null ||
-      Number.isNaN(targetLat) ||
-      targetLng == null ||
-      Number.isNaN(targetLng)
-    ) {
-      alert("목적지 좌표가 없어 진행할 수 없습니다.");
-      return;
-    }
-
-    navigate(
-      {
-        pathname: "/pub/time-select",
-        search: `?placeId=${encodeURIComponent(kakaoId ?? "")}`,
-      },
-      {
-        state: {
-          prefetched: true,
-          placeId: kakaoId,
-          placeName: detail?.name,
-          address: detail?.address,
-          openRangesText: detail?.availableTimes,
-          // ▼ 경로 안내 화면에서 다시 상세로 돌아올 때 사용할 메타
-          isPrivate: false, // 공영이면 false
-        },
-      }
-    );
-  };
+  }, [parkingId]);
 
   if (loading) {
     return (
@@ -230,15 +231,8 @@ export default function PlaceDetail() {
     );
   }
 
-  const {
-    name,
-    distanceKm,
-    etaMin,
-    pricePer10m,
-    address,
-    availableTimes,
-    note,
-  } = detail;
+  const { name, distanceKm, pricePer10m, address, availableTimes, note } =
+    detail;
 
   return (
     <div className="pub-wrap">
@@ -250,7 +244,7 @@ export default function PlaceDetail() {
           className="pub-alarm"
           onClick={async () => {
             try {
-              await subscribeAlert(kakaoId);
+              await subscribeAlert(parkingId ?? kakaoId);
               alert("알림이 설정되었습니다.");
             } catch {
               alert("알림 설정에 실패했습니다.");
@@ -279,8 +273,7 @@ export default function PlaceDetail() {
           </div>
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{distanceKm ?? "-"}km</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
-              <strong>{etaMin ?? "-"}분</strong>
+              <strong>{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
           </div>
@@ -347,8 +340,8 @@ export default function PlaceDetail() {
                 dest: { lat: targetLat, lng: targetLng },
                 name: detail.name,
                 address: detail.address,
-                placeId: kakaoId,
-                isPrivate: false, // 공영
+                placeId: parkingId ?? kakaoId,
+                isPrivate: false,
               },
             });
           }}
@@ -356,13 +349,8 @@ export default function PlaceDetail() {
           경로 안내 보기
         </button>
 
-        <button
-          className={`pub-btn pub-btn-primary ${
-            primary.disabled ? "in-use" : ""
-          }`}
-          disabled={primary.disabled}
-          onClick={primary.onClick}
-        >
+        {/* onClick은 항상 startUse로 직접 연결, disabled 사용 안 함 */}
+        <button className="pub-btn pub-btn-primary" onClick={startUse}>
           {primary.label}
         </button>
       </div>

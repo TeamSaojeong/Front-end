@@ -52,8 +52,8 @@ export default function PvPlaceDetail() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
-
   const [imageUrl, setImageUrl] = useState("");
+
   useEffect(() => {
     return () => {
       if (imageUrl?.startsWith("blob:")) {
@@ -89,11 +89,20 @@ export default function PvPlaceDetail() {
           name: d.name ?? fromSession?.name ?? "주차 장소",
           distanceKm: d.distanceKm ?? fromSession?.distanceKm ?? null,
           etaMin: d.etaMin ?? fromSession?.etaMin ?? null,
-          pricePer10m: d.charge ?? fromSession?.price ?? 0,
+          pricePer10m:
+            d.charge != null
+              ? Number(d.charge)
+              : fromSession?.price != null
+              ? Number(fromSession.price)
+              : 0,
           address: d.address ?? fromSession?.address ?? "",
           availableTimes: Array.isArray(d.operateTimes)
             ? d.operateTimes.map((t) => `${t.start} ~ ${t.end}`).join("  |  ")
-            : fromSession?.availableTimes ?? "00:00 ~ 00:00",
+            : fromSession?.operateTimes
+            ? fromSession.operateTimes
+                .map((t) => `${t.start} ~ ${t.end}`)
+                .join("  |  ")
+            : "00:00 ~ 00:00",
           note:
             d.content ??
             d.description ??
@@ -107,7 +116,6 @@ export default function PvPlaceDetail() {
         };
         setDetail(normalized);
 
-        // 서버 이미지
         try {
           const imgRes = await getPrivateImage(normalized.id);
           if (imgRes?.data && mounted) {
@@ -145,11 +153,20 @@ export default function PvPlaceDetail() {
         name: src.name ?? "내 주차장",
         distanceKm: null,
         etaMin: null,
-        pricePer10m: Number(src.charge ?? src.price ?? 0),
+        pricePer10m:
+          src.charge != null
+            ? Number(src.charge)
+            : src.price != null
+            ? Number(src.price)
+            : 0,
         address: src.address ?? "",
         availableTimes: Array.isArray(src.operateTimes)
           ? src.operateTimes.map((t) => `${t.start} ~ ${t.end}`).join("  |  ")
-          : fromSession?.availableTimes ?? "00:00 ~ 00:00",
+          : fromSession?.operateTimes
+          ? fromSession.operateTimes
+              .map((t) => `${t.start} ~ ${t.end}`)
+              .join("  |  ")
+          : "00:00 ~ 00:00",
         note:
           src.content ??
           src.description ??
@@ -163,11 +180,9 @@ export default function PvPlaceDetail() {
       };
       setDetail(normalized);
 
-      // 로컬/세션 이미지
       if (src.imageUrl) setImageUrl(src.imageUrl);
 
       setLoading(false);
-
       setPrimary({
         disabled: false,
         label: "주차장 이용하기",

@@ -15,12 +15,15 @@ export const useMyParkings = create(
         set((s) => {
           const id = String(park.id);
           const idx = s.items.findIndex((x) => String(x.id) === id);
+
           const next = {
             enabled: true,
-            origin: "local",
             ...s.items[idx],
             ...park,
+            // ✅ origin은 들어온 값 우선, 없으면 기존 값, 둘 다 없으면 local
+            origin: park.origin || s.items[idx]?.origin || "local",
           };
+
           if (idx >= 0) {
             const copy = s.items.slice();
             copy[idx] = next;

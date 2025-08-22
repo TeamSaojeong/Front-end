@@ -8,19 +8,30 @@ export default function BottomSheet({
   places = [],
   isLoading = false,
   errorMsg = "",
-  onRefreshHere, // ← 현 위치 재검색
+  onRefreshHere,
   onSelectPlace,
   onOpenChange,
 }) {
   const sheetRef = useRef(null);
   const contentRef = useRef(null);
-  const headerRef = useRef(null); // 헤더 전용 드래그 타깃
+  const headerRef = useRef(null);
 
   //타이틀 표시 여부
   const [showTitle, setShowTitle] = useState(false);
   const sentinelRef = useRef(null);
 
-  useBottomSheet({ hostRef, sheetRef, contentRef, headerRef, onOpenChange });
+  const { open, close } = useBottomSheet({
+    hostRef,
+    sheetRef,
+    contentRef,
+    headerRef,
+    onOpenChange,
+  });
+
+  const handleRefresh = () => {
+    onRefreshHere?.();
+    close(); // ✅ 현 위치에서 다시 검색 시 자동으로 닫힘
+  };
 
   //헤더 바로 밑 센티넬 보임 여부로 타이틀 토글
   useEffect(()=>{
@@ -38,7 +49,6 @@ export default function BottomSheet({
     return () => io.disconnect();
   }, [hostRef]);
 
-
   return (
         <div
           className={`bs-wrapper ${showTitle ? "show-title" : ""}`}
@@ -53,7 +63,7 @@ export default function BottomSheet({
           places={places}
           isLoading={isLoading}
           errorMsg={errorMsg}
-          onRefreshHere={onRefreshHere}
+          onRefreshHere={handleRefresh}
           onSelectPlace={onSelectPlace}
         />
       </div>

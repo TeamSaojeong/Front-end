@@ -21,22 +21,7 @@ const useMock =
     import.meta.env?.VITE_USE_MOCK === "1") ||
   process.env.REACT_APP_USE_MOCK === "1";
 
-const MOCK_PLACES = [
-  {
-    id: "1021815417",
-    kakaoId: "1021815417",
-    name: "모의 주차장 A",
-    lat: 37.5667,
-    lng: 126.9784,
-    distanceKm: 0.4,
-    etaMin: 3,
-    price: 0,
-    address: "서울특별시 중구 세종대로 110",
-    type: "PUBLIC",
-    leavingSoon: true,
-  },
-];
-
+/** 세션/로컬 유틸 */
 function getWatchedIds() {
   try {
     const raw = localStorage.getItem("watchedPlaceIds");
@@ -44,8 +29,6 @@ function getWatchedIds() {
   } catch {}
   return ["1021815417"];
 }
-
-/* ===== 위치 캐시 유틸 ===== */
 const getCachedLoc = () => {
   try {
     const raw = localStorage.getItem("lastKnownLoc");
@@ -61,12 +44,117 @@ const setCachedLoc = (lat, lng) => {
     );
   } catch {}
 };
-// 두 좌표가 거의 같은지(중복 fetch 방지)
 const near = (a, b) => {
   if (!a || !b) return false;
   const dLat = Math.abs(a.lat - b.lat);
   const dLng = Math.abs(a.lng - b.lng);
-  return dLat < 0.0003 && dLng < 0.0003; // 대략 30m
+  return dLat < 0.0003 && dLng < 0.0003; // ~30m
+};
+
+/* ===========================
+   양재 더미(네가 준 4개만 사용)
+   =========================== */
+const YANGJAE = { lat: 37.484722, lng: 127.034722 }; // 양재역 근사
+const distKm = (a, b) => {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const la1 = (a.lat * Math.PI) / 180;
+  const la2 = (b.lat * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+};
+const isNearYangjae = (lat, lng, radiusKm = 2.5) =>
+  distKm({ lat, lng }, YANGJAE) <= radiusKm;
+
+const forceYangjae =
+  new URLSearchParams(window.location.search).get("yangjae") === "1";
+
+/** 네가 준 4개의 더미만 */
+const getYangjaeDummies = () => [
+  {
+    id: "pv-dummy-yg-1",
+    kakaoId: "pv-dummy-yg-1",
+    name: "양재동 화훼공판장 주차장",
+    address: "서울 서초구 양재동 232-4",
+    lat: 37.4849,
+    lng: 127.0362,
+    price: 500,
+    charge: 500,
+    operateTimes: [{ start: "00:00", end: "24:00" }],
+    note: "",
+    type: "PRIVATE",
+    isLocal: true,
+    _localOnly: true,
+    distanceKm: null,
+    etaMin: null,
+    leavingSoon: false,
+  },
+  {
+    id: "pv-dummy-yg-2",
+    kakaoId: "pv-dummy-yg-2",
+    name: "양재근린공원주차장",
+    address: "서울 서초구 양재동 244-2",
+    lat: 37.4716,
+    lng: 127.0414,
+    price: 800,
+    charge: 800,
+    operateTimes: [{ start: "00:00", end: "24:00" }],
+    note: "",
+    type: "PRIVATE",
+    isLocal: true,
+    _localOnly: true,
+    distanceKm: null,
+    etaMin: null,
+    leavingSoon: false,
+  },
+  {
+    id: "pv-dummy-yg-3",
+    kakaoId: "pv-dummy-yg-3",
+    name: "양재동부동산중개 앞 주차장(구간162)",
+    address: "서울 서초구 강남대로8길 69",
+    lat: 37.469,
+    lng: 127.0441,
+    price: 300,
+    charge: 300,
+    operateTimes: [{ start: "00:00", end: "24:00" }],
+    note: "",
+    type: "PRIVATE",
+    isLocal: true,
+    _localOnly: true,
+    distanceKm: null,
+    etaMin: null,
+    leavingSoon: false,
+  },
+  {
+    id: "pv-dummy-yg-4",
+    kakaoId: "pv-dummy-yg-4",
+    name: "양재빌리지 앞 주차장 (구획 23-6)",
+    address: "서울 서초구 마방로2길 15-15",
+    lat: 37.4735,
+    lng: 127.0401,
+    price: 300,
+    charge: 300,
+    operateTimes: [{ start: "00:00", end: "24:00" }],
+    note: "",
+    type: "PRIVATE",
+    isLocal: true,
+    _localOnly: true,
+    distanceKm: null,
+    etaMin: null,
+    leavingSoon: false,
+  },
+];
+
+const uniqueById = (arr) => {
+  const m = new Map();
+  arr.forEach((x) => {
+    const key = String(x.id);
+    if (!m.has(key)) m.set(key, x);
+  });
+  return Array.from(m.values());
 };
 
 export default function Home() {
@@ -77,7 +165,7 @@ export default function Home() {
   const loadingRef = useRef(false);
   const myLocOverlayRef = useRef(null);
 
-  const cached0 = getCachedLoc() ?? { lat: 37.5665, lng: 126.978 }; // ← 캐시 우선
+  const cached0 = getCachedLoc() ?? { lat: 37.5665, lng: 126.978 };
   const [center, setCenter] = useState(cached0);
 
   const [places, setPlaces] = useState([]);
@@ -96,12 +184,11 @@ export default function Home() {
   const [modalMinutes, setModalMinutes] = useState(5);
 
   const navigate = useNavigate();
-  const myParks = useMyParkings((s) => s.items); // ✅ 내 주차장
+  const myParks = useMyParkings((s) => s.items);
 
   const isPrivate = (p) => String(p?.type || "").toUpperCase() === "PRIVATE";
 
   const onSelectPlace = (p) => {
-    // ✅ 선택된 장소 세션 저장(상세에서 바로 사용)
     const payload = {
       ...p,
       kakaoId: p.kakaoId ?? p.id,
@@ -109,6 +196,8 @@ export default function Home() {
       lon: p.lng,
       lng: p.lng,
       imageUrl: p.imageUrl || p.image || null,
+      isLocal: !!p.isLocal,
+      operateTimes: Array.isArray(p.operateTimes) ? p.operateTimes : undefined,
     };
     try {
       sessionStorage.setItem("selectedPlace", JSON.stringify(payload));
@@ -117,13 +206,11 @@ export default function Home() {
     setSelectedId(p.id);
     updateBubbleStyles(p.id);
 
-    // ✅ PRIVATE이면 PvPlaceDetail, 아니면 PlaceDetail
     setTimeout(() => {
       const path = isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`;
       navigate(path, {
         state: {
           place: payload,
-          // (선택) 상세에서 표기/분기용 플래그
           localOnly: !!p._localOnly,
           isMine: isPrivate(p),
         },
@@ -169,7 +256,6 @@ export default function Home() {
       document.head.appendChild(s);
     }
 
-    // 화면 복귀 시에도 캐시 위치로 복구 후 부드럽게 갱신
     const onVisible = () => {
       const c = getCachedLoc();
       if (c) {
@@ -192,14 +278,11 @@ export default function Home() {
   /* ===== 위치 감지 & 즉시 캐시 표시 → GPS 갱신 ===== */
   const detectAndLoad = () => {
     const cached = getCachedLoc();
-
-    // 1) 캐시나 현재 center로 즉시 표시/조회
     const base = cached ?? center;
     recenterMap(base.lat, base.lng);
     showMyLocation(base.lat, base.lng);
     syncAndFetch(base.lat, base.lng);
 
-    // 2) GPS로 갱신 (짧은 타임아웃 + 실패 시 캐시 유지)
     if (!navigator.geolocation) return;
     let settled = false;
     const hard = setTimeout(() => (settled = true), 4000);
@@ -210,7 +293,6 @@ export default function Home() {
         clearTimeout(hard);
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setCachedLoc(loc.lat, loc.lng);
-
         if (!near(base, loc)) {
           setCenter(loc);
           recenterMap(loc.lat, loc.lng);
@@ -218,10 +300,7 @@ export default function Home() {
           syncAndFetch(loc.lat, loc.lng);
         }
       },
-      () => {
-        clearTimeout(hard);
-        // 실패해도 캐시로 이미 표시 중
-      },
+      () => clearTimeout(hard),
       { enableHighAccuracy: false, timeout: 3500, maximumAge: 120000 }
     );
   };
@@ -297,7 +376,14 @@ export default function Home() {
       const chip = document.createElement("div");
       chip.className = "poi-chip";
       if (p.id === selectedId) chip.classList.add("poi-chip--selected");
-      chip.textContent = `₩ ${(p.price ?? 0).toLocaleString()}원`;
+
+      // 가격 없으면 'P', 있으면 ₩표기
+      const label =
+        p.price == null || Number.isNaN(Number(p.price))
+          ? "P"
+          : `₩ ${Number(p.price).toLocaleString()}원`;
+      chip.textContent = label;
+
       attachTouchClick(chip, () => onSelectPlace(p));
 
       const chipOv = new kakao.maps.CustomOverlay({
@@ -356,7 +442,7 @@ export default function Home() {
     try {
       let rows;
       if (useMock) {
-        rows = MOCK_PLACES;
+        rows = [];
       } else {
         const { data } = await getNearby(lat, lng);
         const rowsRaw = Array.isArray(data)
@@ -369,17 +455,20 @@ export default function Home() {
           const y = r.y ?? r.lat ?? r.latitude;
           const unitMin = r.timerate ?? r.timeRate ?? null;
           const unitPrice = r.addrate ?? r.addRate ?? null;
-          const price =
+          // ⚠️ 가격이 없으면 null 유지 → 지도에서 'P'
+          const computed =
             unitMin && unitPrice
               ? Math.round((unitPrice * 10) / unitMin)
-              : r.price ?? 0;
+              : r.price != null
+              ? Number(r.price)
+              : null;
           return {
             id,
             kakaoId: id,
             name: r.placeName ?? r.name ?? "주차장",
             lat: y,
             lng: x,
-            price,
+            price: computed,
             address: r.addressName ?? r.address ?? "",
             type: (r.type || r.category || "PUBLIC").toUpperCase(),
             distanceKm:
@@ -394,7 +483,7 @@ export default function Home() {
         });
       }
 
-      // ✅ 내 주차장 합치기 (위치 없는 건 제외)
+      // 내 주차장
       const mine = (myParks || [])
         .filter(
           (m) =>
@@ -406,10 +495,10 @@ export default function Home() {
           name: m.name || "내 주차장",
           lat: m.lat,
           lng: m.lng,
-          price: Number(m.charge || 0),
+          price: m.charge != null ? Number(m.charge) : null,
           address: m.address || "",
           content: m.content || "",
-          imageUrl: m.imageUrl || null, //이미지 넣어줌
+          imageUrl: m.imageUrl || null,
           type: "PRIVATE",
           distanceKm: null,
           etaMin: null,
@@ -417,15 +506,12 @@ export default function Home() {
           _localOnly: m.origin === "local",
         }));
 
-      // 중복 제거 (서버 우선)
-      const byId = new Map();
-      rows.forEach((r) => byId.set(String(r.id), r));
-      mine.forEach((m) => {
-        const key = String(m.id);
-        if (!byId.has(key)) byId.set(key, m);
-      });
+      // 양재 더미(네가 준 4개만)
+      const yg =
+        forceYangjae || isNearYangjae(lat, lng) ? getYangjaeDummies() : [];
 
-      const merged = Array.from(byId.values());
+      // 머지: 양재 더미 → 내 주차장 → 서버
+      const merged = uniqueById([...yg, ...mine, ...rows]);
 
       setPlaces(merged);
       renderBubbles(merged);
@@ -516,6 +602,14 @@ export default function Home() {
         : `/place/${modalPlace.id}`;
     navigate(path, { state: { from: "modal" } });
   };
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const c = mapRef.current.getCenter();
+    if (!c) return;
+    fetchNearby(c.getLat(), c.getLng());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myParks]);
 
   return (
     <div ref={wrapRef} className="map-wrap">

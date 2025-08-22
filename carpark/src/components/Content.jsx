@@ -119,7 +119,9 @@ export default function Content({
                 <span>{p.etaMin ?? "—"}분</span>
               </div>
               <div className="bs-price">
-                ₩ {(p.price ?? 0).toLocaleString()}원
+                {p.price == null || Number.isNaN(Number(p.price))
+                  ? "P"
+                  : `₩ ${Number(p.price).toLocaleString()}원`}
               </div>
             </div>
             <button
