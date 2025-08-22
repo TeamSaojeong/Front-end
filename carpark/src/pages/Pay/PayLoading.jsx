@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../../Styles/Pay/PayLoading.css";
 
 import sandtimer from "../../Assets/sandtimer.svg";
-import phlogo from "../../Assets/phlogo.png";
+import phlogo from "../../Assets/phlogo.svg";
 
 export default function PayLoading() {
   const navigate = useNavigate();

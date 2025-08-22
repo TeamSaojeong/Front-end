@@ -10,6 +10,7 @@ import OutModal from "../components/Modal/OutModal";
 import { getNearby } from "../apis/parking";
 import { postMyLocation } from "../apis/location";
 import { useMyParkings } from "../store/MyParkings";
+import reset from "../Assets/reset.svg";
 
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
@@ -619,7 +620,8 @@ export default function Home() {
 
       {showRequery && !isSheetOpen && (
         <button className="requery-btn" onClick={requeryHere}>
-          여기에서 다시 검색
+          <img src={reset} className="requery-img"/>
+          <span className="requery-text">여기에서 다시 검색</span>
         </button>
       )}
 

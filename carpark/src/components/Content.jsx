@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from "react";
 import searchIcon from "../Assets/glasses.svg";
+import content_won from "../Assets/ai_won.svg";
+import content_location from "../Assets/ai_location.svg";
+import target from "../Assets/target.svg";
 
 /* ========= 초성 검색 유틸 ========= */
 const CHO_LIST = [
@@ -109,18 +112,19 @@ export default function Content({
           >
             <div className="bs-card-image" aria-hidden="true" />
             <div className="bs-info">
-              <div className="bs-name">
+              <div className="bs-name" title={p.name}>
                 {p.name}
                 {p.leavingSoon && <span className="bs-badge">곧 나감</span>}
               </div>
               <div className="bs-card-details">
-                <span>{p.distanceKm ?? "—"}km</span>
-                <span>|</span>
-                <span>{p.etaMin ?? "—"}분</span>
+                <img src={content_location}/>
+                <span className="bs-card-details-text">{p.distanceKm ?? "—"}km</span>
               </div>
-              <div className="bs-price">
+              <div   
+                className={`bs-price ${p.price == null || Number.isNaN(Number(p.price)) ? "unconfirmed" : "confirmed"}`}>
+                <img src={content_won}/>
                 {p.price == null || Number.isNaN(Number(p.price))
-                  ? "P"
+                  ? "미확인"
                   : `₩ ${Number(p.price).toLocaleString()}원`}
               </div>
             </div>
@@ -151,7 +155,11 @@ export default function Content({
         disabled={isLoading}
         aria-busy={isLoading ? "true" : "false"}
       >
-        {isLoading ? "추천 갱신 중…" : "현 위치에서 다시 추천"}
+        <img src={target} className="bs-target"/>
+        <span className="bs-location-text">
+          {isLoading ? "추천 갱신 중…" : "현 위치에서 다시 추천"}
+          </span>
+        
       </button>
     </div>
   );

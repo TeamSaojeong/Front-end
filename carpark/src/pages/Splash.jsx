@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../Styles/Splash.css";
 
 import plogo from "../Assets/plogo.svg";
-import phlogo from "../Assets/phlogo.png";
+import phlogo from "../Assets/phlogo.svg";
 
 export default function Splash() {
   const navigate = useNavigate();

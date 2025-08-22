@@ -1,7 +1,7 @@
 import React, { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Mapmenu.css";
-import parkherelogo from "../Assets/phlogo.png";
+import parkherelogo from "../Assets/phlogo.svg";
 import { useParkingForm } from "../store/ParkingForm";
 import rightbutton from "../Assets/rightbutton.svg";
 
@@ -9,6 +9,17 @@ export default function MapMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const resetForm = useParkingForm((s) => s.reset);
+
+  useEffect(()=>{
+    if (open) {
+    document.body.classList.add("menu-open");
+  } else {
+    const timer = setTimeout(() => {
+      document.body.classList.remove("menu-open");
+    }, 300); // ← 1초 뒤 제거
+    return () => clearTimeout(timer);
+  }
+}, [open]);
   return (
     <>
       {!open && (
