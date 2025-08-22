@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "../Styles/ParkingPlaceManage.css";
 import backIcon from "../Assets/arrow.png";
 import { useMyParkings } from "../store/MyParkings";
+import { useParkingForm } from "../store/ParkingForm";
 
 export default function ParkingPlaceManage() {
   const navigate = useNavigate();
@@ -11,10 +12,11 @@ export default function ParkingPlaceManage() {
   const places = useMyParkings((s) => s.items);
   const toggleEnabled = useMyParkings((s) => s.toggleEnabled);
   const remove = useMyParkings((s) => s.remove);
+  const loadFromPlace = useParkingForm((s) => s.loadFromPlace);
 
-  const edit = (id) => {
-    // 추후 수정 페이지 연결
-    alert(`수정하기: ID ${id}`);
+  const edit = (p) => {
+    loadFromPlace(p); // ✅ 기존 데이터 주입
+    navigate("/name"); // ✅ 등록 첫 단계로 이동
   };
 
   const removeWatched = (id) => {
@@ -31,7 +33,7 @@ export default function ParkingPlaceManage() {
       return;
     remove(p.id);
     removeWatched(p.id);
-    // 선택된 상세가 남아있을 수 있어 정리
+    // 선택된 상세 정리
     try {
       const raw = sessionStorage.getItem("selectedPlace");
       const sp = raw ? JSON.parse(raw) : null;
@@ -62,7 +64,6 @@ export default function ParkingPlaceManage() {
             <li key={p.id} className="ppm-item">
               <div className="ppm-left">
                 <div className={`ppm-name ${!p.enabled ? "disabled" : ""}`}>
-                  {/* ✅ 이름 표시 (없으면 (이름 없음 #id) 로 fallback) */}
                   {p.name?.trim() || `(이름 없음 #${p.id})`}
                   {!hasCoord && <span className="ppm-badge">좌표 없음</span>}
                 </div>
@@ -70,13 +71,12 @@ export default function ParkingPlaceManage() {
                 <div className="ppm-actions">
                   <button
                     className={`ppm-edit ${!p.enabled ? "disabled" : ""}`}
-                    onClick={() => edit(p.id)}
+                    onClick={() => edit(p)}
                     type="button"
                   >
                     수정하기 <span className="ppm-chevron">›</span>
                   </button>
 
-                  {/* ✅ 삭제 버튼 */}
                   <button
                     className="ppm-delete"
                     onClick={() => onDelete(p)}

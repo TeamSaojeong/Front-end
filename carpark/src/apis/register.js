@@ -1,4 +1,3 @@
-// src/apis/register.js
 import { useParkingForm } from "../store/ParkingForm";
 import { client } from "./client";
 import { shrinkImageFile } from "../utils/imageShrink";
@@ -6,6 +5,7 @@ import { useMyParkings } from "../store/MyParkings"; // ✅ 내 주차장 저장
 
 const pad2 = (n) => String(n ?? "").padStart(2, "0");
 
+/** 신규 등록 */
 export async function register(accessToken) {
   const s = useParkingForm.getState();
 
@@ -92,10 +92,9 @@ export async function register(accessToken) {
     );
     console.log("[REGISTER] 생성된 주차장 ID:", parkingId);
 
-    // ✅ 개인 주차장 → 상세조회(getPublicDetail) 필요 없음
     const detail = {
       id: parkingId,
-      name: created?.name ?? request.name, // 서버 name 없으면 내가 입력한 값
+      name: created?.name ?? request.name,
       zipcode: created?.zipcode ?? request.zipcode,
       address: created?.address ?? request.address,
       content: created?.content ?? request.content,
@@ -107,7 +106,6 @@ export async function register(accessToken) {
       origin: "server",
     };
 
-    // ✅ 내 주차장 store 반영
     useMyParkings.getState().upsert(detail);
 
     return { parkingId, detail };
@@ -155,4 +153,56 @@ export async function register(accessToken) {
     err.body = body;
     throw err;
   }
+}
+
+/** 수정 */
+export async function modify(parkingId, accessToken) {
+  const s = useParkingForm.getState();
+
+  const request = {
+    name: String(s.name || "").trim(),
+    zipcode: String(s.zipcode || "").trim(),
+    address:
+      typeof s.address === "string" ? s.address : s.address?.roadAddress || "",
+    content: String(s.content || "").trim(),
+    operateTimes: Array.isArray(s.operateTimes)
+      ? s.operateTimes.map(({ start, end }) => ({
+          start:
+            typeof start === "string"
+              ? start
+              : `${pad2(start?.h)}:${pad2(start?.m)}`,
+          end:
+            typeof end === "string" ? end : `${pad2(end?.h)}:${pad2(end?.m)}`,
+        }))
+      : [],
+    charge: Number(s.charge || 0),
+  };
+
+  const fd = new FormData();
+  fd.append(
+    "request",
+    new Blob([JSON.stringify(request)], { type: "application/json" })
+  );
+  if (s.image instanceof File) {
+    fd.append("image", s.image, s.image.name || "parking.jpg");
+  }
+
+  const { data } = await client.patch(`/api/parking/${parkingId}/modify`, fd, {
+    headers: {
+      Authorization:
+        accessToken || client.defaults.headers.common.Authorization,
+    },
+  });
+
+  const detail = {
+    ...(data || {}),
+    id: parkingId,
+    lat: data?.lat ?? s.lat,
+    lng: data?.lng ?? s.lng,
+    origin: "server",
+  };
+
+  useMyParkings.getState().upsert(detail);
+
+  return detail;
 }

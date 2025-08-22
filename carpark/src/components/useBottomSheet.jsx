@@ -1,22 +1,20 @@
-// src/components/useBottomSheet.js
 import { useEffect, useRef } from "react";
 
 /**
- * BottomSheet drag logic (with dynamic reflow fix)
- * - host/sheet의 현재 레이아웃을 바탕으로 MIN_Y/MAX_Y를 '항상' 다시 계산
- * - ResizeObserver/resize 이벤트로 콘텐츠 높이 변화·화면 크기 변화에 즉시 대응
+ * BottomSheet drag logic
+ * - 외부에서 open()/close() 제어 가능
  */
 export default function useBottomSheet({
   hostRef,
   sheetRef,
   contentRef,
-  headerRef, // 헤더에서만 드래그 시작
+  headerRef,
   onOpenChange,
 }) {
   const m = useRef({
     touchStart: { sheetY: 0, touchY: 0, time: 0 },
     lastMove: { y: 0, time: 0 },
-    touchMove: { prevTouchY: 0, moving: "none" }, // "up" | "down" | "none"
+    touchMove: { prevTouchY: 0, moving: "none" },
     isContentTouched: false,
     startedOnHeader: false,
     bounds: { MIN_Y: 0, MAX_Y: 0 },
@@ -30,22 +28,20 @@ export default function useBottomSheet({
     const header = headerRef?.current || sheet;
     if (!host || !sheet || !content || !header) return;
 
-    // --- 바운드 재계산(항상 최신 레이아웃 기반) ---
+    // --- 바운드 재계산 ---
     const recalcBounds = () => {
       const hostRect = host.getBoundingClientRect();
       const sheetRect = sheet.getBoundingClientRect();
 
-      // host 내부 기준 top
       const topRel = sheetRect.top - hostRect.top;
       const H = hostRect.height;
       const sh = sheetRect.height;
 
-      const MIN_Y = H - sh; // 완전 펼침일 때 top
-      const MAX_Y = topRel; // 접힘(현재 DOM 배치) top
+      const MIN_Y = H - sh;
+      const MAX_Y = topRel;
 
       m.current.bounds = { MIN_Y, MAX_Y };
 
-      // 이미 열려 있는 상태라면, 새로운 MIN_Y에 맞춰 위치 보정
       const open = m.current.isOpen;
       sheet.style.transform = open
         ? `translateY(${MIN_Y - MAX_Y}px)`
@@ -53,7 +49,6 @@ export default function useBottomSheet({
     };
 
     const setOpenState = (open) => {
-      // 열고/닫기 직전에 최신 바운드 보장
       recalcBounds();
       const { MIN_Y, MAX_Y } = m.current.bounds;
       sheet.style.transform = open
@@ -68,15 +63,12 @@ export default function useBottomSheet({
     recalcBounds();
     setOpenState(false);
 
-    // ---- Resize 감시 (리스트 로딩 등으로 시트 높이 바뀔 때 보정) ----
     const ro = new ResizeObserver(recalcBounds);
     ro.observe(sheet);
 
-    // 화면 크기/회전 변화 대응
     const onResize = () => recalcBounds();
     window.addEventListener("resize", onResize);
 
-    // 컨텐츠 스크롤 시작 표시
     const onContentStart = () => {
       m.current.isContentTouched = true;
     };
@@ -84,7 +76,7 @@ export default function useBottomSheet({
     const onStart = (e) => {
       const t = e.touches ? e.touches[0] : e;
       const now = performance.now();
-      recalcBounds(); // 제스처 시작 시점에도 최신 바운드 보장
+      recalcBounds();
 
       m.current.touchStart.sheetY = sheet.getBoundingClientRect().y;
       m.current.touchStart.touchY = t.clientY;
@@ -148,10 +140,10 @@ export default function useBottomSheet({
 
       const dt = Math.max(1, performance.now() - m.current.lastMove.time);
       const dy = m.current.lastMove.y - m.current.touchStart.touchY;
-      const velocity = dy / dt; // 음수=위로
+      const velocity = dy / dt;
 
       if (Math.abs(moved) < TAP_THRESHOLD) {
-        setOpenState(true); // 탭은 열기 우선
+        setOpenState(true);
         reset();
         return;
       }
@@ -186,7 +178,6 @@ export default function useBottomSheet({
       m.current.startedOnHeader = false;
     };
 
-    // 드래그 시작은 헤더에서만
     header.addEventListener("touchstart", onStart, { passive: false });
     header.addEventListener("mousedown", onStart);
 
@@ -214,5 +205,26 @@ export default function useBottomSheet({
       content.removeEventListener("touchstart", onContentStart);
     };
   }, [hostRef, sheetRef, contentRef, headerRef, onOpenChange]);
+
+  // ✅ 외부 제어용 함수
+  const open = () => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const { MIN_Y, MAX_Y } = m.current.bounds;
+    sheet.style.transform = `translateY(${MIN_Y - MAX_Y}px)`;
+    m.current.isOpen = true;
+    sheet.dataset.open = "1";
+    onOpenChange?.(true);
+  };
+
+  const close = () => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    sheet.style.transform = `translateY(0)`;
+    m.current.isOpen = false;
+    sheet.dataset.open = "0";
+    onOpenChange?.(false);
+  };
+
+  return { open, close };
 }
-//good
