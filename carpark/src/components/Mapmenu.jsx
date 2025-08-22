@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Mapmenu.css";
 import parkherelogo from "../Assets/phlogo.png";
 import { useParkingForm } from "../store/ParkingForm";
+import rightbutton from "../Assets/rightbutton.svg";
 
 export default function MapMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const resetForm = useParkingForm((s) => s.reset);
-
   return (
     <>
       {!open && (
@@ -50,7 +50,7 @@ export default function MapMenu() {
           <div className="menu-section">
             <div className="menu-section-title">주차 장소</div>
 
-            {/* ✅ 등록 진입 : 폼/세션 초기화 후 시작 */}
+            {/* 등록 진입 : 폼/세션 초기화 후 시작 */}
             <button
               className="menu-row"
               onClick={() => {
@@ -61,7 +61,7 @@ export default function MapMenu() {
                 navigate("/confirm");
               }}
             >
-              주차 장소 등록<span className="chev">›</span>
+              주차 장소 등록<span className="chev"><img src={rightbutton}/></span>
             </button>
 
             <button
@@ -71,16 +71,16 @@ export default function MapMenu() {
                 navigate("/parkingplacemanage");
               }}
             >
-              주차 장소 관리<span className="chev">›</span>
+              주차 장소 관리<span className="chev"><img src={rightbutton}/></span>
             </button>
           </div>
 
           <hr className="menu-divider" />
 
           <div className="menu-section">
-            <div className="menu-section-title">서비스 이용</div>
+            <div className="menu-section-title-second">서비스 이용</div>
             <button className="menu-row danger">
-              로그아웃<span className="chev">›</span>
+              로그아웃<span className="chev"><img src={rightbutton}/></span>
             </button>
           </div>
         </div>

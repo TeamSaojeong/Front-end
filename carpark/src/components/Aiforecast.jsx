@@ -1,4 +1,5 @@
 import React from "react";
+import Right from "../Assets/right.svg";
 import "../Styles/Aiforecast.css";
 
 import parkIcon from "../Assets/parking-sign.svg";
@@ -12,11 +13,11 @@ export default function AIForecastCard({ onClick }) {
 
       <div className="aif-box-text">
         <div className="aif-title">AI 주차 예보</div>
-        <div className="aif-sub">AI 분석을 통해 미리 혼잡도를 체크해보세요!</div>
+        <div className="aif-sub"><span className="aif-sub-point">AI 분석</span>을 통해 미리 <span className="aif-sub-point">혼잡도</span>를 체크해보세요!</div>
       </div>
 
       <span className="aif-chevron" aria-hidden="true">
-        ›
+        <img src={Right}/>
       </span>
     </button>
   );

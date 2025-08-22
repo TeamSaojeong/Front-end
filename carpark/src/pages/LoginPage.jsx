@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Login.css";
@@ -87,6 +86,7 @@ const LoginPage = () => {
           <div className="login-inputuptext">이메일</div>
           <div className="login-input">
             <input
+              className="login-input-text"
               type="text"
               placeholder={idPlaceholder}
               value={id}
@@ -103,6 +103,7 @@ const LoginPage = () => {
           <div className="login-inputuptext">비밀번호</div>
           <div className="login-input">
             <input
+              className="login-password-text"
               type="password"
               placeholder={pwPlaceholder}
               value={pw}

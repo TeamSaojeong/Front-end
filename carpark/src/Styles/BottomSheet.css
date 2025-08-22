@@ -3,23 +3,23 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% - 115px); /* PEEK */
-  height: calc(100% - 90px); /* MIN_Y */
+  top: calc(100% - 8.875rem);   /* 142px */
+  height: calc(100% - 11.25rem); /* 180px */
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+  border-top-left-radius: 1rem;   /* 16px */
+  border-top-right-radius: 1rem;  /* 16px */
+  box-shadow: 0 -0.5rem 1.5rem rgba(0, 0, 0, 0.15); /* -8px 24px */
   transition: transform 0.35s ease-out;
   will-change: transform;
   z-index: 20;
 }
 
 .bs-header {
-  height: 36px; /* 좀 더 잡기 쉽게 */
-  padding: 10px 0 6px;
-  touch-action: none; /* 헤더에서 제스처 캡처 */
+  height: 0.75rem; /* 12px */
+  padding: 0.625rem 0 0.375rem; /* 10px 0 6px */
+  touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   cursor: grab;
@@ -29,9 +29,9 @@
 }
 
 .bs-handle {
-  width: 44px;
-  height: 4px;
-  border-radius: 2px;
+  width: 2.75rem;  /* 44px */
+  height: 0.25rem; /* 4px */
+  border-radius: 0.125rem; /* 2px */
   margin: 0 auto;
   background: #dee2e6;
 }
@@ -41,28 +41,28 @@
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   padding: 0;
-  touch-action: pan-y; /* 컨텐츠는 세로 스크롤만 */
+  touch-action: pan-y;
 }
 
 /* 컨텐츠 여백 */
 .bs-body {
-  padding: 12px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  padding: 0.75rem 1.5rem; /* 12px 24px */
 }
 
 /* 이하 동일 - 카드/버튼 등 */
 .bs-search {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 335px;
-  height: 48px;
-  padding: 0 16px;
+  gap: 0.25rem; /* 4px */
+  width: 18.875rem; /* 302px */
+  height: 1.5rem;   /* 24px */
+  padding: 0.875rem 1.25rem; /* 14px 20px */
   background: #f3f5f8;
-  border-radius: 24px;
-  margin-bottom: 16px;
+  border-radius: 6.25rem; /* 100px */
+  margin-bottom: 1.25rem; /* 20px */
 }
 .bs-search-icon {
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px */
   line-height: 1;
 }
 .bs-search input {
@@ -70,38 +70,71 @@
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
   color: #111;
 }
 .bs-section {
-  margin: 12px 2px 8px;
+  margin: 0.75rem 0.125rem 0.5rem; /* 12px 2px 8px */
 }
 .bs-title {
-  margin: 0 0 4px;
-  font-size: 18px;
-  font-weight: 700;
+  opacity: 0;
+  transform: translateY(0.375rem); /* 6px */
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events: none;
+
+  margin: 0 0 0.375rem; /* 6px */
+  font-size: 1.5rem;    /* 24px */
+  font-weight: 600;
   color: #111;
+  line-height: 2.125rem; /* 34px */
+  font-family: Pretendard;
+  font-style: normal;
+  letter-spacing: -0.0375rem; /* -0.6px */
+}
+
+/* 시트가 충분히 올라오면 표시 */
+.bs-wrapper.show-title .bs-title,
+.bs-wrapper.show-title .bs-sub {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 감지용 엘리먼트 */
+.bs-sentinel {
+  width: 100%;
+  height: 0.0625rem; /* 1px */
+  opacity: 0;
 }
 .bs-sub {
+  opacity: 0;
+  transform: translateY(0.375rem); /* 6px */
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events: none;
+
   margin: 0;
-  font-size: 13px;
-  color: #6b7280;
+  font-size: 0.875rem; /* 14px */
+  color: #767676;
+  font-family: Pretendard;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.25rem; /* 20px */
+  letter-spacing: -0.021875rem; /* -0.35px */
 }
 .bs-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 12px;
+  gap: 0.75rem; /* 12px */
+  padding: 0.75rem; /* 12px */
+  border-radius: 0.75rem; /* 12px */
   background: #fff;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
-  border: 1px solid #f0f0f0;
-  margin-bottom: 12px;
+  box-shadow: 0 0.0625rem 0 rgba(0, 0, 0, 0.06); /* 1px */
+  border: 0.0625rem solid #f0f0f0; /* 1px */
+  margin-bottom: 0.75rem; /* 12px */
 }
 .bs-card-image {
-  width: 56px;
-  height: 56px;
-  border-radius: 8px;
+  width: 3.5rem;  /* 56px */
+  height: 3.5rem; /* 56px */
+  border-radius: 0.5rem; /* 8px */
   background: #e9eef5;
 }
 .bs-info {
@@ -111,36 +144,36 @@
 .bs-name {
   font-weight: 600;
   color: #111;
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem; /* 4px */
 }
 .bs-card-details {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: #6b7280;
   display: flex;
-  gap: 6px;
+  gap: 0.375rem; /* 6px */
 }
 .bs-price {
-  margin-top: 4px;
-  font-size: 13px;
+  margin-top: 0.25rem; /* 4px */
+  font-size: 0.8125rem; /* 13px */
   color: #6b7280;
 }
 .bs-more {
-  padding: 8px 12px;
-  border-radius: 16px;
+  padding: 0.5rem 0.75rem; /* 8px 12px */
+  border-radius: 1rem; /* 16px */
   border: 0;
   background: #2e80ec;
   color: #fff;
-  font-size: 13px;
+  font-size: 0.8125rem; /* 13px */
   font-weight: 600;
 }
 .bs-location {
   position: sticky;
-  bottom: 12px;
+  bottom: 0.75rem; /* 12px */
   width: 100%;
-  height: 48px;
-  margin-top: 16px;
+  height: 3rem;    /* 48px */
+  margin-top: 1rem; /* 16px */
   border: 0;
-  border-radius: 24px;
+  border-radius: 1.5rem; /* 24px */
   background: #f3f5f8;
   color: #2e80ec;
   font-weight: 600;

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import searchIcon from "../Assets/glasses.png";
+import searchIcon from "../Assets/glasses.svg";
 
 /* ========= 초성 검색 유틸 ========= */
 const CHO_LIST = [
@@ -80,7 +80,7 @@ export default function Content({
       </div>
 
       <div className="bs-section">
-        <h2 className="bs-title">지금 주차 가능한 곳</h2>
+        <h2 className="bs-title">지금 추천하는 주차장</h2>
         <p className="bs-sub">현재 위치 기반으로 추천해드려요!</p>
       </div>
 

@@ -1,66 +1,83 @@
 .aif-box {
   position: absolute;
-  top: 16px;
+  top: 1rem; /* 16px */
   left: calc(
-    16px + 48px + 12px
-  ); /*메뉴버튼이 시작하는 위치:16, 메뉴버튼의 너비인 48만큼 오른쪽 이동, 메뉴버튼과 ai박스 간격 12 */
-  right: 16px;
+    1rem + 3rem + 0.75rem
+  ); /* 16px + 48px + 12px */
+  right: 1rem; /* 16px */
   z-index: 22;
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 56px; /* 높이 56px로 고정 */
-  padding: 0 14px;
+  padding: 0 0.5rem 0 0.75rem; /* 0 8px 0 12px */
   background: #fff;
-  border-radius: 16px;
-  backdrop-filter: blur(10px); /*피그마 값*/
-  border: 1px solid #fff;
-
+  border-radius: 1rem; /* 16px */
+  backdrop-filter: blur(0.625rem); /* 10px */
+  border: 0.0625rem solid #fff; /* 1px */
+  margin-top: 2.375rem; /* 38px */
   cursor: pointer;
   text-align: left;
   touch-action: manipulation;
+  margin-left: 0.75rem; /* 12px */
 }
 
 /* 아이콘 영역 */
 .aif-box-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem; /* 6px */
+  margin-right: 0.5rem; /* 8px */
 }
 
 .aif-icon,
 .aif-icon.small {
-  width: 56px;
-  height: 56px;
-  flex: 0 0 56px;
-  object-fit: contain; /*원본 비율 유지 */
+  width: 3.5rem;  /* 56px */
+  height: 3.5rem; /* 56px */
+  flex: 0 0 3.5rem; /* 56px */
+  object-fit: contain;
 }
 
 /* 텍스트 */
 .aif-box-text {
   flex: 1 1 auto;
   min-width: 0;
+  width: 10rem !important; /* 160px */
 }
+
 .aif-title {
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
+  font-family: Pretendard;
+  font-style: normal;
   font-weight: 700;
-  color: #111;
-  line-height: 1.2;
-  margin: 0;
+  color: #303030;
+  line-height: 1.25rem; /* 20px */
+  margin-bottom: 0.125rem; /* 2px */
+  width: 4.375rem; /* 70px */
 }
+
 .aif-sub {
-  font-size: 11px;
-  color: #6b7280;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #767676;
+  font-family: Pretendard;
+  font-size: 0.5625rem; /* 9px */
+  font-style: normal;
+  font-weight: 400;
+  line-height: 0.875rem; /* 14px */
+  letter-spacing: -0.01406rem; /* -0.225px */
+}
+
+.aif-sub-point {
+  color: #767676;
+  font-family: Pretendard;
+  font-size: 0.5625rem; /* 9px */
+  font-style: normal;
+  font-weight: 600;
+  line-height: 0.875rem; /* 14px */
+  letter-spacing: -0.01406rem; /* -0.225px */
 }
 
 /* ai박스안 꺾쇠 */
 .aif-chevron {
-  font-size: 18px;
-  /* width: 20px;
-  height: 20px; */
+  font-size: 1.125rem; /* 18px */
+  width: 1.25rem !important; /* 20px */
+  height: 1.25rem !important; /* 20px */
   color: #2e80ec;
 }

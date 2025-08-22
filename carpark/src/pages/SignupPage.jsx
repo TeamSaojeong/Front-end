@@ -122,14 +122,15 @@ const SignupPage = () => {
         {/* 이메일 */}
         <div className="signup-inputuptext">이메일</div>
         <div className="signup-input">
-          <input
+          <input              
+            className="signup-email-text"
             type="text"
             placeholder={idPlaceholder}
             value={id}
             onChange={(e) => handleIdChange(e.target.value)}
             onFocus={() => setIdPlaceholder("")}
             onBlur={() => {
-              setIdPlaceholder("이메일을 입력해 주세요");
+              setIdPlaceholder("이메일을 입력해 주세요(최소 8자리)");
               handleIdBlur();
             }}
           />
@@ -139,7 +140,8 @@ const SignupPage = () => {
         {/* 비밀번호 */}
         <div className="signup-inputuptext">비밀번호</div>
         <div className="signup-input">
-          <input
+          <input              
+            className="signup-password-text"
             type="password"
             placeholder={pwPlaceholder}
             value={pw}
@@ -156,13 +158,15 @@ const SignupPage = () => {
         {/* 이름 */}
         <div className="signup-inputuptext">이름</div>
         <div className="signup-input">
-          <input
+          <input              
+            className="signup-name-text"
             type="text"
             placeholder={namePlaceholder}
             value={name}
             onChange={(e) => setName(e.target.value)}
             onFocus={() => setNamePlaceholder("")}
-            onBlur={() => setNamePlaceholder("이름을 입력해 주세요")}
+            onBlur={() => {
+              setNamePlaceholder("이름을 입력해 주세요")}}
           />
         </div>
 
@@ -179,6 +183,7 @@ const SignupPage = () => {
               setCarPlaceholder("차량번호를 입력해 주세요 (EX)123가4568");
               handleCarBlur();
             }}
+            className="signup-carnum-text"
           />
         </div>
         {carError && <div className="error-text">{carError}</div>}
@@ -190,7 +195,7 @@ const SignupPage = () => {
           disabled={!isEnabled}
           onClick={handleSignup}
         >
-          가입하기
+          가입 완료
         </button>
       </div>
     </div>
