@@ -3,38 +3,37 @@ import { useNavigate } from "react-router-dom";
 import "../../Styles/Nfc/NFCTagPage.css";
 
 import arrow from "../../Assets/arrow.png";
-import nfc_icon from "../../Assets/Nfc.svg";
+import nfc_icon from "../../Assets/nfc.svg";
 import pin_icon from "../../Assets/pin.svg";
+import PreviousBtn from "../../components/Register/PreviousBtn";
 
 const NFCTagPage = () => {
   const navigate = useNavigate();
 
   return (
     <div className="nfc-container">
-      <div className="nfc-header">
-        <img
-          src={arrow}
-          alt="뒤로가기"
-          className="back-arrow"
-          onClick={() => navigate(-1)}
-        />
+      <PreviousBtn />
+      
         <div className="nfc-text">
-          NFC 태그
-          <br />
-          <p>
+          <h1 className="nfc-title">NFC 태그</h1>
+          
+          <p className="nfc-sub">
             주차 장소에 도착하시고,
             <br />
             NFC 태그에 휴대폰을 가까이 대주세요.
           </p>
         </div>
-      </div>
 
       <div className="nfc-section">
-        <img src={nfc_icon} alt="nfc 아이콘" />
+        <img src={nfc_icon} alt="nfc 아이콘" className="nfc-icon-img"/>
+      </div>
+
+      <div className="nfc-time-inner">
+        <img src={pin_icon} alt="핀 아이콘" className="pin-icon" />
+        <span className="nfc-time-text">주차 장소 api 가져오는 곳</span>
       </div>
 
       {/* 버튼 */}
-      <div className="nfc-button-section">
         <button
           className="nfc-outsoon"
           onClick={() =>
@@ -47,16 +46,13 @@ const NFCTagPage = () => {
             })
           }
         >
-          경로 다시보기
+          <span className="nfc-outsoon-text">
+            경로 다시 보기
+            </span>
+          
         </button>
-      </div>
 
-      <div className="nfc-time-box">
-        <div className="nfc-time-inner">
-          <img src={pin_icon} alt="핀 아이콘" className="pin-icon" />
-          <span className="nfc-time-text">주차 장소 api 가져오는 곳</span>
-        </div>
-      </div>
+      
     </div>
   );
 };
