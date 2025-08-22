@@ -343,7 +343,7 @@ export default function PvPlaceDetail() {
     }
 
     pullStatus();
-    const timer = setInterval(pullStatus, 10000);
+    const timer = setInterval(pullStatus, 3000); // 3초마다 확인
     return () => {
       mounted = false;
       clearInterval(timer);
@@ -377,6 +377,17 @@ export default function PvPlaceDetail() {
       return;
     }
 
+    console.log('PvPlaceDetail에서 NFC로 전달하는 정보:', {
+      placeId,
+      placeName: detail?.name,
+      address: detail?.address,
+      openRangesText: detail?.availableTimes,
+      isLocal: !!detail?._flags?.isLocal,
+      lat: targetLat,
+      lng: targetLng,
+      pricePer10Min: Math.round((detail?.pricePer10m || 0) / 10) * 10,
+    });
+    
     navigate(
       {
         pathname: "/nfc",

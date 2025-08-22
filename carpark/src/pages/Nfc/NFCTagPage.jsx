@@ -14,7 +14,10 @@ const NFCTagPage = () => {
   useEffect(() => {
     // PvPlaceDetail에서 전달된 주차장 정보 받기
     const info = location.state;
+    console.log('NFCTagPage 받은 정보:', info);
+    
     if (info) {
+      console.log('주차장 이름:', info.placeName);
       setParkingInfo(info);
       // NFC 태그용 정보를 sessionStorage에 저장
       sessionStorage.setItem('nfcParkingInfo', JSON.stringify({
@@ -32,7 +35,9 @@ const NFCTagPage = () => {
       try {
         const saved = sessionStorage.getItem('nfcParkingInfo');
         if (saved) {
-          setParkingInfo(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          console.log('sessionStorage에서 불러온 정보:', parsed);
+          setParkingInfo(parsed);
         }
       } catch (error) {
         console.error('주차장 정보 로드 실패:', error);
