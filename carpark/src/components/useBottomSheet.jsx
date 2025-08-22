@@ -2,21 +2,19 @@ import { useEffect, useRef } from "react";
 
 /**
  * BottomSheet drag logic
- * - 레이아웃을 읽어 MIN_Y/MAX_Y를 동적으로 계산
- * - 방향 + 이동량 + 속도(플링) 기준으로 스냅
- * - 헤더 탭(거의 이동 0) 시 토글
+ * - 외부에서 open()/close() 제어 가능
  */
 export default function useBottomSheet({
   hostRef,
   sheetRef,
   contentRef,
-  headerRef, // 헤더에서만 드래그 시작
+  headerRef,
   onOpenChange,
 }) {
   const m = useRef({
     touchStart: { sheetY: 0, touchY: 0, time: 0 },
     lastMove: { y: 0, time: 0 },
-    touchMove: { prevTouchY: 0, moving: "none" }, // "up" | "down" | "none"
+    touchMove: { prevTouchY: 0, moving: "none" },
     isContentTouched: false,
     startedOnHeader: false,
     bounds: { MIN_Y: 0, MAX_Y: 0 },
@@ -30,15 +28,28 @@ export default function useBottomSheet({
     const header = headerRef?.current || sheet;
     if (!host || !sheet || !content || !header) return;
 
-    // ---- 동적 바운드 계산 ----
-    const initialTop = sheet.getBoundingClientRect().y; // 접힘 위치
-    const H = host.clientHeight;
-    const MIN_Y = H - sheet.clientHeight; // 펼침 위치
-    const MAX_Y = initialTop;
+    // --- 바운드 재계산 ---
+    const recalcBounds = () => {
+      const hostRect = host.getBoundingClientRect();
+      const sheetRect = sheet.getBoundingClientRect();
 
-    m.current.bounds = { MIN_Y, MAX_Y };
+      const topRel = sheetRect.top - hostRect.top;
+      const H = hostRect.height;
+      const sh = sheetRect.height;
+
+      const MIN_Y = H - sh;
+      const MAX_Y = topRel;
+
+      m.current.bounds = { MIN_Y, MAX_Y };
+
+      const open = m.current.isOpen;
+      sheet.style.transform = open
+        ? `translateY(${MIN_Y - MAX_Y}px)`
+        : `translateY(0)`;
+    };
 
     const setOpenState = (open) => {
+      recalcBounds();
       const { MIN_Y, MAX_Y } = m.current.bounds;
       sheet.style.transform = open
         ? `translateY(${MIN_Y - MAX_Y}px)`
@@ -48,10 +59,16 @@ export default function useBottomSheet({
       onOpenChange?.(open);
     };
 
-    // 초기: 접힘
+    // 초기 상태: 접힘
+    recalcBounds();
     setOpenState(false);
 
-    // 컨텐츠 스크롤 시작 표시
+    const ro = new ResizeObserver(recalcBounds);
+    ro.observe(sheet);
+
+    const onResize = () => recalcBounds();
+    window.addEventListener("resize", onResize);
+
     const onContentStart = () => {
       m.current.isContentTouched = true;
     };
@@ -59,6 +76,8 @@ export default function useBottomSheet({
     const onStart = (e) => {
       const t = e.touches ? e.touches[0] : e;
       const now = performance.now();
+      recalcBounds();
+
       m.current.touchStart.sheetY = sheet.getBoundingClientRect().y;
       m.current.touchStart.touchY = t.clientY;
       m.current.touchStart.time = now;
@@ -66,15 +85,13 @@ export default function useBottomSheet({
       m.current.touchMove.prevTouchY = t.clientY;
       m.current.lastMove = { y: t.clientY, time: now };
 
-      m.current.startedOnHeader = true; // 헤더에서만 시작
+      m.current.startedOnHeader = true;
       m.current.isContentTouched = false;
     };
 
     const canMove = () => {
       if (!m.current.startedOnHeader) return false;
 
-      // 컨텐츠 쪽을 잡고 있는 제스처라면:
-      // 완전 펼침 + 아래로 끌기 + scrollTop==0 일 때만 시트를 내리게 허용
       const { MIN_Y } = m.current.bounds;
       if (m.current.isContentTouched) {
         const atTop = sheet.getBoundingClientRect().y === MIN_Y;
@@ -100,9 +117,7 @@ export default function useBottomSheet({
 
       if (!canMove()) return;
 
-      // 시트 제스처가 잡혔을 때만 기본동작 차단
       e.preventDefault();
-
       const { MIN_Y, MAX_Y } = m.current.bounds;
       const offset = t.clientY - m.current.touchStart.touchY;
       let nextY = m.current.touchStart.sheetY + offset;
@@ -115,31 +130,26 @@ export default function useBottomSheet({
 
     const onEnd = () => {
       const { MIN_Y, MAX_Y } = m.current.bounds;
-      const range = Math.max(1, MAX_Y - MIN_Y); // 이동 가능한 총 거리
+      const range = Math.max(1, MAX_Y - MIN_Y);
 
-      // 동적 임계값: 전체 범위의 18%, 최대 36px
       const DIST_THRESHOLD = Math.min(36, range * 0.18);
-      // 탭 판단: 8px 미만
       const TAP_THRESHOLD = 8;
 
       const currY = sheet.getBoundingClientRect().y;
       const moved = currY - m.current.touchStart.sheetY;
 
-      // 마지막 120ms으로 속도 계산 (px/ms)
       const dt = Math.max(1, performance.now() - m.current.lastMove.time);
       const dy = m.current.lastMove.y - m.current.touchStart.touchY;
-      const velocity = dy / dt; // 음수면 위로 휙
+      const velocity = dy / dt;
 
-      // 1) 거의 이동이 없으면 헤더 탭으로 간주 → 토글 (열기 쪽 우선)
       if (Math.abs(moved) < TAP_THRESHOLD) {
-        setOpenState(!m.current.isOpen || true); // 닫혀있으면 열기, 열려있어도 유지
+        setOpenState(true);
         reset();
         return;
       }
 
-      // 2) 플링(속도) 기준 스냅: 작은 움직임이어도 쉽게 열림/닫힘
-      const OPEN_FLING_V = -0.35; // 위로 0.35px/ms 이상
-      const CLOSE_FLING_V = 0.35; // 아래로 0.35px/ms 이상
+      const OPEN_FLING_V = -0.35;
+      const CLOSE_FLING_V = 0.35;
       if (velocity <= OPEN_FLING_V) {
         setOpenState(true);
         reset();
@@ -151,12 +161,10 @@ export default function useBottomSheet({
         return;
       }
 
-      // 3) 거리 기준 스냅: 임계값 이상이면 방향대로
       if (Math.abs(moved) >= DIST_THRESHOLD) {
         if (m.current.touchMove.moving === "up") setOpenState(true);
         else setOpenState(false);
       } else {
-        // 4) 임계 미만: 가까운 쪽으로 스냅 (열기 쪽 약간 가중)
         const toOpen = Math.abs(currY - MIN_Y) <= Math.abs(currY - MAX_Y) + 6;
         setOpenState(toOpen);
       }
@@ -170,7 +178,6 @@ export default function useBottomSheet({
       m.current.startedOnHeader = false;
     };
 
-    // 드래그 시작은 헤더에서만
     header.addEventListener("touchstart", onStart, { passive: false });
     header.addEventListener("mousedown", onStart);
 
@@ -183,6 +190,9 @@ export default function useBottomSheet({
     content.addEventListener("touchstart", onContentStart);
 
     return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onResize);
+
       header.removeEventListener("touchstart", onStart);
       header.removeEventListener("mousedown", onStart);
 
@@ -195,4 +205,26 @@ export default function useBottomSheet({
       content.removeEventListener("touchstart", onContentStart);
     };
   }, [hostRef, sheetRef, contentRef, headerRef, onOpenChange]);
+
+  // ✅ 외부 제어용 함수
+  const open = () => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const { MIN_Y, MAX_Y } = m.current.bounds;
+    sheet.style.transform = `translateY(${MIN_Y - MAX_Y}px)`;
+    m.current.isOpen = true;
+    sheet.dataset.open = "1";
+    onOpenChange?.(true);
+  };
+
+  const close = () => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    sheet.style.transform = `translateY(0)`;
+    m.current.isOpen = false;
+    sheet.dataset.open = "0";
+    onOpenChange?.(false);
+  };
+
+  return { open, close };
 }

@@ -6,22 +6,58 @@ import Address from "../../components/Register/Address";
 import InputBox from "../../components/InputBox";
 import AddImg from "../../components/Register/AddImg";
 import { useParkingForm } from "../../store/ParkingForm";
-import { register } from "../../apis/register";
 import "../../Styles/Register/DescriptionPage.css";
-const DescriptionPage = () => {
-  const form = useParkingForm();
+
+/* ===== Kakao 지오코딩 ===== */
+const SDK_SRC =
+  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
+
+async function ensureKakao() {
+  if (window.kakao?.maps?.services) return;
+  await new Promise((resolve, reject) => {
+    const prev = document.getElementById("kakao-map-sdk-services");
+    if (prev) {
+      prev.onload = resolve;
+      prev.onerror = reject;
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = SDK_SRC;
+    s.async = true;
+    s.id = "kakao-map-sdk-services";
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  await new Promise((r) => window.kakao.maps.load(r));
+}
+
+async function geocodeAddressToXY(address) {
+  if (!address || !address.trim()) return null;
+  await ensureKakao();
+  const geocoder = new window.kakao.maps.services.Geocoder();
+  return new Promise((resolve) => {
+    geocoder.addressSearch(address, (res, status) => {
+      if (status === window.kakao.maps.services.Status.OK && res?.[0]) {
+        resolve({ lng: Number(res[0].x), lat: Number(res[0].y) });
+      } else {
+        console.warn("[Geocode] 주소 변환 실패:", address, status);
+        resolve(null);
+      }
+    });
+  });
+}
+
+export default function DescriptionPage() {
   const navigate = useNavigate();
-  const [errors, setErrors] = useState({});
-  const { name, address, content, image, setField, reset } = useParkingForm();
+  const { address, content, image, setField } = useParkingForm();
+  const [errors] = useState({});
 
   const hasAddress =
     typeof address === "string"
       ? !!address.trim()
-      : !!address?.zip ||
-        !!address?.zonecode ||
-        !!address.roa ||
-        !!address?.roadAddress;
-  const hasContent = !!content?.trim();
+      : !!address?.roadAddress || !!address?.address;
+  const hasContent = !!(content || "").trim();
   const hasImage = image instanceof File || (!!image && !!image.name);
   const isActive = hasAddress && hasContent && hasImage;
 
@@ -44,8 +80,42 @@ const DescriptionPage = () => {
       </div>
 
       <div>
-        <p className="ds-address-title">주차 장소과 가장 근접한 위치</p>
-        <Address onchange={(addr) => setField("address", addr)} />
+        <p className="ds-address-title">주차 장소와 가장 근접한 위치</p>
+
+        <Address
+          onChange={async (addr) => {
+            const zip =
+              addr?.zonecode || addr?.zip || addr?.zipcode || addr?.postCode;
+            const full =
+              addr?.roadAddress || addr?.address || addr?.jibunAddress || "";
+
+            if (zip) setField("zipcode", zip);
+            setField("address", full);
+
+            // 좌표 초기화
+            setField("lat", null);
+            setField("lng", null);
+
+            // ✅ 검색결과에서 좌표 제공 시 그대로 사용
+            if (addr?.x && addr?.y) {
+              console.log(
+                "[DescriptionPage] 검색결과 좌표 사용:",
+                addr.y,
+                addr.x
+              );
+              setField("lat", Number(addr.y));
+              setField("lng", Number(addr.x));
+              return;
+            }
+
+            // ✅ 없으면 geocode fallback
+            const xy = await geocodeAddressToXY(full);
+            console.log("[DescriptionPage] 주소 → 좌표 변환:", full, xy);
+
+            setField("lat", xy?.lat ?? null);
+            setField("lng", xy?.lng ?? null);
+          }}
+        />
       </div>
 
       <div>
@@ -69,11 +139,11 @@ const DescriptionPage = () => {
 
       <NextBtn
         disabled={!isActive}
+        isActive={isActive}
         onClick={handleNext}
         className="ds-nextBtn"
+        label="다음"
       />
     </div>
   );
-};
-
-export default DescriptionPage;
+}

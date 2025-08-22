@@ -10,7 +10,6 @@ const ParkingEnd = () => {
 
   return (
     <div className="parkingend-container">
-
       <div className="parkingend-header">
         <div className="parkingend-text">
           주차 이용 종료
@@ -30,7 +29,7 @@ const ParkingEnd = () => {
       <div className="parkingend-button-section">
         <button
           className="parkingend-outcomplete"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate("/home")}
         >
           출차 완료
         </button>

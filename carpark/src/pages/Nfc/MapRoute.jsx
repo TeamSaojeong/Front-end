@@ -1,6 +1,4 @@
-// src/pages/Nfc/MapRoute.jsx
-// 지도 불러오기 + 상단/하단 UI + OSRM 거리/시간 + 상단 카드 클릭 시 상세로 이동
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../../Styles/Nfc/MapRoute.css";
 
@@ -10,18 +8,25 @@ import orangeLcIcon from "../../Assets/orangelc.svg";
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
 
+// 캐시된 내 위치(OutSoon/LocationPinger와 동일 키)
+const getCachedLoc = () => {
+  try {
+    const raw = localStorage.getItem("lastKnownLoc");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 export default function MapRoute() {
   const navigate = useNavigate();
-  // state 예시: { dest:{lat,lng}, name, address, placeId, isPrivate }
-  const { state } = useLocation();
+  const { state } = useLocation(); // { dest:{lat,lng}, name, address, placeId, isPrivate }
 
-  // refs
   const mapEl = useRef(null);
   const mapRef = useRef(null);
   const polylinesRef = useRef([]);
   const myLocOverlayRef = useRef(null);
 
-  // state
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [routeMeta, setRouteMeta] = useState({
@@ -29,22 +34,24 @@ export default function MapRoute() {
     durationMin: null,
   });
 
+  const dest = useMemo(() => state?.dest ?? null, [state]);
+
   // ===== Kakao Map init =====
   useEffect(() => {
     const init = () => {
       const kakao = window.kakao;
       if (!mapEl.current || mapRef.current) return;
 
-      const centerLat = state?.dest?.lat ?? 37.5665;
-      const centerLng = state?.dest?.lng ?? 126.978;
+      const centerLat = dest?.lat ?? 37.5665;
+      const centerLng = dest?.lng ?? 126.978;
       const map = new kakao.maps.Map(mapEl.current, {
         center: new kakao.maps.LatLng(centerLat, centerLng),
         level: 4,
       });
       mapRef.current = map;
 
-      if (state?.dest?.lat && state?.dest?.lng) {
-        showRouteTo(state.dest.lat, state.dest.lng);
+      if (dest?.lat && dest?.lng) {
+        showRouteTo(dest.lat, dest.lng);
       } else {
         setErrorMsg("목적지 좌표가 없습니다.");
       }
@@ -61,7 +68,7 @@ export default function MapRoute() {
       document.head.appendChild(s);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  }, [dest]);
 
   // ===== helpers =====
   const clearPolylines = () => {
@@ -74,7 +81,6 @@ export default function MapRoute() {
     if (!mapRef.current || !kakao?.maps) return;
 
     const path = coords.map((c) => new kakao.maps.LatLng(c.lat, c.lng));
-
     clearPolylines();
     const polyline = new kakao.maps.Polyline({
       path,
@@ -94,10 +100,8 @@ export default function MapRoute() {
   const showMyLocation = (lat, lng) => {
     const kakao = window.kakao;
     if (!mapRef.current || !kakao?.maps) return;
-
     const el = document.createElement("div");
     el.className = "my-loc-dot";
-
     if (myLocOverlayRef.current) myLocOverlayRef.current.setMap(null);
     myLocOverlayRef.current = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(lat, lng),
@@ -109,25 +113,21 @@ export default function MapRoute() {
     myLocOverlayRef.current.setMap(mapRef.current);
   };
 
-  // OSRM(프론트 호출) — 경로/거리/시간 동시 반환
+  // OSRM — 경로/거리/시간
   const fetchRoute = async (origin, dest) => {
     const url =
       `https://router.project-osrm.org/route/v1/driving/` +
       `${origin.lng},${origin.lat};${dest.lng},${dest.lat}` +
       `?overview=full&geometries=geojson`;
-
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`OSRM ${resp.status}`);
     const json = await resp.json();
-
     const route = json?.routes?.[0];
     const coords = route?.geometry?.coordinates ?? [];
     const distanceMeters = route?.distance ?? null; // m
     const durationSeconds = route?.duration ?? null; // s
-
-    const path = coords.map(([lng, lat]) => ({ lat, lng }));
     return {
-      coords: path,
+      coords: coords.map(([lng, lat]) => ({ lat, lng })),
       distanceKm:
         typeof distanceMeters === "number" ? distanceMeters / 1000 : null,
       durationMin:
@@ -135,46 +135,60 @@ export default function MapRoute() {
     };
   };
 
-  const showRouteTo = async (destLat, destLng) => {
-    const dest = { lat: destLat, lng: destLng };
-
-    const origin = await new Promise((resolve) => {
+  // 내 위치 얻기(권한 실패/타임아웃 시 캐시 → 서울역)
+  const getOrigin = () =>
+    new Promise((resolve) => {
+      const cached = getCachedLoc();
       if (!navigator.geolocation) {
-        resolve({ lat: 37.554722, lng: 126.970833 }); // 서울역
+        resolve(cached ?? { lat: 37.554722, lng: 126.970833 }); // 서울역
         return;
       }
+      let done = false;
+      const timer = setTimeout(() => {
+        if (done) return;
+        done = true;
+        resolve(cached ?? { lat: 37.554722, lng: 126.970833 });
+      }, 6500);
+
       navigator.geolocation.getCurrentPosition(
-        (pos) =>
-          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => resolve({ lat: 37.554722, lng: 126.970833 }),
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+        (pos) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve(cached ?? { lat: 37.554722, lng: 126.970833 });
+        },
+        { enableHighAccuracy: false, timeout: 6000, maximumAge: 60_000 }
       );
     });
 
+  const showRouteTo = async (destLat, destLng) => {
+    const d = { lat: destLat, lng: destLng };
     try {
       setIsLoading(true);
       setErrorMsg("");
+
+      const origin = await getOrigin();
       showMyLocation(origin.lat, origin.lng);
 
-      const { coords, distanceKm, durationMin } = await fetchRoute(
-        origin,
-        dest
-      );
+      const { coords, distanceKm, durationMin } = await fetchRoute(origin, d);
       drawRoute(coords);
-      setRouteMeta({
-        distanceKm,
-        durationMin,
-      });
+      setRouteMeta({ distanceKm, durationMin });
 
       // 목적지 마커
       const kakao = window.kakao;
       new kakao.maps.Marker({
-        position: new kakao.maps.LatLng(dest.lat, dest.lng),
+        position: new kakao.maps.LatLng(d.lat, d.lng),
         map: mapRef.current,
       });
     } catch (e) {
       console.warn("경로 조회 실패:", e);
-      setErrorMsg("경로를 불러오지 못했습니다.");
+      setErrorMsg("경로를 불러오지 못했습니다. 위치 권한을 확인해 주세요.");
     } finally {
       setIsLoading(false);
     }
@@ -192,20 +206,16 @@ export default function MapRoute() {
     return `${d} · ${t}`;
   };
 
-  // 상단 카드 클릭 → 상세 페이지로
   const goToDetail = () => {
-    const pid = state?.placeId ?? state?.id;
-    if (!pid) {
-      navigate(-1);
-      return;
-    }
+    const pid = state?.placeId;
+    if (!pid) return navigate(-1);
     const path = state?.isPrivate ? `/pv/place/${pid}` : `/place/${pid}`;
     navigate(path, { state });
   };
 
   return (
     <div className="map-wrap">
-      {/* 상단 정보 카드 (클릭 시 상세로 이동) */}
+      {/* 상단 정보 카드 */}
       <div
         className="route-topcard"
         onClick={goToDetail}
@@ -245,13 +255,14 @@ export default function MapRoute() {
       <div className="route-endbar">
         <button
           className="route-endbtn"
-          onClick={() => navigate("/home", { replace: true })}
+          onClick={() =>
+            navigate("/home", { replace: true, state: { recenter: true } })
+          }
         >
           경로 안내 종료
         </button>
       </div>
 
-      {/* 상태 토스트 */}
       {isLoading && <div className="map-toast">경로 불러오는 중…</div>}
       {!!errorMsg && <div className="map-toast error">{errorMsg}</div>}
     </div>

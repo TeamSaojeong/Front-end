@@ -4,6 +4,7 @@ import "../Styles/TimeProvider.css";
 
 import backIcon from "../Assets/arrow.png";
 import closeSvg from "../Assets/close1.svg";
+import { useParkingForm } from "../store/ParkingForm"; // ✅ 추가
 
 const ITEM_H = 44;
 const AMPM = ["오전", "오후"];
@@ -38,6 +39,9 @@ export default function TimeProvider() {
   const [slots, setSlots] = useState([makeSlot()]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [picking, setPicking] = useState("start");
+
+  // ✅ 등록 폼 저장소
+  const setField = useParkingForm((s) => s.setField);
 
   // 휠 refs & 타이머
   const refA = useRef(null);
@@ -124,7 +128,10 @@ export default function TimeProvider() {
       start: fmt24(s.start),
       end: fmt24(s.end),
     }));
-    navigate("/paypage", {
+    // ✅ 스토어에 저장 (register 호출 시 사용)
+    setField("operateTimes", payload);
+
+    navigate("/registerpay", {
       state: { lotId: placeId ?? 0, lotName: placeName, timeRanges: payload },
     });
   };
@@ -147,7 +154,6 @@ export default function TimeProvider() {
         </div>
       </div>
 
-      {/* ✅ 고정 높이 부모에서도 스크롤 가능하도록 전용 영역 */}
       <div className="time-scroll">
         <div className="time-slots">
           {slots.map((s, idx) => {

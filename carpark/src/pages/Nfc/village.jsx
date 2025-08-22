@@ -1,38 +1,27 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../../Styles/Nfc/PvTimeSelect.css";
+import "../../Styles/Nfc/Village.css";
 
 import backIcon from "../../Assets/arrow.png";
 import clockIcon from "../../Assets/clock.svg";
 
 const ITEM_H = 44; // CSS의 tp-item 높이와 동일하게 유지
 
-export default function PvTimeSelect() {
+export default function Village() {
   const navigate = useNavigate();
   const { state, search } = useLocation() || {};
   const qs = new URLSearchParams(search || "");
   // NFC URL 진입 시 ?placeId=xxx 지원
   const placeId = state?.placeId ?? qs.get("placeId") ?? 999; // 데모 기본값
 
-  // ✅ 요청 값(기본값)
-  const DEFAULTS = {
-    placeName: "양재근린공원주차장",
-    openRangesText: "00:00 ~ 24:00",
-    pricePer10Min: 800,
-  };
-
   // ------- 백엔드에서 받아올 값들 -------
   const [loading, setLoading] = useState(!state?.prefetched);
   const [error, setError] = useState(null);
-  const [placeName, setPlaceName] = useState(
-    state?.placeName ?? DEFAULTS.placeName
-  );
+  const [placeName, setPlaceName] = useState(state?.placeName ?? "—");
   const [openRangesText, setOpenRangesText] = useState(
-    state?.openRangesText ?? DEFAULTS.openRangesText
+    state?.openRangesText ?? "—"
   );
-  const [pricePer10Min, setPricePer10Min] = useState(
-    state?.pricePer10Min ?? DEFAULTS.pricePer10Min
-  );
+  const [pricePer10Min, setPricePer10Min] = useState(state?.pricePer10Min ?? 0);
   // ------------------------------------
 
   useEffect(() => {
@@ -47,12 +36,12 @@ export default function PvTimeSelect() {
         // const res = await fetch(`/api/parking/places/${placeId}`);
         // const data = await res.json();
 
-        // mock (요청하신 값으로 세팅)
+        // mock
         await new Promise((r) => setTimeout(r, 200));
         const data = {
-          placeName: DEFAULTS.placeName,
-          openRangesText: DEFAULTS.openRangesText,
-          pricePer10Min: DEFAULTS.pricePer10Min,
+          placeName: "양재빌리지 앞 주차장 (구획 23-6)",
+          openRangesText: "00:00 ~ 24:00",
+          pricePer10Min: 300,
         };
 
         if (aborted) return;
@@ -104,7 +93,6 @@ export default function PvTimeSelect() {
     if (wm)
       wm.scrollTop =
         (minutes.indexOf(m) >= 0 ? minutes.indexOf(m) : 0) * ITEM_H;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // mount only
 
   // 공통 스냅
@@ -150,6 +138,7 @@ export default function PvTimeSelect() {
         lotId: placeId || 999, // 임의 ID
         startAt: now.toISOString(),
         endAt: end.toISOString(),
+        // 참고용으로 아래 값들도 넘길 수 있음(선택)
         // durationMin: totalMinutes,
         // estimatedCost,
       },
@@ -157,33 +146,33 @@ export default function PvTimeSelect() {
   };
 
   return (
-    <div className="tp-container">
+    <div className="village-container">
       <img
         src={backIcon}
         alt="뒤로가기"
-        className="tp-back"
+        className="village-back"
         onClick={() => navigate(-1)}
       />
 
-      <div className="tp-header">
-        <div className="tp-title">주차 이용 시간을{"\n"}선택해 주세요</div>
+      <div className="village-header">
+        <div className="village-title">주차 이용 시간을{"\n"}선택해 주세요</div>
 
-        <div className="tp-meta">
-          <div className="tp-row">
-            <span className="tp-label">주차 장소 이름</span>
-            <span className="tp-value">
+        <div className="village-meta">
+          <div className="village-row">
+            <span className="village-label">주차 장소 이름</span>
+            <span className="village-value">
               {loading ? "불러오는 중..." : error ? "—" : placeName}
             </span>
           </div>
-          <div className="tp-row">
-            <span className="tp-label">주차 가능 시간</span>
-            <span className="tp-value">
+          <div className="village-row">
+            <span className="village-label">주차 가능 시간</span>
+            <span className="village-value">
               {loading ? "불러오는 중..." : error ? "—" : openRangesText}
             </span>
           </div>
-          <div className="tp-row">
-            <span className="tp-label">10분당 주차 비용</span>
-            <span className="tp-value">
+          <div className="village-row">
+            <span className="village-label">10분당 주차 비용</span>
+            <span className="village-value">
               {loading
                 ? "…"
                 : error
@@ -194,54 +183,54 @@ export default function PvTimeSelect() {
         </div>
 
         {/* 아이콘 + 선택 시간 */}
-        <div className="tp-chip">
-          <img src={clockIcon} alt="" className="tp-chip-icon" />
+        <div className="village-chip">
+          <img src={clockIcon} alt="" className="village-chip-icon" />
           <span>{durationText}</span>
         </div>
       </div>
 
       {/* Wheel Picker (박스 없이 두 줄 가이드만) */}
-      <div className="tp-wheel-wrap">
+      <div className="village-wheel-wrap">
         <div
-          className="tp-wheel"
+          className="village-wheel"
           ref={wheelHRef}
           onScroll={handleScroll("h")}
           aria-label="시간 선택 휠"
         >
-          <div className="tp-spacer" />
+          <div className="village-spacer" />
           {hours.map((hh) => (
-            <div className={`tp-item ${h === hh ? "active" : ""}`} key={hh}>
+            <div className={`village-item ${h === hh ? "active" : ""}`} key={hh}>
               {hh}
             </div>
           ))}
-          <div className="tp-spacer" />
+          <div className="village-spacer" />
         </div>
 
-        <div className="tp-col-suffix">:</div>
+        <div className="village-col-suffix">:</div>
 
         <div
-          className="tp-wheel"
+          className="village-wheel"
           ref={wheelMRef}
           onScroll={handleScroll("m")}
           aria-label="분 선택 휠"
         >
-          <div className="tp-spacer" />
+          <div className="village-spacer" />
           {minutes.map((mm) => (
-            <div className={`tp-item ${m === mm ? "active" : ""}`} key={mm}>
+            <div className={`village-item ${m === mm ? "active" : ""}`} key={mm}>
               {fmt2(mm)}
             </div>
           ))}
-          <div className="tp-spacer" />
+          <div className="village-spacer" />
         </div>
 
         {/* 가운데 가이드 라인 */}
-        <div className="tp-guide-line tp-guide-top" />
-        <div className="tp-guide-line tp-guide-bot" />
+        <div className="village-guide-line village-guide-top" />
+        <div className="village-guide-line village-guide-bot" />
       </div>
 
-      <div className="tp-bottom">
+      <div className="village-bottom">
         <button
-          className={`tp-pay ${
+          className={`village-pay ${
             isDisabled || loading || error ? "disabled" : ""
           }`}
           onClick={handlePay}
@@ -249,7 +238,7 @@ export default function PvTimeSelect() {
         >
           결제하기
         </button>
-        {error && <div className="tp-error">{error}</div>}
+        {error && <div className="village-error">{error}</div>}
       </div>
     </div>
   );
