@@ -168,7 +168,7 @@ export default function PvPlaceDetail() {
 
         const normalized = {
           id: d.id ?? d.parkingId ?? placeId,
-          name: d.name ?? fromSession?.name ?? "주차 장소",
+          name: d.name ?? d.parkingName ?? d.placeName ?? fromSession?.name ?? "주차 장소",
           distanceKm: calculatedDistance ?? d.distanceKm ?? fromSession?.distanceKm ?? null,
           etaMin: d.etaMin ?? fromSession?.etaMin ?? null,
           pricePer10m:
@@ -267,30 +267,44 @@ export default function PvPlaceDetail() {
       };
       setDetail(normalized);
 
-      // 로컬 이미지가 있으면 사용, 없으면 서버에서 가져오기
+      // 이미지 로드 우선순위: 로컬 → 서버
+      console.log("[PvPlaceDetail] 이미지 로드 시작:", {
+        id: normalized.id,
+        hasLocalImage: !!src.imageUrl,
+        hasLocalFile: !!src.image
+      });
+
+      // 1. 로컬 URL이 있는 경우
       if (src.imageUrl) {
         setImageUrl(src.imageUrl);
-      } else {
-        // 실제 등록된 주차장인 경우 서버에서 이미지 가져오기 시도
-        if (String(normalized.id) && !String(normalized.id).startsWith('temp_')) {
-          try {
-            const imgRes = await getPrivateImage(normalized.id);
-            if (imgRes?.data) {
-              const url = URL.createObjectURL(imgRes.data);
-              setImageUrl(url);
-              console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
-            }
-          } catch (error) {
-            // 404 오류는 정상적인 상황 (이미지가 없는 경우)
-            if (error?.response?.status === 404) {
-              console.log("[PvPlaceDetail] 이미지 없음 (404)");
-            } else {
-              console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", error?.message);
-            }
+        console.log("[PvPlaceDetail] 로컬 URL 사용:", src.imageUrl);
+      }
+      // 2. 로컬 File 객체가 있는 경우 
+      else if (src.image instanceof File) {
+        const url = URL.createObjectURL(src.image);
+        setImageUrl(url);
+        console.log("[PvPlaceDetail] 로컬 File 객체 사용");
+      }
+      // 3. 서버에서 이미지 가져오기 (실제 등록된 주차장만)
+      else if (String(normalized.id) && !String(normalized.id).startsWith('temp_')) {
+        try {
+          console.log("[PvPlaceDetail] 서버 이미지 요청:", normalized.id);
+          const imgRes = await getPrivateImage(normalized.id);
+          if (imgRes?.data) {
+            const url = URL.createObjectURL(imgRes.data);
+            setImageUrl(url);
+            console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
           }
-        } else {
-          console.log("[PvPlaceDetail] 임시 ID이므로 이미지 로드 건너뜀");
+        } catch (error) {
+          // 404는 정상 (이미지 없음), 다른 오류만 경고
+          if (error?.response?.status === 404) {
+            console.log("[PvPlaceDetail] 서버에 이미지 없음 (404) - 정상");
+          } else {
+            console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", error?.message);
+          }
         }
+      } else {
+        console.log("[PvPlaceDetail] 이미지 로드 건너뜀 (임시 ID 또는 ID 없음)");
       }
 
       setLoading(false);

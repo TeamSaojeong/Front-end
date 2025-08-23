@@ -5,7 +5,7 @@ import "../../Styles/Pay/PayPage.css";
 import arrow from "../../Assets/arrow.png";
 import kakaopay from "../../Assets/kakaopay.svg";
 
-import { getPublicDetail, createReservation } from "../../apis/parking"; // ← 명세 기반 API 사용
+import { getPublicDetail, createReservation, preparePayment } from "../../apis/parking"; // ← 명세 기반 API 사용
 
 const KRW = (n) =>
   (isNaN(n) ? 0 : Math.round(n))
@@ -145,39 +145,32 @@ export default function PayPage() {
 
     setPosting(true);
     try {
-      // 선예약이면 startInMinutes 포함
-      const payload =
-        typeof startInMinutes === "number"
-          ? { startInMinutes, minutes }
-          : { minutes };
+      // 카카오페이 결제 준비
+      const paymentPayload = {
+        parkName: lotName,
+        parkingId: parkingId,
+        total: total,
+        usingMinutes: minutes
+      };
 
-      const res = await createReservation(parkingId, payload);
+      console.log('결제 준비 요청:', paymentPayload);
+      const res = await preparePayment(paymentPayload);
+      console.log('결제 준비 응답:', res);
 
-      const paymentRedirectUrl =
-        res?.data?.paymentRedirectUrl || res?.data?.data?.paymentRedirectUrl;
-      const reservationId =
-        res?.data?.reservationId || res?.data?.data?.reservationId;
+      // 카카오페이 리다이렉트 URL 추출
+      const paymentRedirectUrl = res?.data?.next_redirect_pc_url || res?.data?.data?.next_redirect_pc_url;
 
       if (paymentRedirectUrl) {
-        // 외부결제 이동
+        // 카카오페이로 이동
+        console.log('카카오페이로 이동:', paymentRedirectUrl);
         window.location.href = paymentRedirectUrl;
-      } else if (reservationId) {
-        // 결제 없는 예약완료
-        navigate("/paycomplete", {
-          replace: true,
-          state: {
-            reservationId,
-            startAt: startAt.toISOString(),
-            endAt: endAt.toISOString(),
-            lotName,
-          },
-        });
       } else {
-        alert("예약은 되었지만 응답을 해석할 수 없습니다.");
+        alert("결제 준비에 실패했습니다. 응답을 확인해주세요.");
+        console.error('결제 URL을 찾을 수 없음:', res);
       }
     } catch (e) {
-      console.error(e);
-      alert(e?.response?.data?.message || "예약/결제에 실패했습니다.");
+      console.error('결제 준비 오류:', e);
+      alert(e?.response?.data?.message || "결제 준비에 실패했습니다.");
     } finally {
       setPosting(false);
     }

@@ -235,7 +235,18 @@ export default function Home() {
     updateBubbleStyles(p.id);
 
     setTimeout(() => {
+      // ID 검증 및 디버깅
+      console.log('클릭된 주차장 정보:', { id: p.id, name: p.name, isPrivate: isPrivate(p) });
+      
+      if (!p.id || String(p.id).trim() === '') {
+        console.error('주차장 ID가 없습니다:', p);
+        alert('주차장 정보에 오류가 있습니다. 다시 시도해주세요.');
+        return;
+      }
+      
       const path = isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`;
+      console.log('이동할 경로:', path);
+      
       navigate(path, {
         state: {
           place: payload,
@@ -321,6 +332,7 @@ export default function Home() {
       (pos) => {
         if (settled) return;
         clearTimeout(hard);
+        console.log('위치 권한 허용됨:', pos.coords);
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setCachedLoc(loc.lat, loc.lng);
         if (!near(base, loc)) {
@@ -330,7 +342,12 @@ export default function Home() {
           syncAndFetch(loc.lat, loc.lng);
         }
       },
-      () => clearTimeout(hard),
+      (error) => {
+        console.error('위치 권한 오류:', error);
+        console.log('위치 권한 오류 코드:', error.code);
+        console.log('위치 권한 오류 메시지:', error.message);
+        clearTimeout(hard);
+      },
       { enableHighAccuracy: false, timeout: 3500, maximumAge: 120000 }
     );
   };
@@ -511,6 +528,17 @@ export default function Home() {
         });
       }
 
+      console.log('지도 표시 조건 체크:', myParks?.map(m => ({
+        id: m.id,
+        name: m.name,
+        enabled: m.enabled,
+        lat: m.lat,
+        lng: m.lng,
+        latType: typeof m.lat,
+        lngType: typeof m.lng,
+        canShow: m.enabled && typeof m.lat === "number" && typeof m.lng === "number"
+      })));
+
       const mine = (myParks || [])
         .filter(
           (m) =>
@@ -582,12 +610,50 @@ export default function Home() {
       const c = mapRef.current?.getCenter?.();
       if (!c) return;
       fetchNearby(c.getLat(), c.getLng());
+      
+      // 실시간 알림 확인
+      checkNotifications();
     }, 10_000);
   };
   const stopPolling = () => {
     if (pollRef.current) {
       clearInterval(pollRef.current);
       pollRef.current = null;
+    }
+  };
+
+  // 실시간 알림 확인
+  const checkNotifications = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+      const response = await fetch('https://api.parkhere.store/api/alerts/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json();
+      const notifications = result.data || [];
+
+      // 새로운 알림이 있으면 OutModal 표시
+      notifications.forEach(notification => {
+        if (notification.type === 'SOON_OUT') {
+          console.log('실시간 알림 수신:', notification);
+          openSoonModalFor(
+            notification.parkingId, 
+            notification.placeName, 
+            notification.minutesAgo || 5
+          );
+        }
+      });
+
+    } catch (error) {
+      console.error('알림 확인 실패:', error);
     }
   };
 

@@ -5,7 +5,7 @@ import styled, { createGlobalStyle } from "styled-components";
 
 /* ===== Kakao 지오코딩 유틸 ===== */
 const SDK_SRC =
-  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=여기에_카카오REST키&autoload=false&libraries=services";
+  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
 
 async function ensureKakao() {
   if (window.kakao?.maps?.services) return;

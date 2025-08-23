@@ -88,14 +88,31 @@ export async function register(accessToken) {
     const data = await postOnce(file, hasImage);
     console.log("[REGISTER] 서버 응답:", JSON.stringify(data, null, 2));
     
-    // API 명세서에 따라 data는 배열
-    const dataArray = data?.data ?? [];
-    const created = Array.isArray(dataArray) && dataArray.length > 0 ? dataArray[0] : {};
+    // API 명세서에 따라 data는 객체 (배열이 아님)
+    const created = data?.data ?? {};
+    console.log("[REGISTER] created object:", created);
 
     const parkingId = String(
-      created?.parkingId || created?.id || created?.parking_id || ""
+      created?.parking_id || created?.parkingId || created?.id || ""
     );
-    console.log("[REGISTER] 생성된 주차장 ID:", parkingId);
+    console.log("[REGISTER] ID 추출 과정:", {
+      parking_id: created?.parking_id,
+      parkingId: created?.parkingId,
+      id: created?.id,
+      final: parkingId
+    });
+
+    // 이미지 정보 보존
+    const imageInfo = {};
+    if (s.image instanceof File) {
+      imageInfo.image = s.image;
+      imageInfo.imageUrl = URL.createObjectURL(s.image);
+      console.log("[REGISTER] 이미지 정보 저장:", {
+        fileName: s.image.name,
+        fileSize: s.image.size,
+        hasImageUrl: !!imageInfo.imageUrl
+      });
+    }
 
     const detail = {
       id: parkingId,
@@ -107,7 +124,7 @@ export async function register(accessToken) {
       charge: created?.charge ?? request.charge,
       lat: created?.lat ?? request.lat,
       lng: created?.lng ?? request.lng,
-      imageUrl: created?.imageUrl ?? null,
+      ...imageInfo, // 이미지 정보 추가
       origin: "server",
       operate: created?.operate ?? true,
     };

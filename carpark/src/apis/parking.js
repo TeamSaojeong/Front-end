@@ -55,9 +55,22 @@ export async function getMyParkingDetail(parkingId, accessToken) {
 }
 
 /** 개인 주차장 이미지(blob) */
-export const getPrivateImage = (parkingId) => {
+export const getPrivateImage = async (parkingId) => {
   const cleanId = normalizeId(parkingId);
-  return client.get(`/api/parking/${cleanId}/image`, { responseType: "blob" });
+  try {
+    const response = await client.get(`/api/parking/${cleanId}/image`, { 
+      responseType: "blob" 
+    });
+    return response;
+  } catch (error) {
+    // 404는 정상적인 상황 (이미지가 없는 경우)
+    if (error?.response?.status === 404) {
+      console.log(`[API] 주차장 ${cleanId} 이미지 없음 (404)`);
+      return null;
+    }
+    // 다른 오류는 재전파
+    throw error;
+  }
 };
 
 /** 혼잡도 예측 */
@@ -103,6 +116,13 @@ export const getParkingStatus = (parkingId) => {
 export const createReservation = (parkingId, usingMinutes) => {
   const cleanId = normalizeId(parkingId);
   return client.post(`/api/parking/${cleanId}/reservation`, { usingMinutes });
+};
+
+/** 카카오페이 결제 준비 */
+export const preparePayment = (payload) => {
+  return client.post('/api/pay/ready', payload, {
+    headers: authHeader()
+  });
 };
 
 /** ‘곧 나감’ 신고 */
