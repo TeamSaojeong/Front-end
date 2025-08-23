@@ -30,10 +30,15 @@ export default function PvTimeSelect() {
 
   // ✅ 요청 값(기본값) - NFC 정보가 있으면 우선 사용
   const DEFAULTS = {
-    placeName: nfcInfo?.placeName ?? "양재근린공원주차장",
-    openRangesText: nfcInfo?.openRangesText ?? "00:00 ~ 24:00",
-    pricePer10Min: nfcInfo?.pricePer10Min ?? 800,
+    placeName: nfcInfo?.name || nfcInfo?.placeName || "양재근린공원주차장",
+    openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || "00:00 ~ 24:00",
+    pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || 800,
   };
+  
+  console.log('PvTimeSelect NFC 정보:', {
+    nfcInfo,
+    defaults: DEFAULTS
+  });
 
   // ------- 백엔드에서 받아올 값들 -------
   const [loading, setLoading] = useState(!state?.prefetched);
@@ -158,24 +163,32 @@ export default function PvTimeSelect() {
     const now = new Date();
     const end = new Date(now.getTime() + totalMinutes * 60000);
 
-    // NFC 정보와 함께 결제 페이지로 이동
-    navigate("/PayPage", {
-      state: {
-        demo: true, // 데모 플래그 (PayPage에서 API 생략)
-        lotId: placeId || 999,
-        startAt: now.toISOString(),
-        endAt: end.toISOString(),
-        durationMin: totalMinutes,
-        estimatedCost,
-        // NFC 주차장 정보 포함
-        parkingInfo: nfcInfo ? {
-          placeId: nfcInfo.placeId,
-          placeName: nfcInfo.placeName,
-          address: nfcInfo.address,
-          isLocal: nfcInfo.isLocal,
-        } : null,
+    // 결제 정보 준비
+    const paymentData = {
+      demo: true, // 데모 플래그 (PayPage에서 API 생략)
+      lotId: placeId || 999,
+      parkingId: nfcInfo?.id || placeId,
+      parkName: placeName,
+      startAt: now.toISOString(),
+      endAt: end.toISOString(),
+      durationMin: totalMinutes,
+      usingMinutes: totalMinutes,
+      estimatedCost,
+      total: estimatedCost,
+      // 주차장 정보
+      parkingInfo: {
+        id: nfcInfo?.id || placeId,
+        name: placeName,
+        address: nfcInfo?.address || "",
+        isPrivate: nfcInfo?.isPrivate !== false,
+        charge: pricePer10Min
       },
-    });
+    };
+
+    console.log('PvTimeSelect에서 PayPage로 전달:', paymentData);
+
+    // NFC 정보와 함께 결제 페이지로 이동
+    navigate("/PayPage", { state: paymentData });
   };
 
   return (

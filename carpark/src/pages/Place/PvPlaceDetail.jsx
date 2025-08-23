@@ -108,13 +108,16 @@ export default function PvPlaceDetail() {
 
   // 현재 위치 가져오기
   useEffect(() => {
+    console.log("[PvPlaceDetail] 현재 위치 가져오기 시작");
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCurrentLocation({
+          const location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setCurrentLocation(location);
+          console.log("[PvPlaceDetail] 현재 위치 획득:", location);
         },
         (error) => {
           console.error('위치 가져오기 실패:', error);
@@ -162,9 +165,18 @@ export default function PvPlaceDetail() {
         const lng = toNum(d?.lng ?? d?.x) ?? sessionLng ?? null;
 
         // 현재 위치 기준 거리 계산
+        console.log("[PvPlaceDetail] 거리 계산:", {
+          hasCurrentLocation: !!currentLocation,
+          currentLocation,
+          targetLat: lat,
+          targetLng: lng
+        });
+        
         const calculatedDistance = currentLocation && lat && lng 
           ? calculateDistance(currentLocation.lat, currentLocation.lng, lat, lng)
           : null;
+          
+        console.log("[PvPlaceDetail] 계산된 거리:", calculatedDistance);
 
         const normalized = {
           id: d.id ?? d.parkingId ?? placeId,
@@ -391,16 +403,22 @@ export default function PvPlaceDetail() {
       return;
     }
 
-    console.log('PvPlaceDetail에서 NFC로 전달하는 정보:', {
-      placeId,
-      placeName: detail?.name,
-      address: detail?.address,
-      openRangesText: detail?.availableTimes,
-      isLocal: !!detail?._flags?.isLocal,
+    // NFC로 전달할 정보 준비
+    const parkingInfo = {
+      id: placeId,
+      name: detail?.name || "주차 장소",
+      address: detail?.address || "",
+      availableTimes: detail?.availableTimes || "",
+      isPrivate: true,
       lat: targetLat,
       lng: targetLng,
-      pricePer10Min: Math.round((detail?.pricePer10m || 0) / 10) * 10,
-    });
+      charge: detail?.pricePer10m || 0,
+    };
+
+    console.log('PvPlaceDetail에서 NFC로 전달하는 정보:', parkingInfo);
+    
+    // 세션 스토리지에도 저장 (백업용)
+    sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
     
     navigate(
       {
