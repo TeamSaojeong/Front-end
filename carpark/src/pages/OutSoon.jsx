@@ -92,9 +92,18 @@ export default function OutSoon() {
   }, []);
   const minsLeft = Math.max(0, (endAt.getTime() - now) / 60000);
 
-  const near10 = Math.abs(minsLeft - 10) <= TOL_MIN;
+  // 6분~10분 범위에서 빨간 버튼 표시
+  const inRedButtonRange = minsLeft >= 6 && minsLeft <= 10;
   const near5 = Math.abs(minsLeft - 5) <= TOL_MIN;
-  const canPressOutSoon = inUseByOther && (near10 || near5);
+  const canPressOutSoon = inUseByOther && (inRedButtonRange || near5);
+  
+  console.log('[OutSoon] 버튼 상태 체크:', {
+    minsLeft: Math.round(minsLeft * 100) / 100,
+    inRedButtonRange,
+    near5,
+    canPressOutSoon,
+    inUseByOther
+  });
 
   const pressedKey = useMemo(
     () => `outsoon-pressed-${placeId}-${startAt.getTime()}`,
@@ -113,7 +122,7 @@ export default function OutSoon() {
     } catch {}
   }, [pressedKey]);
 
-  const bubbleMinuteLabel = near5 ? "5분" : "10분";
+  const bubbleMinuteLabel = near5 ? "5분" : inRedButtonRange ? "10분" : "10분";
 
   // ===== 연장 바텀시트 =====
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -447,7 +456,7 @@ export default function OutSoon() {
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
           <span className="outsoon-time-text">
             {formatHHMM(startAt)} ~ {formatHHMM(endAt)} (
-            {formatDiff(startAt, endAt)})
+            {Math.floor(minsLeft)}분)
           </span>
         </div>
       </div>
