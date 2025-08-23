@@ -57,19 +57,114 @@ export async function getMyParkingDetail(parkingId, accessToken) {
 /** 개인 주차장 이미지(blob) */
 export const getPrivateImage = async (parkingId) => {
   const cleanId = normalizeId(parkingId);
+  console.log(`[API] 이미지 요청 시작: GET /api/parking/${cleanId}/image`);
+  
   try {
     const response = await client.get(`/api/parking/${cleanId}/image`, { 
       responseType: "blob" 
     });
+    
+    console.log(`[API] 이미지 응답 성공:`, {
+      status: response.status,
+      contentType: response.headers['content-type'],
+      dataSize: response.data?.size,
+      hasData: !!response.data
+    });
+    
     return response;
   } catch (error) {
+    console.log(`[API] 이미지 요청 실패:`, {
+      parkingId: cleanId,
+      status: error?.response?.status,
+      statusText: error?.response?.statusText,
+      message: error?.message,
+      url: error?.config?.url
+    });
+    
     // 404는 정상적인 상황 (이미지가 없는 경우)
     if (error?.response?.status === 404) {
-      console.log(`[API] 주차장 ${cleanId} 이미지 없음 (404)`);
+      console.log(`[API] 주차장 ${cleanId} 이미지 없음 (404) - 정상`);
       return null;
     }
     // 다른 오류는 재전파
     throw error;
+  }
+};
+
+/** [내가 등록한 주차장 조회] GET /api/parking (관리용) */
+export const getMyParkings = async () => {
+  try {
+    console.log('[API] GET /api/parking - 내 주차장 조회 (관리용)');
+    const response = await client.get('/api/parking', {
+      headers: authHeader(),
+    });
+    console.log('[API] 내 주차장 응답 (관리용):', response.data);
+    return response;
+  } catch (error) {
+    if (error?.response?.status === 401) {
+      console.warn('[API] 토큰 만료, 로그인 페이지로 이동');
+      localStorage.removeItem('accessToken');
+      window.location.href = '/login';
+      return { data: [] };
+    }
+    console.error('[API] 내 주차장 조회 실패:', error);
+    throw error;
+  }
+};
+
+/** [모든 개인 주차장 조회] GET /api/parking (지도용) */
+export const getAllPrivateParkings = async () => {
+  try {
+    console.log('[API] GET /api/parking - 모든 개인 주차장 조회 (지도용)');
+    
+    // 🔍 JWT 토큰에서 사용자 정보 추출
+    const token = localStorage.getItem("accessToken");
+    let currentUserId = null;
+    
+    if (token) {
+      try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        currentUserId = decoded.loginId || decoded.email || decoded.sub; // ✅ loginId 사용
+        console.log('[API] 토큰에서 추출한 사용자 ID:', currentUserId);
+      } catch (e) {
+        console.warn('[API] JWT 디코딩 실패:', e);
+      }
+    }
+    
+    // ✅ 기존 API 호출하되, 응답에 소유자 정보 추가
+    const response = await client.get('/api/parking', {
+      headers: authHeader(),
+    });
+    
+    // ✅ 백엔드 응답 필드명에 맞춰 매핑
+    if (response.data?.data) {
+      response.data.data = response.data.data.map(parking => ({
+        ...parking,
+        // 필드명 통일
+        parking_id: parking.parkingId,
+        name: parking.parkingName,
+        enabled: parking.operate,
+        // 소유자 구분은 아직 백엔드에서 제공 안함 (임시로 모든 주차장 표시)
+        is_owner: false, // 일단 모든 주차장을 다른 사용자 것으로 처리
+        owner_id: 'unknown',
+        current_user: currentUserId
+      }));
+    }
+    
+    console.log('[API] 모든 개인 주차장 응답 (소유자 정보 추가):', response.data);
+    return response;
+  } catch (error) {
+    if (error?.response?.status === 401) {
+      console.warn('[API] 토큰 만료, 로그인 페이지로 이동');
+      localStorage.removeItem('accessToken');
+      window.location.href = '/login';
+      return { data: [] };
+    }
+    console.error('[API] 모든 개인 주차장 조회 실패:', error);
+    
+    // ✅ 오류 시 빈 배열 반환 (지도 기능 유지)
+    return { data: { data: [] } };
   }
 };
 
@@ -106,6 +201,8 @@ export function unsubscribeAlert({ alertId }) {
   });
 }
 
+// 알림 서버 API는 현재 미제공. 로컬 스토리지 기반 메커니즘을 사용합니다.
+
 /** 상태 조회 */
 export const getParkingStatus = (parkingId) => {
   const cleanId = normalizeId(parkingId);
@@ -131,3 +228,10 @@ export const postSoonOut = (payload) => client.post(`/api/soonout`, payload);
 /** 주변 평균 요금(10분당) */
 export const getAvgFee = (lat, lon) =>
   client.get("/api/parking/avg", { params: { lat, lon } });
+
+/** 생성된 곧나감 알림 조회 */
+export const getSoonOutDetail = (soonOutId) => {
+  return client.get(`/api/soonout/${encodeURIComponent(soonOutId)}`, {
+    headers: authHeader(),
+  });
+};

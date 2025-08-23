@@ -105,8 +105,22 @@ const LoginPage = () => {
       // 토큰 저장
       const accessToken = extractToken(res);
       if (accessToken) {
+        // 🔍 토큰 디코딩해서 사용자 정보 확인
+        try {
+          const payload = JSON.parse(atob(accessToken.split('.')[1]));
+          console.log('🔑 새로 발급받은 토큰:', {
+            사용자: payload.loginId || payload.sub,
+            발급시간: new Date(payload.iat * 1000),
+            만료시간: new Date(payload.exp * 1000),
+            토큰앞부분: accessToken.substring(0, 50) + '...'
+          });
+        } catch (e) {
+          console.log('토큰 디코딩 실패:', e);
+        }
+        
         localStorage.setItem("accessToken", accessToken);
-        client.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+        // ✅ 전역 헤더 설정 제거 - interceptor에서만 처리
+        // client.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       }
 
       // ✅ 사용자 키 저장 (이메일/아이디). 응답에 값이 없으면 입력값 사용
