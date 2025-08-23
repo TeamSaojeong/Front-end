@@ -12,36 +12,45 @@ const NFCTagPage = () => {
   const [parkingInfo, setParkingInfo] = useState(null);
 
   useEffect(() => {
-    // PvPlaceDetail에서 전달된 주차장 정보 받기
-    const info = location.state;
-    console.log('NFCTagPage 받은 정보:', info);
+    console.log('NFCTagPage 정보 로드 시작');
     
-    if (info) {
-      console.log('주차장 이름:', info.placeName);
-      setParkingInfo(info);
-      // NFC 태그용 정보를 sessionStorage에 저장
-      sessionStorage.setItem('nfcParkingInfo', JSON.stringify({
-        placeId: info.placeId,
-        placeName: info.placeName,
-        address: info.address,
-        openRangesText: info.openRangesText,
-        isLocal: info.isLocal,
-        lat: info.lat,
-        lng: info.lng,
-        pricePer10Min: info.pricePer10Min || 800 // 기본값
-      }));
-    } else {
-      // sessionStorage에서 기존 정보 불러오기
+    // 1. location.state에서 받기 (PvPlaceDetail에서 전달)
+    let info = location.state;
+    console.log('location.state:', info);
+    
+    // 2. sessionStorage에서 백업 정보 받기
+    if (!info) {
       try {
         const saved = sessionStorage.getItem('nfcParkingInfo');
         if (saved) {
-          const parsed = JSON.parse(saved);
-          console.log('sessionStorage에서 불러온 정보:', parsed);
-          setParkingInfo(parsed);
+          info = JSON.parse(saved);
+          console.log('sessionStorage에서 불러온 정보:', info);
         }
       } catch (error) {
-        console.error('주차장 정보 로드 실패:', error);
+        console.error('sessionStorage 로드 실패:', error);
       }
+    }
+    
+    if (info) {
+      // 주차장 이름 추출 (다양한 필드명 지원)
+      const parkingName = info.name || info.placeName || info.parkingName || "주차 장소";
+      
+      const processedInfo = {
+        id: info.id || info.placeId,
+        name: parkingName,
+        address: info.address || "",
+        availableTimes: info.availableTimes || info.openRangesText || "",
+        isPrivate: info.isPrivate !== false, // 기본값 true
+        lat: info.lat,
+        lng: info.lng,
+        charge: info.charge || info.pricePer10Min || 0
+      };
+      
+      console.log('처리된 주차장 정보:', processedInfo);
+      console.log('주차장 이름:', parkingName);
+      setParkingInfo(processedInfo);
+    } else {
+      console.warn('주차장 정보를 찾을 수 없습니다');
     }
   }, [location.state]);
 
@@ -97,7 +106,7 @@ const NFCTagPage = () => {
         <div className="nfc-time-inner">
           <img src={pin_icon} alt="핀 아이콘" className="pin-icon" />
           <span className="nfc-time-text">
-            {parkingInfo ? parkingInfo.placeName : "주차장 정보를 불러오는 중..."}
+            {parkingInfo ? parkingInfo.name : "주차장 정보를 불러오는 중..."}
           </span>
         </div>
       </div>
