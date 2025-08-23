@@ -58,6 +58,16 @@ export default function OutSoon() {
   const placeId = state?.placeId ?? selectedPlace?.id ?? placeName;
   const address = state?.address ?? selectedPlace?.address ?? "";
   const provider = "kakao";
+  
+  // 예약 ID 가져오기 (PayPage에서 전달되거나 sessionStorage에서)
+  const reservationId = state?.reservationId ?? 
+    (() => {
+      try {
+        return sessionStorage.getItem('currentReservationId');
+      } catch {
+        return null;
+      }
+    })();
 
   const inUseByOther = !!state?.inUseByOther;
 
@@ -82,9 +92,18 @@ export default function OutSoon() {
   }, []);
   const minsLeft = Math.max(0, (endAt.getTime() - now) / 60000);
 
-  const near10 = Math.abs(minsLeft - 10) <= TOL_MIN;
+  // 6분~10분 범위에서 빨간 버튼 표시
+  const inRedButtonRange = minsLeft >= 6 && minsLeft <= 10;
   const near5 = Math.abs(minsLeft - 5) <= TOL_MIN;
-  const canPressOutSoon = inUseByOther && (near10 || near5);
+  const canPressOutSoon = inUseByOther && (inRedButtonRange || near5);
+  
+  console.log('[OutSoon] 버튼 상태 체크:', {
+    minsLeft: Math.round(minsLeft * 100) / 100,
+    inRedButtonRange,
+    near5,
+    canPressOutSoon,
+    inUseByOther
+  });
 
   const pressedKey = useMemo(
     () => `outsoon-pressed-${placeId}-${startAt.getTime()}`,
@@ -103,7 +122,7 @@ export default function OutSoon() {
     } catch {}
   }, [pressedKey]);
 
-  const bubbleMinuteLabel = near5 ? "5분" : "10분";
+  const bubbleMinuteLabel = near5 ? "5분" : inRedButtonRange ? "10분" : "10분";
 
   // ===== 연장 바텀시트 =====
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -154,12 +173,54 @@ export default function OutSoon() {
   const disabledExtend = totalMinutes === 0;
   const selectedText = `${extH}시간 ${pad2(extM)}분 연장`;
 
-  const applyExtend = () => {
+  const applyExtend = async () => {
     if (disabledExtend) return;
-    const next = new Date(endAt);
-    next.setHours(next.getHours() + extH);
-    next.setMinutes(next.getMinutes() + extM);
-    setEndAt(next);
+    
+    // 예약 ID 확인
+    if (!reservationId) {
+      alert('예약 정보를 찾을 수 없어 연장할 수 없습니다.');
+      return;
+    }
+    
+    const totalMinutes = extH * 60 + extM;
+    
+    try {
+      console.log('연장하기 API 호출:', { reservationId, totalMinutes });
+      
+      // 백엔드 API 호출
+      const response = await fetch(`https://api.parkhere.store/api/reservation/${reservationId}/extend`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          usingMinutes: totalMinutes
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API 오류 ${response.status}: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('연장하기 성공:', result);
+      
+      // 로컬 상태 업데이트
+      const next = new Date(endAt);
+      next.setHours(next.getHours() + extH);
+      next.setMinutes(next.getMinutes() + extM);
+      setEndAt(next);
+      
+      alert(`${extH}시간 ${extM}분 연장되었습니다.`);
+      
+    } catch (error) {
+      console.error('연장하기 실패:', error);
+      alert(`연장하기에 실패했습니다: ${error.message}`);
+      return;
+    }
+    
     setOpen(false);
     setExtH(0);
     setExtM(0);
@@ -205,6 +266,8 @@ export default function OutSoon() {
       );
     });
 
+  const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
+
   // ===== 곧 나감 전송 =====
   const onPressOutSoon = async () => {
     if (!canPressOutSoon) return;
@@ -223,12 +286,94 @@ export default function OutSoon() {
         lng,
         minute,
         provider,
-        externalId: placeId, // kakao id
+        externalId: normalizeId(placeId), // kakao id
         placeName,
         address,
       };
 
       await postSoonOut(payload);
+
+      // 🔔 같은 주차장을 구독한 다른 사용자들에게 알림 시뮬레이션
+      try {
+        // 현재 사용자 키
+        const currentUserKey = localStorage.getItem("userKey") || "guest";
+        console.log(`[알림] 현재 사용자: ${currentUserKey}`);
+        
+        // 모든 사용자 키 찾기 (실제로는 서버에서 처리해야 함)
+        const allUserKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("watchedPlaceIds__")) {
+            const userKey = key.replace("watchedPlaceIds__", "");
+            if (userKey !== currentUserKey) {
+              allUserKeys.push(userKey);
+            }
+          }
+        }
+        
+        console.log(`[알림] 발견된 다른 사용자들:`, allUserKeys);
+        
+        // 각 사용자가 이 주차장을 구독하고 있는지 확인
+        allUserKeys.forEach(userKey => {
+          const watchedIdsKey = `watchedPlaceIds__${userKey}`;
+          const watchedNamesKey = `watchedPlaceNames__${userKey}`;
+          
+          try {
+            const watchedIds = JSON.parse(localStorage.getItem(watchedIdsKey) || "[]");
+            const watchedNames = JSON.parse(localStorage.getItem(watchedNamesKey) || "{}");
+            
+            console.log(`[알림] 사용자 ${userKey}의 구독 정보:`, {
+              watchedIds,
+              watchedNames,
+              currentPlaceId: normalizeId(placeId)
+            });
+            
+            // 이 주차장을 구독하고 있는지 확인
+            if (watchedIds.includes(normalizeId(placeId))) {
+              console.log(`[알림] 사용자 ${userKey}가 이 주차장을 구독하고 있음!`);
+              
+              // 알림 데이터 생성
+              const notificationData = {
+                id: Date.now() + Math.random(), // 고유 ID
+                type: 'SOON_OUT',
+                parkingId: normalizeId(placeId),
+                placeName: watchedNames[normalizeId(placeId)] || placeName,
+                minutesAgo: minute,
+                timestamp: Date.now(),
+                targetUserKey: userKey
+              };
+              
+              console.log(`[알림] 생성된 알림 데이터:`, notificationData);
+              
+              // 해당 사용자의 알림 목록에 추가
+              const notificationsKey = `pendingNotifications__${userKey}`;
+              const existingNotifications = JSON.parse(localStorage.getItem(notificationsKey) || "[]");
+              existingNotifications.push(notificationData);
+              localStorage.setItem(notificationsKey, JSON.stringify(existingNotifications));
+              
+              console.log(`[알림] 사용자 ${userKey}의 알림 목록에 추가됨:`, {
+                key: notificationsKey,
+                count: existingNotifications.length,
+                notifications: existingNotifications
+              });
+              
+              console.log(`[알림] 사용자 ${userKey}에게 ${placeName} 곧 나감 알림 전송 완료`);
+            } else {
+              console.log(`[알림] 사용자 ${userKey}는 이 주차장을 구독하지 않음`);
+            }
+          } catch (error) {
+            console.error(`[알림] 사용자 ${userKey} 알림 처리 실패:`, error);
+          }
+        });
+        
+        // 개발 중에만 로그 출력 (테스트 알림은 제거)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[알림] 개발 모드: 현재 사용자 ${currentUserKey}에게는 테스트 알림을 추가하지 않음`);
+        }
+        
+      } catch (error) {
+        console.error("[알림] 알림 시뮬레이션 실패:", error);
+      }
 
       // ✅ cancel 화면/자동 종료를 위해 시간 & 장소를 함께 전달 + 세션에도 저장
       const startISO = startAt.toISOString();
@@ -311,7 +456,7 @@ export default function OutSoon() {
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
           <span className="outsoon-time-text">
             {formatHHMM(startAt)} ~ {formatHHMM(endAt)} (
-            {formatDiff(startAt, endAt)})
+            {Math.floor(minsLeft)}분)
           </span>
         </div>
       </div>

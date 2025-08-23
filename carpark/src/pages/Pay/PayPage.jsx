@@ -5,7 +5,7 @@ import "../../Styles/Pay/PayPage.css";
 import arrow from "../../Assets/arrow.png";
 import kakaopay from "../../Assets/kakaopay.svg";
 
-import { getPublicDetail, createReservation } from "../../apis/parking"; // ← 명세 기반 API 사용
+import { getPublicDetail, createReservation, preparePayment } from "../../apis/parking"; // ← 명세 기반 API 사용
 
 const KRW = (n) =>
   (isNaN(n) ? 0 : Math.round(n))
@@ -27,6 +27,9 @@ export default function PayPage() {
   const navigate = useNavigate();
   const { state } = useLocation() || {};
 
+  console.log('[PayPage] 받은 state 정보:', state);
+  console.log('[PayPage] location 전체:', useLocation());
+
   // 상세에서 넘어올 수 있는 값들
   // A) 바로 리디렉트 모드: paymentUrl 또는 reservationId 만 넘어온 경우
   const paymentUrl =
@@ -42,32 +45,82 @@ export default function PayPage() {
     : new Date(startAt.getTime() + 2 * 60 * 60 * 1000);
   const startInMinutes = state?.startInMinutes; // RESERVABLE에서 넘겨줄 수 있음(곧 나감 n분 뒤)
 
-  // 화면 데이터
-  const [loading, setLoading] = useState(true);
-  const [lotName, setLotName] = useState("");
-  const [pricePer10Min, setPricePer10Min] = useState(0);
+  // C) NFC/PvTimeSelect에서 넘어온 정보들
+  const parkName = state?.parkName || state?.parkingInfo?.name || "";
+  const total = state?.total || state?.estimatedCost || 0;
+  const usingMinutes = state?.usingMinutes || state?.durationMin || 0;
+
+  // D) state가 비어있으면 sessionStorage에서 백업 확인
+  let backupInfo = null;
+  if (!state || Object.keys(state).length === 0) {
+    try {
+      const saved = sessionStorage.getItem('nfcParkingInfo');
+      if (saved) {
+        backupInfo = JSON.parse(saved);
+        console.log('[PayPage] sessionStorage 백업 사용:', backupInfo);
+      }
+    } catch (error) {
+      console.error('[PayPage] sessionStorage 로드 실패:', error);
+    }
+  }
+
+  console.log('[PayPage] 추출된 정보:', {
+    parkingId,
+    parkName,
+    total,
+    usingMinutes,
+    startAt,
+    endAt
+  });
+
+  // 화면 데이터 - NFC에서 넘어온 정보 또는 백업 정보 사용
+  const finalParkName = parkName || backupInfo?.name || "";
+  const finalCharge = state?.pricePer10Min || state?.parkingInfo?.charge || backupInfo?.charge || 0;
+  
+  console.log('[PayPage] 10분당 요금 확인:', {
+    statePricePer10Min: state?.pricePer10Min,
+    parkingInfoCharge: state?.parkingInfo?.charge,
+    backupCharge: backupInfo?.charge,
+    finalCharge
+  });
+  
+  const [loading, setLoading] = useState(!finalParkName); // 이름이 있으면 로딩 스킵
+  const [lotName, setLotName] = useState(finalParkName); // NFC에서 넘어온 이름 우선
+  const [pricePer10Min, setPricePer10Min] = useState(finalCharge);
   const [nearbyAvg10Min, setNearbyAvg10Min] = useState(null); // 선택: 표시만
   const [posting, setPosting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 이용 시간(분)
+  // 이용 시간(분) - NFC에서 넘어온 정보 우선 사용
   const minutes = useMemo(() => {
+    // NFC에서 넘어온 시간이 있으면 우선 사용
+    if (usingMinutes > 0) {
+      return usingMinutes;
+    }
+    // 아니면 시작/종료 시간으로 계산
     const diff = Math.max(0, Math.round((endAt - startAt) / 60000));
     return diff;
-  }, [startAt, endAt]);
+  }, [startAt, endAt, usingMinutes]);
 
   const hoursPart = Math.floor(minutes / 60);
   const minsPart = minutes % 60;
 
-  // 요금 (10분 단위 올림)
+  // 요금 (10분 단위 올림) - NFC에서 넘어온 총액이 있으면 우선 사용
   const billableUnits = useMemo(() => Math.ceil(minutes / 10), [minutes]);
-  const fee = useMemo(
-    () => billableUnits * pricePer10Min,
-    [billableUnits, pricePer10Min]
-  );
+  const fee = useMemo(() => {
+    // NFC에서 넘어온 총액이 있으면 우선 사용 (서비스 수수료 제외)
+    if (total > 0) {
+      return Math.round(total / 1.1); // 서비스 수수료 10% 제외
+    }
+    return billableUnits * pricePer10Min;
+  }, [billableUnits, pricePer10Min, total]);
+  
   const svcRate = 0.1;
   const svcFee = useMemo(() => Math.round(fee * svcRate), [fee]);
-  const total = useMemo(() => fee + svcFee, [fee, svcFee]);
+  const finalTotal = useMemo(() => {
+    // NFC에서 넘어온 총액이 있으면 우선 사용
+    return total > 0 ? total : fee + svcFee;
+  }, [fee, svcFee, total]);
 
   // ───────────────────────────────────────────────────────────
   // 1) 바로 리디렉트 모드 처리: paymentUrl/reservationId만 넘어온 케이스
@@ -101,9 +154,31 @@ export default function PayPage() {
       };
     }
 
+    // 개인 주차장 여부 확인
+    const isPrivateParking = state?.parkingInfo?.isPrivate || 
+                           state?.demo || 
+                           backupInfo?.isPrivate;
+
+    console.log('[PayPage] 주차장 타입 확인:', {
+      isPrivateParking,
+      hasDemo: !!state?.demo,
+      parkingInfoIsPrivate: state?.parkingInfo?.isPrivate,
+      backupIsPrivate: backupInfo?.isPrivate
+    });
+
+    if (isPrivateParking) {
+      // 개인 주차장: API 호출 없이 전달받은 정보 사용
+      console.log('[PayPage] 개인 주차장 - API 호출 스킵');
+      setLotName(finalParkName || "개인 주차장");
+      setPricePer10Min(finalCharge);
+      setLoading(false);
+      return () => { mounted = false; };
+    }
+
+    // 공영 주차장만 API 호출
     (async () => {
       try {
-        // 공영/민영 상세에서 가격 가져오기
+        console.log('[PayPage] 공영 주차장 - API 호출 시작');
         const lotRes = await getPublicDetail(parkingId); // { data: {...} }
         if (!mounted) return;
 
@@ -114,7 +189,7 @@ export default function PayPage() {
         );
         setNearbyAvg10Min(null); // 서버 준비되면 채우기
       } catch (e) {
-        console.error(e);
+        console.error('[PayPage] API 호출 실패:', e);
         setLotName(state?.lotName ?? "주차장");
         setPricePer10Min(state?.pricePer10m ?? 0);
         setErrorMsg("요금 정보를 불러오지 못했습니다.");
@@ -141,43 +216,43 @@ export default function PayPage() {
     if (posting) return;
     if (!parkingId) return alert("주차장 정보가 없습니다.");
     if (minutes <= 0) return alert("이용 시간을 확인해 주세요.");
-    if (pricePer10Min <= 0) return alert("요금 정보가 없습니다.");
+
+    console.log('[PayPage] 결제 시작:', {
+      parkingId,
+      lotName,
+      minutes,
+      finalTotal,
+      pricePer10Min
+    });
 
     setPosting(true);
     try {
-      // 선예약이면 startInMinutes 포함
-      const payload =
-        typeof startInMinutes === "number"
-          ? { startInMinutes, minutes }
-          : { minutes };
+      // 카카오페이 결제 준비
+      const paymentPayload = {
+        parkName: lotName || "주차장",
+        parkingId: parkingId,
+        total: finalTotal,
+        usingMinutes: minutes
+      };
 
-      const res = await createReservation(parkingId, payload);
+      console.log('결제 준비 요청:', paymentPayload);
+      const res = await preparePayment(paymentPayload);
+      console.log('결제 준비 응답:', res);
 
-      const paymentRedirectUrl =
-        res?.data?.paymentRedirectUrl || res?.data?.data?.paymentRedirectUrl;
-      const reservationId =
-        res?.data?.reservationId || res?.data?.data?.reservationId;
+      // 카카오페이 리다이렉트 URL 추출
+      const paymentRedirectUrl = res?.data?.next_redirect_pc_url || res?.data?.data?.next_redirect_pc_url;
 
       if (paymentRedirectUrl) {
-        // 외부결제 이동
+        // 카카오페이로 이동
+        console.log('카카오페이로 이동:', paymentRedirectUrl);
         window.location.href = paymentRedirectUrl;
-      } else if (reservationId) {
-        // 결제 없는 예약완료
-        navigate("/paycomplete", {
-          replace: true,
-          state: {
-            reservationId,
-            startAt: startAt.toISOString(),
-            endAt: endAt.toISOString(),
-            lotName,
-          },
-        });
       } else {
-        alert("예약은 되었지만 응답을 해석할 수 없습니다.");
+        alert("결제 준비에 실패했습니다. 응답을 확인해주세요.");
+        console.error('결제 URL을 찾을 수 없음:', res);
       }
     } catch (e) {
-      console.error(e);
-      alert(e?.response?.data?.message || "예약/결제에 실패했습니다.");
+      console.error('결제 준비 오류:', e);
+      alert(e?.response?.data?.message || "결제 준비에 실패했습니다.");
     } finally {
       setPosting(false);
     }
@@ -247,7 +322,7 @@ export default function PayPage() {
         <div className="paypage__pair paypage__total">
           <span>총 합계</span>
           <span className="total-amount">
-            <span className="num">{KRW_NUM(total)}</span>
+            <span className="num">{KRW_NUM(finalTotal)}</span>
             <span className="won">원</span>
           </span>
         </div>
@@ -270,9 +345,9 @@ export default function PayPage() {
         <button
           className={`primary ${posting || loading ? "disabled" : ""}`}
           onClick={handlePay}
-          disabled={posting || loading || minutes <= 0 || pricePer10Min <= 0}
+          disabled={posting || loading || minutes <= 0}
         >
-          {KRW(total)} 결제하기
+          {KRW(finalTotal)} 결제하기
         </button>
       </div>
     </div>

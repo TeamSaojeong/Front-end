@@ -22,14 +22,9 @@ const useMock =
     import.meta.env?.VITE_USE_MOCK === "1") ||
   process.env.REACT_APP_USE_MOCK === "1";
 
-/** 세션/로컬 유틸 */
-function getWatchedIds() {
-  try {
-    const raw = localStorage.getItem("watchedPlaceIds");
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return ["1021815417"];
-}
+const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
+
+/** 로컬 저장 유틸 */
 const getCachedLoc = () => {
   try {
     const raw = localStorage.getItem("lastKnownLoc");
@@ -52,10 +47,39 @@ const near = (a, b) => {
   return dLat < 0.0003 && dLng < 0.0003; // ~30m
 };
 
+/** 내가 알림 등록한 장소들 */
+const getUserKey = () => localStorage.getItem("userKey") || "guest";
+const LSK = (key) => `watchedPlaceIds__${key}`;
+const useWatchedIds = (userKey = getUserKey()) => {
+  const read = () => {
+    try {
+      const raw = localStorage.getItem(LSK(userKey));
+      const arr = raw ? JSON.parse(raw) : [];
+      return (Array.isArray(arr) ? arr : []).map((x) => normalizeId(x));
+    } catch {
+      return [];
+    }
+  };
+  const [ids, setIds] = useState(read);
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === LSK(userKey)) {
+        try {
+          const next = e.newValue ? JSON.parse(e.newValue) : [];
+          setIds((Array.isArray(next) ? next : []).map((x) => normalizeId(x)));
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [userKey]);
+  return ids;
+};
+
 /* ===========================
-   양재 더미(네가 준 4개만 사용)
+   양재 더미(4개)
    =========================== */
-const YANGJAE = { lat: 37.484722, lng: 127.034722 }; // 양재역 근사
+const YANGJAE = { lat: 37.484722, lng: 127.034722 };
 const distKm = (a, b) => {
   const R = 6371;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;
@@ -73,7 +97,6 @@ const isNearYangjae = (lat, lng, radiusKm = 2.5) =>
 const forceYangjae =
   new URLSearchParams(window.location.search).get("yangjae") === "1";
 
-/** 네가 준 4개의 더미만 */
 const getYangjaeDummies = () => [
   {
     id: "pv-dummy-yg-1",
@@ -165,6 +188,8 @@ export default function Home() {
   const overlaysRef = useRef([]);
   const loadingRef = useRef(false);
   const myLocOverlayRef = useRef(null);
+  const pollRef = useRef(null); // 폴링 타이머
+  const lastSoonMapRef = useRef({}); // { [placeId]: lastShownTs }
 
   const cached0 = getCachedLoc() ?? { lat: 37.5665, lng: 126.978 };
   const [center, setCenter] = useState(cached0);
@@ -186,6 +211,8 @@ export default function Home() {
 
   const navigate = useNavigate();
   const myParks = useMyParkings((s) => s.items);
+  const userKey = getUserKey();
+  const watchedIds = useWatchedIds(userKey);
 
   const isPrivate = (p) => String(p?.type || "").toUpperCase() === "PRIVATE";
 
@@ -208,7 +235,18 @@ export default function Home() {
     updateBubbleStyles(p.id);
 
     setTimeout(() => {
+      // ID 검증 및 디버깅
+      console.log('클릭된 주차장 정보:', { id: p.id, name: p.name, isPrivate: isPrivate(p) });
+      
+      if (!p.id || String(p.id).trim() === '') {
+        console.error('주차장 ID가 없습니다:', p);
+        alert('주차장 정보에 오류가 있습니다. 다시 시도해주세요.');
+        return;
+      }
+      
       const path = isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`;
+      console.log('이동할 경로:', path);
+      
       navigate(path, {
         state: {
           place: payload,
@@ -244,6 +282,7 @@ export default function Home() {
       );
 
       detectAndLoad();
+      ensurePolling(); // ✅ 초기화 후 폴링 시작
     };
 
     if (window.kakao?.maps) {
@@ -272,6 +311,7 @@ export default function Home() {
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("pageshow", onVisible);
+      stopPolling();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -292,6 +332,7 @@ export default function Home() {
       (pos) => {
         if (settled) return;
         clearTimeout(hard);
+        console.log('위치 권한 허용됨:', pos.coords);
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setCachedLoc(loc.lat, loc.lng);
         if (!near(base, loc)) {
@@ -301,7 +342,12 @@ export default function Home() {
           syncAndFetch(loc.lat, loc.lng);
         }
       },
-      () => clearTimeout(hard),
+      (error) => {
+        console.error('위치 권한 오류:', error);
+        console.log('위치 권한 오류 코드:', error.code);
+        console.log('위치 권한 오류 메시지:', error.message);
+        clearTimeout(hard);
+      },
       { enableHighAccuracy: false, timeout: 3500, maximumAge: 120000 }
     );
   };
@@ -378,9 +424,8 @@ export default function Home() {
       chip.className = "poi-chip";
       if (p.id === selectedId) chip.classList.add("poi-chip--selected");
 
-      // 가격 없으면 'P', 있으면 ₩표기
       const label =
-        p.price == null || Number.isNaN(Number(p.price))
+        p.price == null || Number.isNaN(Number(p.price)) || Number(p.price) === 0
           ? "P"
           : `₩ ${Number(p.price).toLocaleString()}원`;
       chip.textContent = label;
@@ -456,7 +501,6 @@ export default function Home() {
           const y = r.y ?? r.lat ?? r.latitude;
           const unitMin = r.timerate ?? r.timeRate ?? null;
           const unitPrice = r.addrate ?? r.addRate ?? null;
-          // ⚠️ 가격이 없으면 null 유지 → 지도에서 'P'
           const computed =
             unitMin && unitPrice
               ? Math.round((unitPrice * 10) / unitMin)
@@ -484,34 +528,47 @@ export default function Home() {
         });
       }
 
-      // 내 주차장
+      console.log('지도 표시 조건 체크:', myParks?.map(m => ({
+        id: m.id,
+        name: m.name,
+        enabled: m.enabled,
+        lat: m.lat,
+        lng: m.lng,
+        latType: typeof m.lat,
+        lngType: typeof m.lng,
+        canShow: m.enabled && typeof m.lat === "number" && typeof m.lng === "number"
+      })));
+
       const mine = (myParks || [])
         .filter(
           (m) =>
             m.enabled && typeof m.lat === "number" && typeof m.lng === "number"
         )
-        .map((m) => ({
-          id: String(m.id),
-          kakaoId: String(m.id),
-          name: m.name || "내 주차장",
-          lat: m.lat,
-          lng: m.lng,
-          price: m.charge != null ? Number(m.charge) : null,
-          address: m.address || "",
-          content: m.content || "",
-          imageUrl: m.imageUrl || null,
-          type: "PRIVATE",
-          distanceKm: null,
-          etaMin: null,
-          leavingSoon: false,
-          _localOnly: m.origin === "local",
-        }));
+        .map((m) => {
+          // 현재 위치에서 주차장까지의 거리 계산
+          const distance = distKm({ lat, lng }, { lat: m.lat, lng: m.lng });
+          
+          return {
+            id: String(m.id),
+            kakaoId: String(m.id),
+            name: m.name || "내 주차장",
+            lat: m.lat,
+            lng: m.lng,
+            price: m.charge != null ? Number(m.charge) : null,
+            address: m.address || "",
+            content: m.content || "",
+            imageUrl: m.imageUrl || null,
+            type: "PRIVATE",
+            distanceKm: Math.round(distance * 10) / 10, // 소수점 첫째 자리까지
+            etaMin: null, // 시간 정보는 제거
+            leavingSoon: false,
+            _localOnly: m.origin === "local",
+          };
+        });
 
-      // 양재 더미(네가 준 4개만)
       const yg =
         forceYangjae || isNearYangjae(lat, lng) ? getYangjaeDummies() : [];
 
-      // 머지: 양재 더미 → 내 주차장 → 서버
       const merged = uniqueById([...yg, ...mine, ...rows]);
 
       setPlaces(merged);
@@ -531,14 +588,81 @@ export default function Home() {
     }
   };
 
-  const maybeOpenOutModal = (rows) => {
-    const watched = getWatchedIds();
-    const hit = rows.find((p) => watched.includes(p.id) && p.leavingSoon);
-    if (hit) {
-      setModalPlace({ id: hit.id, name: hit.name, type: hit.type });
-      setModalMinutes(5);
-      setModalOpen(true);
+  // === 모달 오픈 & 폴링 유틸 ===
+  const openSoonModalFor = (placeId, placeName, minute = 5) => {
+    const nowTs = Date.now();
+    const lastTs = lastSoonMapRef.current[String(placeId)] || 0;
+    if (nowTs - lastTs < 90 * 1000) return; // 90초 이내 중복 방지
+    lastSoonMapRef.current[String(placeId)] = nowTs;
+
+    const p = places.find((x) => normalizeId(x.id) === String(placeId));
+    const name = p?.name || placeName || "주차장";
+    const type = p?.type || "PUBLIC";
+
+    setModalPlace({ id: String(placeId), name, type });
+    setModalMinutes(minute || 5);
+    setModalOpen(true);
+  };
+
+  const ensurePolling = () => {
+    if (pollRef.current) return;
+    pollRef.current = setInterval(() => {
+      const c = mapRef.current?.getCenter?.();
+      if (!c) return;
+      fetchNearby(c.getLat(), c.getLng());
+      
+      // 실시간 알림 확인
+      checkNotifications();
+    }, 10_000);
+  };
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
     }
+  };
+
+  // 실시간 알림 확인
+  const checkNotifications = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+      const response = await fetch('https://api.parkhere.store/api/alerts/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json();
+      const notifications = result.data || [];
+
+      // 새로운 알림이 있으면 OutModal 표시
+      notifications.forEach(notification => {
+        if (notification.type === 'SOON_OUT') {
+          console.log('실시간 알림 수신:', notification);
+          openSoonModalFor(
+            notification.parkingId, 
+            notification.placeName, 
+            notification.minutesAgo || 5
+          );
+        }
+      });
+
+    } catch (error) {
+      console.error('알림 확인 실패:', error);
+    }
+  };
+
+  const maybeOpenOutModal = (rows) => {
+    if (!watchedIds?.length) return;
+    const hit = rows.find(
+      (p) => watchedIds.includes(normalizeId(p.id)) && p.leavingSoon
+    );
+    if (hit) openSoonModalFor(normalizeId(hit.id), hit.name, 5);
   };
 
   const refreshFromCurrentPosition = () => {
@@ -638,6 +762,7 @@ export default function Home() {
       <OutModal
         isOpen={modalOpen}
         minutesAgo={modalMinutes}
+        placeId={modalPlace.id}
         placeName={modalPlace.name}
         onClose={() => setModalOpen(false)}
         onViewDetail={goDetailFromModal}

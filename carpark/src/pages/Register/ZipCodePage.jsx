@@ -5,7 +5,7 @@ import styled, { createGlobalStyle } from "styled-components";
 
 /* ===== Kakao 지오코딩 유틸 ===== */
 const SDK_SRC =
-  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=여기에_카카오REST키&autoload=false&libraries=services";
+  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
 
 async function ensureKakao() {
   if (window.kakao?.maps?.services) return;
@@ -49,28 +49,41 @@ const ZipCodePage = () => {
   const returnTo = location.state?.returnTo || -1;
 
   const handleComplete = async (data) => {
-    const addr =
-      data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
+    try {
+      const addr =
+        data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
 
-    // ✅ 좌표 구하기
-    const full = data.roadAddress || data.jibunAddress || addr;
-    const xy = await geocodeAddressToXY(full);
+      console.log("[ZipCodePage] 주소 선택됨:", data);
 
-    const selectedAddress = {
-      zipcode: data.zonecode || "",
-      address: addr || "",
-      roadAddress: data.roadAddress || "",
-      jibunAddress: data.jibunAddress || "",
-      lat: xy?.lat ?? null,
-      lng: xy?.lng ?? null,
-    };
+      // ✅ 좌표 구하기 (오류 시 null 처리)
+      let xy = null;
+      try {
+        const full = data.roadAddress || data.jibunAddress || addr;
+        xy = await geocodeAddressToXY(full);
+        console.log("[ZipCodePage] 좌표 변환 결과:", xy);
+      } catch (geocodeError) {
+        console.warn("[ZipCodePage] 좌표 변환 실패:", geocodeError);
+      }
 
-    console.log("[ZipCodePage] 선택된 주소:", selectedAddress);
+      const selectedAddress = {
+        zipcode: data.zonecode || "",
+        address: addr || "",
+        roadAddress: data.roadAddress || "",
+        jibunAddress: data.jibunAddress || "",
+        lat: xy?.lat ?? null,
+        lng: xy?.lng ?? null,
+      };
 
-    if (typeof returnTo === "string") {
-      navigate(returnTo, { state: { selectedAddress }, replace: true });
-    } else {
-      navigate(-1, { state: { selectedAddress }, replace: true });
+      console.log("[ZipCodePage] 선택된 주소:", selectedAddress);
+
+      if (typeof returnTo === "string") {
+        navigate(returnTo, { state: { selectedAddress }, replace: true });
+      } else {
+        navigate(-1, { state: { selectedAddress }, replace: true });
+      }
+    } catch (error) {
+      console.error("[ZipCodePage] handleComplete 오류:", error);
+      alert("주소 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   };
 

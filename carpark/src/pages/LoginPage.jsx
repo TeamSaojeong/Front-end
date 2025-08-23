@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Login.css";
@@ -25,23 +26,23 @@ const LoginPage = () => {
 
     const idValue = id.trim();
 
-    // 1) JSON: loginId + memberId 둘 다 포함 (백엔드 어떤 키든 매칭되도록)
+    // 1) JSON: loginId + memberId 둘 다 포함 (어떤 필드로 받아도 매칭)
     const bodyJson = {
       loginId: idValue,
       memberId: idValue,
       password: pw,
     };
 
-    // 2) FORM 데이터도 준비
+    // 2) FORM도 준비 (JSON 실패 시 재시도)
     const form = new URLSearchParams();
     form.set("loginId", idValue);
     form.set("memberId", idValue);
     form.set("password", pw);
 
-    // 로그인 요청엔 Authorization 금지 (인터셉터가 제거하지만, 한 번 더 방어)
+    // 로그인 요청엔 Authorization 금지
     const noAuthJson = {
       headers: { Authorization: undefined, "Content-Type": "application/json" },
-      validateStatus: () => true, // 상태 코드 관계없이 받음(디버깅용)
+      validateStatus: () => true,
     };
     const noAuthForm = {
       headers: {
@@ -75,7 +76,7 @@ const LoginPage = () => {
         res.data
       );
 
-      // B) 여전히 실패(>=400)이면 FORM으로 재시도
+      // B) JSON 실패면 FORM 재시도
       if (!(res.status >= 200 && res.status < 300)) {
         const res2 = await client.post("/api/login", form, noAuthForm);
         console.log(
@@ -101,11 +102,34 @@ const LoginPage = () => {
         return;
       }
 
+      // 토큰 저장
       const accessToken = extractToken(res);
       if (accessToken) {
         localStorage.setItem("accessToken", accessToken);
         client.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       }
+
+      // ✅ 사용자 키 저장 (이메일/아이디). 응답에 값이 없으면 입력값 사용
+      const userKey =
+        res.data?.data?.memberId ||
+        res.data?.memberId ||
+        res.data?.data?.loginId ||
+        res.data?.loginId ||
+        idValue;
+      localStorage.setItem("userKey", String(userKey));
+
+      // ✅ (선택) 이전 공용 watchedPlaceIds → 사용자별로 마이그레이션
+      try {
+        const legacy = localStorage.getItem("watchedPlaceIds");
+        if (legacy) {
+          const namespacedKey = `watchedPlaceIds__${userKey}`;
+          if (!localStorage.getItem(namespacedKey)) {
+            localStorage.setItem(namespacedKey, legacy);
+          }
+          localStorage.removeItem("watchedPlaceIds");
+        }
+      } catch {}
+
       navigate("/home");
     } catch (err) {
       const code = err?.response?.status;

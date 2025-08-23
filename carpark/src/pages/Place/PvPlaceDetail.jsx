@@ -8,17 +8,60 @@ import pinIcon from "../../Assets/emptypin.svg";
 import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
+import alarmFilledIcon from "../../Assets/alarm1.svg";
 
 import {
   getPrivateDetail,
   getParkingStatus,
   subscribeAlert,
+  unsubscribeAlert,
   getPrivateImage,
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
 import { useMyParkings } from "../../store/MyParkings";
 
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
+const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
+
+/** 사용자별 로컬 키 (동일 브라우저 내 다른 계정 분리용) */
+const getUserKey = () => localStorage.getItem("userKey") || "guest";
+const lsk = (key) => `watchedPlaceIds__${key}`;
+const readWatched = (userKey = getUserKey()) => {
+  try {
+    const raw = localStorage.getItem(lsk(userKey));
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.map((x) => normalizeId(x)) : [];
+  } catch {
+    return [];
+  }
+};
+const saveWatched = (ids, userKey = getUserKey()) => {
+  try {
+    localStorage.setItem(lsk(userKey), JSON.stringify(ids));
+  } catch {}
+};
+const addWatched = (id, userKey = getUserKey()) => {
+  const set = new Set(readWatched(userKey));
+  set.add(normalizeId(id));
+  saveWatched([...set], userKey);
+};
+
+// 거리 계산 함수 (Haversine formula)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  if (!lat1 || !lng1 || !lat2 || !lng2) return null;
+  
+  const R = 6371; // 지구 반지름 (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  
+  return Math.round(distance * 10) / 10; // 소수점 첫째 자리까지
+};
 
 export default function PvPlaceDetail() {
   const navigate = useNavigate();
@@ -48,11 +91,79 @@ export default function PvPlaceDetail() {
 
   const sessionLat = toNum(fromSession?.lat);
   const sessionLng = toNum(fromSession?.lng);
+  
+  const userKey = getUserKey();
+  const externalId = normalizeId(placeId);
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [currentLocation, setCurrentLocation] = useState(null);
+  
+  /** 처음 진입 시: 로컬 기억값을 우선으로 아이콘 상태 결정 */
+  const [isSubscribed, setIsSubscribed] = useState(() =>
+    readWatched(userKey).includes(externalId)
+  );
+
+  // 현재 위치 가져오기
+  useEffect(() => {
+    console.log("[PvPlaceDetail] 현재 위치 가져오기 시작");
+    console.log("[PvPlaceDetail] 환경 정보:", {
+      userAgent: navigator.userAgent,
+      isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+      hasGeolocation: !!navigator.geolocation,
+      isSecureContext: window.isSecureContext
+    });
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setCurrentLocation(location);
+          console.log("[PvPlaceDetail] 현재 위치 획득:", location);
+        },
+        (error) => {
+          console.error('[PvPlaceDetail] 위치 가져오기 실패:', error.code, error.message);
+          
+          // 모바일에서 자주 발생하는 오류들 처리
+          switch(error.code) {
+            case 1: // PERMISSION_DENIED
+              console.warn('[PvPlaceDetail] 위치 권한 거부됨');
+              alert('위치 권한을 허용해야 거리를 계산할 수 있습니다. 브라우저 설정에서 위치 권한을 허용해주세요.');
+              break;
+            case 2: // POSITION_UNAVAILABLE
+              console.warn('[PvPlaceDetail] 위치 정보 사용 불가');
+              break;
+            case 3: // TIMEOUT
+              console.warn('[PvPlaceDetail] 위치 가져오기 시간 초과');
+              break;
+          }
+          
+          // 캐시된 위치 사용
+          try {
+            const cached = JSON.parse(localStorage.getItem("lastKnownLoc") || "{}");
+            if (cached.lat && cached.lng) {
+              setCurrentLocation({ lat: cached.lat, lng: cached.lng });
+              console.log('[PvPlaceDetail] 캐시된 위치 사용:', cached);
+            } else {
+              console.warn('[PvPlaceDetail] 캐시된 위치도 없음');
+            }
+          } catch (e) {
+            console.error('[PvPlaceDetail] 캐시 로드 실패:', e);
+          }
+        },
+        { 
+          enableHighAccuracy: false, // 모바일에서 더 빠른 응답
+          timeout: 15000, // 타임아웃 증가
+          maximumAge: 600000 // 10분간 캐시 사용
+        }
+      );
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -84,10 +195,24 @@ export default function PvPlaceDetail() {
         const lat = toNum(d?.lat ?? d?.y) ?? sessionLat ?? null;
         const lng = toNum(d?.lng ?? d?.x) ?? sessionLng ?? null;
 
+        // 현재 위치 기준 거리 계산
+        console.log("[PvPlaceDetail] 거리 계산:", {
+          hasCurrentLocation: !!currentLocation,
+          currentLocation,
+          targetLat: lat,
+          targetLng: lng
+        });
+        
+        const calculatedDistance = currentLocation && lat && lng 
+          ? calculateDistance(currentLocation.lat, currentLocation.lng, lat, lng)
+          : null;
+          
+        console.log("[PvPlaceDetail] 계산된 거리:", calculatedDistance);
+
         const normalized = {
           id: d.id ?? d.parkingId ?? placeId,
-          name: d.name ?? fromSession?.name ?? "주차 장소",
-          distanceKm: d.distanceKm ?? fromSession?.distanceKm ?? null,
+          name: d.name ?? d.parkingName ?? d.placeName ?? fromSession?.name ?? "주차 장소",
+          distanceKm: calculatedDistance ?? d.distanceKm ?? fromSession?.distanceKm ?? null,
           etaMin: d.etaMin ?? fromSession?.etaMin ?? null,
           pricePer10m:
             d.charge != null
@@ -140,7 +265,7 @@ export default function PvPlaceDetail() {
       }
     }
 
-    function loadLocal() {
+    async function loadLocal() {
       setLoading(true);
       setError("");
 
@@ -148,10 +273,15 @@ export default function PvPlaceDetail() {
       const lat = toNum(src.lat) ?? sessionLat ?? null;
       const lng = toNum(src.lng) ?? sessionLng ?? null;
 
+      // 현재 위치 기준 거리 계산
+      const calculatedDistance = currentLocation && lat && lng 
+        ? calculateDistance(currentLocation.lat, currentLocation.lng, lat, lng)
+        : null;
+
       const normalized = {
         id: src.id ?? placeId,
         name: src.name ?? "내 주차장",
-        distanceKm: null,
+        distanceKm: calculatedDistance,
         etaMin: null,
         pricePer10m:
           src.charge != null
@@ -180,7 +310,45 @@ export default function PvPlaceDetail() {
       };
       setDetail(normalized);
 
-      if (src.imageUrl) setImageUrl(src.imageUrl);
+      // 이미지 로드 우선순위: 로컬 → 서버
+      console.log("[PvPlaceDetail] 이미지 로드 시작:", {
+        id: normalized.id,
+        hasLocalImage: !!src.imageUrl,
+        hasLocalFile: !!src.image
+      });
+
+      // 1. 로컬 URL이 있는 경우
+      if (src.imageUrl) {
+        setImageUrl(src.imageUrl);
+        console.log("[PvPlaceDetail] 로컬 URL 사용:", src.imageUrl);
+      }
+      // 2. 로컬 File 객체가 있는 경우 
+      else if (src.image instanceof File) {
+        const url = URL.createObjectURL(src.image);
+        setImageUrl(url);
+        console.log("[PvPlaceDetail] 로컬 File 객체 사용");
+      }
+      // 3. 서버에서 이미지 가져오기 (실제 등록된 주차장만)
+      else if (String(normalized.id) && !String(normalized.id).startsWith('temp_')) {
+        try {
+          console.log("[PvPlaceDetail] 서버 이미지 요청:", normalized.id);
+          const imgRes = await getPrivateImage(normalized.id);
+          if (imgRes?.data) {
+            const url = URL.createObjectURL(imgRes.data);
+            setImageUrl(url);
+            console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
+          }
+        } catch (error) {
+          // 404는 정상 (이미지 없음), 다른 오류만 경고
+          if (error?.response?.status === 404) {
+            console.log("[PvPlaceDetail] 서버에 이미지 없음 (404) - 정상");
+          } else {
+            console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", error?.message);
+          }
+        }
+      } else {
+        console.log("[PvPlaceDetail] 이미지 로드 건너뜀 (임시 ID 또는 ID 없음)");
+      }
 
       setLoading(false);
       setPrimary({
@@ -196,13 +364,16 @@ export default function PvPlaceDetail() {
       return;
     }
 
-    if (isLocal) loadLocal();
-    else loadRemote();
+    if (isLocal) {
+      loadLocal();
+    } else {
+      loadRemote();
+    }
 
     return () => {
       mounted = false;
     };
-  }, [placeId, isLocal]); // eslint-disable-line
+  }, [placeId, isLocal, currentLocation]); // currentLocation 추가
 
   useEffect(() => {
     if (!placeId || isLocal) return;
@@ -229,7 +400,7 @@ export default function PvPlaceDetail() {
     }
 
     pullStatus();
-    const timer = setInterval(pullStatus, 10000);
+    const timer = setInterval(pullStatus, 3000); // 3초마다 확인
     return () => {
       mounted = false;
       clearInterval(timer);
@@ -249,6 +420,62 @@ export default function PvPlaceDetail() {
     }
   };
 
+  // 운영 시간 체크 함수
+  const checkOperatingHours = (operateTimes) => {
+    if (!operateTimes || !Array.isArray(operateTimes) || operateTimes.length === 0) {
+      // 운영 시간 정보가 없으면 항상 이용 가능으로 간주
+      return { isAvailable: true, message: "" };
+    }
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // 현재 시간을 분으로 변환
+    const currentDay = now.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+
+    console.log('[PvPlaceDetail] 운영 시간 체크:', {
+      operateTimes,
+      currentTime,
+      currentDay,
+      currentTimeString: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    });
+
+    for (const timeSlot of operateTimes) {
+      const { start, end } = timeSlot;
+      
+      // 시간 문자열을 분으로 변환 (예: "09:00" -> 540)
+      const parseTime = (timeStr) => {
+        if (!timeStr || typeof timeStr !== 'string') return null;
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) return null;
+        return hours * 60 + minutes;
+      };
+
+      const startMinutes = parseTime(start);
+      const endMinutes = parseTime(end);
+
+      if (startMinutes === null || endMinutes === null) continue;
+
+      // 운영 시간 체크
+      let isInRange = false;
+      
+      if (startMinutes <= endMinutes) {
+        // 일반적인 경우 (예: 09:00 ~ 18:00)
+        isInRange = currentTime >= startMinutes && currentTime <= endMinutes;
+      } else {
+        // 자정을 넘나드는 경우 (예: 22:00 ~ 06:00)
+        isInRange = currentTime >= startMinutes || currentTime <= endMinutes;
+      }
+
+      if (isInRange) {
+        return { isAvailable: true, message: "" };
+      }
+    }
+
+    return { 
+      isAvailable: false, 
+      message: "지금은 이용 시간이 아닙니다." 
+    };
+  };
+
   const startUse = () => {
     const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
     const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
@@ -263,6 +490,107 @@ export default function PvPlaceDetail() {
       return;
     }
 
+    // 운영 시간 체크 - 디버깅 강화
+    console.log('[PvPlaceDetail] 운영 시간 체크 시작:', {
+      operateTimes: detail?.operateTimes,
+      availableTimes: detail?.availableTimes,
+      detail: detail
+    });
+
+    // 1차: 배열 형태 운영 시간 체크
+    let timeCheck = checkOperatingHours(detail?.operateTimes);
+    
+    // 2차: 문자열 형태 운영 시간 체크 (개인 주차장용)
+    if (timeCheck.isAvailable && detail?.availableTimes) {
+      const checkStringOperatingHours = (availableTimes) => {
+        if (!availableTimes || typeof availableTimes !== 'string') {
+          return { isAvailable: true };
+        }
+        
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
+        console.log('[PvPlaceDetail] 문자열 운영 시간 체크:', {
+          availableTimes,
+          currentTime,
+          currentTimeString: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+        });
+        
+        // "09:00 ~ 18:00" 또는 "09:00~18:00" 형태 파싱
+        const timeMatch = availableTimes.match(/(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/);
+        if (!timeMatch) {
+          console.log('[PvPlaceDetail] 시간 형식을 파싱할 수 없음:', availableTimes);
+          return { isAvailable: true }; // 파싱 실패 시 이용 가능으로 간주
+        }
+        
+        const [, startH, startM, endH, endM] = timeMatch.map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+        
+        console.log('[PvPlaceDetail] 파싱된 시간:', {
+          start: `${startH}:${startM}`,
+          end: `${endH}:${endM}`,
+          startMinutes,
+          endMinutes
+        });
+        
+        let isInRange = false;
+        if (startMinutes <= endMinutes) {
+          // 일반적인 경우 (예: 09:00 ~ 18:00)
+          isInRange = currentTime >= startMinutes && currentTime <= endMinutes;
+        } else {
+          // 자정을 넘나드는 경우 (예: 22:00 ~ 06:00)
+          isInRange = currentTime >= startMinutes || currentTime <= endMinutes;
+        }
+        
+        console.log('[PvPlaceDetail] 시간 범위 체크:', {
+          isInRange,
+          currentTime,
+          startMinutes,
+          endMinutes
+        });
+        
+        return { 
+          isAvailable: isInRange,
+          message: isInRange ? "" : "지금은 이용 시간이 아닙니다."
+        };
+      };
+      
+      timeCheck = checkStringOperatingHours(detail.availableTimes);
+    }
+    
+    console.log('[PvPlaceDetail] 최종 운영 시간 체크 결과:', timeCheck);
+    
+    if (!timeCheck.isAvailable) {
+      alert(timeCheck.message);
+      return;
+    }
+
+    // NFC로 전달할 정보 준비
+    const parkingInfo = {
+      id: placeId,
+      name: detail?.name || "주차 장소",
+      address: detail?.address || "",
+      availableTimes: detail?.availableTimes || "",
+      isPrivate: true,
+      lat: targetLat,
+      lng: targetLng,
+      charge: detail?.pricePer10m || 0,
+    };
+
+    console.log('PvPlaceDetail에서 NFC로 전달하는 정보:', parkingInfo);
+    
+    // 세션 스토리지에도 저장 (모바일에서 중요)
+    try {
+      sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
+      console.log('[PvPlaceDetail] sessionStorage 저장 완료');
+      
+      // 모바일에서 localStorage에도 백업 저장
+      localStorage.setItem('lastNfcParkingInfo', JSON.stringify(parkingInfo));
+    } catch (error) {
+      console.error('[PvPlaceDetail] 스토리지 저장 실패:', error);
+    }
+    
     navigate(
       {
         pathname: "/nfc",
@@ -276,6 +604,9 @@ export default function PvPlaceDetail() {
           address: detail?.address,
           openRangesText: detail?.availableTimes,
           isLocal: !!detail?._flags?.isLocal,
+          lat: targetLat,
+          lng: targetLng,
+          pricePer10Min: Math.round((detail?.pricePer10m || 0) / 10) * 10, // 10분당 가격으로 변환
         },
       }
     );
@@ -343,21 +674,97 @@ export default function PvPlaceDetail() {
             <button
               className="pub-alarm"
               onClick={async () => {
+                if (!placeId) {
+                  alert("주차장 정보를 불러올 수 없어 알림을 설정할 수 없습니다.");
+                  return;
+                }
+
                 try {
-                  await subscribeAlert(placeId);
-                  alert("알림이 설정되었습니다.");
-                } catch {
-                  alert("알림 설정에 실패했습니다.");
+                  if (isSubscribed) {
+                    // 알림 해지 - alertId 필요
+                    const alertIdsKey = `alertIds__${userKey}`;
+                    const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
+                    const alertId = alertIds[externalId];
+                    
+                    if (alertId) {
+                      await unsubscribeAlert({ alertId });
+                      
+                      // 로컬에서 제거
+                      const watchedIds = readWatched(userKey).filter(id => id !== externalId);
+                      saveWatched(watchedIds, userKey);
+                      
+                      const nameKey = "watchedPlaceNames__" + userKey;
+                      const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+                      delete names[externalId];
+                      localStorage.setItem(nameKey, JSON.stringify(names));
+                      
+                      // alertId도 제거
+                      delete alertIds[externalId];
+                      localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
+                      
+                      setIsSubscribed(false);
+                      alert("알림이 해지되었습니다.");
+                    } else {
+                      alert("알림 ID를 찾을 수 없어 해지할 수 없습니다.");
+                    }
+                  } else {
+                    // 알림 등록
+                    console.log('개인주차장 알림 등록 파라미터:', { provider: "kakao", externalId, parkingId: placeId });
+                    const alertResponse = await subscribeAlert({ 
+                      provider: "kakao", 
+                      externalId,
+                      parkingId: placeId 
+                    });
+                    const alertId = alertResponse?.data?.data?.id;
+                    
+                    console.log('POST /api/alerts response:', alertResponse);
+                    console.log('extracted alertId:', alertId);
+                    
+                    addWatched(externalId, userKey);
+
+                    const nameKey = "watchedPlaceNames__" + userKey;
+                    const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+                    names[externalId] = detail?.name || "개인 주차장";
+                    localStorage.setItem(nameKey, JSON.stringify(names));
+
+                    // alertId 저장
+                    if (alertId) {
+                      const alertIdsKey = `alertIds__${userKey}`;
+                      const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
+                      alertIds[externalId] = alertId;
+                      localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
+                    }
+
+                    setIsSubscribed(true);
+                    alert("알림이 설정되었습니다.");
+                  }
+                } catch (e) {
+                  if (e?.response?.status === 401) {
+                    alert("세션이 만료되었습니다. 다시 로그인해 주세요.");
+                    try {
+                      localStorage.removeItem("accessToken");
+                    } catch {}
+                    navigate("/login", { state: { from: location.pathname } });
+                    return;
+                  }
+                  alert(e?.response?.data?.message || "처리 중 오류가 발생했어요.");
                 }
               }}
-              aria-label="알림"
-              title="알림 설정"
+              aria-label={isSubscribed ? "알림 해지" : "알림 설정"}
+              title={isSubscribed ? "알림 해지" : "알림 설정"}
             >
-              <img src={alarmIcon} alt="알림" />
+              <img src={isSubscribed ? alarmFilledIcon : alarmIcon} alt="알림" />
             </button>
             <button
               className="pub-bell"
-              onClick={() => alert("신고하기 준비 중")}
+              onClick={() => navigate("/report", {
+                state: {
+                  placeId: placeId,
+                  placeName: detail?.name || "내 주차장",
+                  address: detail?.address || "",
+                  isPrivate: true
+                }
+              })}
               aria-label="신고하기"
             >
               <img src={reportIcon} alt="신고" />
@@ -375,8 +782,7 @@ export default function PvPlaceDetail() {
           </div>
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{distanceKm ?? "-"}km</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
-              <strong>{etaMin ?? "-"}분</strong>
+              <strong>{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
           </div>

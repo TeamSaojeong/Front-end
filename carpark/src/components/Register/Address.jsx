@@ -33,11 +33,19 @@ const Address = () => {
       setField("zipcode", zipStr);
       setField("address", roadStr);
 
-      // ✅ lat/lng도 저장
-      if (sel.lat && sel.lng) {
-        setField("lat", sel.lat);
-        setField("lng", sel.lng);
-        console.log("[Address] 좌표 저장:", sel.lat, sel.lng);
+      // ✅ lat/lng도 저장 (null 체크 강화)
+      if (sel.lat != null && sel.lng != null) {
+        const lat = Number(sel.lat);
+        const lng = Number(sel.lng);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setField("lat", lat);
+          setField("lng", lng);
+          console.log("[Address] 좌표 저장 성공:", lat, lng);
+        } else {
+          console.warn("[Address] 좌표 변환 실패:", sel.lat, sel.lng);
+        }
+      } else {
+        console.warn("[Address] 좌표 데이터 없음:", sel);
       }
 
       // state 비우기: 뒤로가기/새로고침 시 중복 세팅 방지
