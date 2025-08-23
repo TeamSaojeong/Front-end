@@ -1,7 +1,8 @@
 import { useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import PreviousBtn from "../components/Register/PreviousBtn";
 import ai_time from "../Assets/ai_time.svg";
-import { mockApiResponse } from "../apis/mockApiResponse";
+import { fetchParkingPrediction } from "../apis/aipredict";
 import emoji_s from "../Assets/emoji_s.svg";
 import emoji_t from "../Assets/emoji_t.svg";
 import "../Styles/AIResult.css";
@@ -57,12 +58,95 @@ const AIResult = () => {
   const { state } = useLocation();
   const selectedTime = state?.selectedTime || ""; // "HH:MM"
   const address = state?.address || "";
+  const locationData = state?.locationData || null; // ✅ 좌표 정보
+  
+  const [loading, setLoading] = useState(true);
+  const [predictionData, setPredictionData] = useState(null);
+  const [error, setError] = useState("");
 
   const timeLabel = formatKoreanTime(selectedTime);
 
-  // 모의 응답에서 첫 번째 결과 사용
-  const first = mockApiResponse.items?.[0];
-  const msg = levelMessages[first?.pred_level] || levelMessages["여유"]; // ✅ 안전한 fallback
+  // AI 예측 API 호출
+  useEffect(() => {
+    const fetchPrediction = async () => {
+      if (!address || !selectedTime) {
+        setError("주소 또는 시간 정보가 없습니다.");
+        setLoading(false);
+        return;
+      }
+
+      if (!locationData || !locationData.lat || !locationData.lng) {
+        setError("위치 좌표 정보가 없습니다. 주소를 다시 선택해주세요.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        console.log('[AIResult] 검색 위치 기준 예측:', {
+          address,
+          coordinates: locationData,
+          selectedTime
+        });
+        
+        // 검색한 위치의 좌표 사용
+        const payload = {
+          lat: locationData.lat, // ✅ 검색한 위치의 위도
+          lon: locationData.lng, // ✅ 검색한 위치의 경도
+          arrival: `2025-08-18T${selectedTime}:00`, // 도착 시간
+          radius: 1.0, // 1km 반경
+          top_k: 15,
+          exact_radius: true,
+          list_mode: true,
+          sort_by: "score",
+          fill_external: true,
+          use_places: true
+        };
+
+        const result = await fetchParkingPrediction(payload);
+        setPredictionData(result);
+        
+        console.log('[AIResult] 예측 결과 수신:', result);
+        
+      } catch (err) {
+        console.error('[AIResult] 예측 실패:', err);
+        setError(`AI 예측 요청에 실패했습니다: ${err.message || '알 수 없는 오류'}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrediction();
+  }, [address, selectedTime, locationData]);
+
+  // 로딩 중
+  if (loading) {
+    return (
+      <div className="airesult-wrap">
+        <PreviousBtn />
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <p>AI가 주차 혼잡도를 예측하고 있어요...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 오류 발생
+  if (error) {
+    return (
+      <div className="airesult-wrap">
+        <PreviousBtn />
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 예측 결과 사용
+  const first = predictionData?.items?.[0];
+  const msg = levelMessages[first?.pred_level] || levelMessages["여유"];
 
   return (
     <div className="airesult-wrap">

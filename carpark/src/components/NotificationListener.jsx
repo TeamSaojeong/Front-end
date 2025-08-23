@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import OutModal from './Modal/OutModal';
 import { useNotificationStore } from '../store/NotificationStore';
+import { getSoonOutDetail } from '../apis/parking';
 
 export default function NotificationListener() {
   const { notifications, addNotification, removeNotification } = useNotificationStore();
@@ -14,102 +15,94 @@ export default function NotificationListener() {
     }
   }, [notifications]);
 
-  // 폴링으로 알림 확인
+  // 폴링으로 알림 확인 (로컬 + 서버)
+  const getUserEmail = () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return "guest";
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      return decoded.email || decoded.sub || "guest";
+    } catch {
+      return "guest";
+    }
+  };
+
   const checkNotifications = async () => {
     const token = localStorage.getItem('accessToken');
-    if (!token) return;
+    const currentUserKey = getUserEmail();
 
     try {
-      // 로컬 스토리지에서 pendingNotifications 확인
-      const currentUserKey = localStorage.getItem("userKey") || "guest";
+      // 1. 로컬 스토리지에서 pendingNotifications 확인
       const notificationsKey = `pendingNotifications__${currentUserKey}`;
-      
-      // console.log(`[폴링] 사용자 ${currentUserKey}의 알림 확인 중...`);
-      // console.log(`[폴링] 확인할 키: ${notificationsKey}`);
       
       try {
         const pendingNotifications = JSON.parse(localStorage.getItem(notificationsKey) || "[]");
-        // 알림이 있을 때만 로그 출력
-        if (pendingNotifications.length > 0) {
-          console.log(`[폴링] 발견된 알림:`, pendingNotifications);
-        }
         
         if (pendingNotifications.length > 0) {
-          // 새로운 알림이 있으면 추가
-          pendingNotifications.forEach(notification => {
-            // 이미 표시된 알림인지 확인
+          console.log(`[폴링] 📬 로컬에서 발견된 알림:`, pendingNotifications);
+          
+          for (const notification of pendingNotifications) {
             const isDuplicate = notifications.some(existing => 
               existing.id === notification.id
             );
             
-            console.log(`[폴링] 알림 ${notification.id} 처리 중...`, {
-              isDuplicate,
-              existingCount: notifications.length,
-              notification
-            });
-            
             if (!isDuplicate) {
-              console.log(`[폴링] 새 알림 추가 시도:`, notification);
-              addNotification({
-                id: notification.id,
-                type: notification.type,
-                parkingId: notification.parkingId,
-                placeName: notification.placeName,
-                minutesAgo: notification.minutesAgo || 10,
-                timestamp: notification.timestamp
-              });
+              console.log(`[폴링] ✅ 새 알림 처리 시작:`, notification);
               
-              // 즉시 상태 확인
-              setTimeout(() => {
-                const currentState = useNotificationStore.getState();
-                console.log(`[폴링] addNotification 후 즉시 상태 확인:`, {
-                  notifications: currentState.notifications,
-                  count: currentState.notifications.length
+              try {
+                // 항상 soonOutId로 서버에서 최신 정보 조회 시도
+                if (notification.soonOutId) {
+                  const detailRes = await getSoonOutDetail(notification.soonOutId);
+                  const detail = detailRes?.data?.data || {};
+                  
+                  // 서버 응답의 provider/externalId와 내가 구독한 주차장 비교
+                  const watchedIds = JSON.parse(localStorage.getItem(`watchedPlaceIds__${currentUserKey}`) || "[]");
+                  const watchedNames = JSON.parse(localStorage.getItem(`watchedPlaceNames__${currentUserKey}`) || "{}");
+                  
+                  const isSubscribed = detail.provider === 'kakao' && 
+                    watchedIds.includes(detail.externalId);
+                  
+                  if (isSubscribed) {
+                    console.log(`[폴링] ✅ 구독한 주차장의 곧나감 발견:`, detail);
+                    addNotification({
+                      id: `soonout_${notification.soonOutId}`,
+                      type: 'SOON_OUT',
+                      parkingId: detail.externalId,
+                      placeName: watchedNames[detail.externalId] || detail.placeName,
+                      minutesAgo: detail.minute || 10,
+                      timestamp: Date.now()
+                    });
+                  } else {
+                    console.log(`[폴링] ❌ 구독하지 않은 주차장:`, detail);
+                  }
+                }
+              } catch (e) {
+                console.error(`[폴링] 서버 조회 실패:`, e);
+                // 서버 조회 실패 시 로컬 정보로 폴백
+                addNotification({
+                  id: notification.id,
+                  type: notification.type,
+                  parkingId: notification.parkingId,
+                  placeName: notification.placeName,
+                  minutesAgo: notification.minutesAgo || 10,
+                  timestamp: notification.timestamp
                 });
-              }, 0);
+              }
             } else {
-              console.log(`[폴링] 중복 알림 무시:`, notification.id);
+              console.log(`[폴링] ❌ 중복 알림 무시:`, notification.id);
             }
-          });
+          }
           
           // 처리된 알림은 로컬 스토리지에서 제거
           localStorage.removeItem(notificationsKey);
-          
-          console.log(`[폴링] ${pendingNotifications.length}개의 새 알림 처리 완료`);
         }
-        // else는 제거 (새 알림이 없을 때는 로그 출력하지 않음)
       } catch (error) {
         console.error('[폴링] 로컬 알림 처리 실패:', error);
       }
 
-      // 여기서 서버에 알림이 있는지 확인하는 API를 호출
-      // 예: GET /api/notifications/check 또는 GET /api/alerts/check
-      // 현재는 구현되지 않은 상태이므로 주석으로 표시
-      
-      // const response = await fetch('/api/notifications/check', {
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //     'Content-Type': 'application/json'
-      //   }
-      // });
-      // const data = await response.json();
-      
-      // if (data.notifications && data.notifications.length > 0) {
-      //   data.notifications.forEach(notification => {
-      //     addNotification({
-      //       id: notification.id,
-      //       type: notification.type,
-      //       parkingId: notification.parkingId,
-      //       placeName: notification.placeName,
-      //       minutesAgo: notification.minutesAgo || 10,
-      //       timestamp: Date.now()
-      //     });
-      //   });
-      // }
-
-      // console.log(`[폴링] 현재 알림 개수: ${notifications.length}`);
     } catch (error) {
-      console.error('[폴링] 알림 확인 실패:', error);
+      console.error('[폴링] 알림 확인 전체 실패:', error);
     }
   };
 
@@ -175,25 +168,30 @@ export default function NotificationListener() {
 
   // 테스트용: 수동으로 알림 추가 (개발 중에만 사용)
   const addTestNotification = () => {
+    const currentUserKey = getUserEmail();
     const testNotification = {
-      id: Date.now(),
+      id: `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: 'SOON_OUT',
       parkingId: 'test-parking-123',
-      placeName: '테스트 주차장',
-      minutesAgo: 5,
-      timestamp: Date.now()
+      placeName: `테스트 주차장 (사용자: ${currentUserKey})`,
+      minutesAgo: Math.floor(Math.random() * 15) + 5, // 5-20분 사이 랜덤
+      timestamp: Date.now(),
+      senderUserKey: 'test-sender',
+      targetUserKey: currentUserKey
     };
     
+    console.log(`[테스트] 사용자 ${currentUserKey}에게 테스트 알림 추가:`, testNotification);
+    
+    // 직접 store에 추가
     addNotification(testNotification);
     
-    // 로컬 스토리지에도 추가 (실제 시나리오 시뮬레이션)
-    const currentUserKey = localStorage.getItem("userKey") || "guest";
+    // 로컬 스토리지에도 추가 (폴링 시스템 테스트용)
     const notificationsKey = `pendingNotifications__${currentUserKey}`;
     const existingNotifications = JSON.parse(localStorage.getItem(notificationsKey) || "[]");
-    existingNotifications.push(testNotification);
+    existingNotifications.push({...testNotification, id: testNotification.id + '_storage'});
     localStorage.setItem(notificationsKey, JSON.stringify(existingNotifications));
     
-    console.log('[테스트] 알림 추가됨:', testNotification);
+    console.log(`[테스트] 🎯 테스트 알림이 ${currentUserKey} 사용자에게 전송됨`);
   };
 
   // 수동으로 알림 확인 (개발 중에만 사용)
@@ -219,10 +217,12 @@ export default function NotificationListener() {
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontSize: '12px'
             }}
+            title="현재 사용자에게 테스트 알림을 즉시 추가합니다"
           >
-            테스트 알림 추가
+            🔔 테스트 알림
           </button>
           
           <button 
@@ -237,11 +237,36 @@ export default function NotificationListener() {
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+            title="수동으로 서버 및 로컬 알림을 확인합니다"
+          >
+            🔍 수동 확인
+          </button>
+          
+          <div
+            style={{
+              position: 'fixed',
+              top: '90px',
+              right: '10px',
+              zIndex: 9999,
+              padding: '8px',
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              color: 'white',
+              borderRadius: '4px',
+              fontSize: '10px',
+              maxWidth: '200px',
+              lineHeight: '1.3'
             }}
           >
-            수동 알림 확인
-          </button>
+            <div><strong>💡 개발 가이드:</strong></div>
+            <div>1. 다른 계정으로 로그인</div>
+            <div>2. 주차장 알림 설정</div>
+            <div>3. 원래 계정으로 돌아와서</div>
+            <div>4. '곧 나감' 버튼 클릭</div>
+            <div>5. 알림 설정한 계정에서 OutModal 확인</div>
+          </div>
         </>
       )}
 

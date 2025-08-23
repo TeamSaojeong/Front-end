@@ -92,8 +92,16 @@ const OutSoon_cancel = () => {
   // 곧나감 이후 화면이므로 연장 불가
   const extendDisabled = true;
 
+  // 시현용 시간 건너뛰기 기능 - 바로 종료하고 Home으로 이동
+  const skipToEnd = () => {
+    console.log('[시현용] 시간 건너뛰기 - 바로 종료');
+    // /home으로 이동
+    navigate('/home', { replace: true });
+  };
+
   return (
     <div className="outsoon-cancel-container">
+
       <div className="outsoon-cancel-header">
         <div className="outsoon-cancel-text">
           {placeName}
@@ -123,6 +131,30 @@ const OutSoon_cancel = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* 시현용 시간 건너뛰기 버튼 */}
+      <div style={{
+        margin: '15px auto 10px',
+        textAlign: 'center'
+      }}>
+        <button
+          onClick={skipToEnd}
+          style={{
+            backgroundColor: '#333333',
+            color: 'white',
+            border: 'none',
+            borderRadius: '25px',
+            padding: '10px 20px',
+            fontSize: '13px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            minWidth: '180px'
+          }}
+        >
+          [시현용] 시간 건너뛰기 버튼
+        </button>
       </div>
 
       <div className="outsoon-cancel-car-section">

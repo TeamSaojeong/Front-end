@@ -92,9 +92,18 @@ export default function OutSoon() {
   }, []);
   const minsLeft = Math.max(0, (endAt.getTime() - now) / 60000);
 
-  const near10 = Math.abs(minsLeft - 10) <= TOL_MIN;
+  // 6분~10분 범위에서 빨간 버튼 표시
+  const inRedButtonRange = minsLeft >= 6 && minsLeft <= 10;
   const near5 = Math.abs(minsLeft - 5) <= TOL_MIN;
-  const canPressOutSoon = inUseByOther && (near10 || near5);
+  const canPressOutSoon = inUseByOther && (inRedButtonRange || near5);
+  
+  console.log('[OutSoon] 버튼 상태 체크:', {
+    minsLeft: Math.round(minsLeft * 100) / 100,
+    inRedButtonRange,
+    near5,
+    canPressOutSoon,
+    inUseByOther
+  });
 
   const pressedKey = useMemo(
     () => `outsoon-pressed-${placeId}-${startAt.getTime()}`,
@@ -113,7 +122,7 @@ export default function OutSoon() {
     } catch {}
   }, [pressedKey]);
 
-  const bubbleMinuteLabel = near5 ? "5분" : "10분";
+  const bubbleMinuteLabel = near5 ? "5분" : inRedButtonRange ? "10분" : "10분";
 
   // ===== 연장 바텀시트 =====
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -282,15 +291,32 @@ export default function OutSoon() {
         address,
       };
 
-      await postSoonOut(payload);
+      const response = await postSoonOut(payload);
+      
+      // ✅ 백엔드 응답에서 soonOut_id 추출
+      const soonOutId = response?.data?.soonOut_id;
+      console.log('[OutSoon] 곧 나감 발송 완료, ID:', soonOutId);
 
-      // 🔔 같은 주차장을 구독한 다른 사용자들에게 알림 시뮬레이션
+      // ✅ 크로스 브라우저/크로스 사용자 알림 시스템
       try {
-        // 현재 사용자 키
-        const currentUserKey = localStorage.getItem("userKey") || "guest";
-        console.log(`[알림] 현재 사용자: ${currentUserKey}`);
+        const currentTime = Date.now();
+        const currentUserKey = (() => {
+          try {
+            const token = localStorage.getItem("accessToken");
+            if (!token) return "guest";
+            const payload = token.split('.')[1];
+            const decoded = JSON.parse(atob(payload));
+            return decoded.email || decoded.sub || "guest";
+          } catch {
+            return "guest";
+          }
+        })();
+        console.log(`[OutSoon] 📤 알림 발송 시작, 현재 사용자: ${currentUserKey}`);
         
-        // 모든 사용자 키 찾기 (실제로는 서버에서 처리해야 함)
+        // 🔄 같은 브라우저의 다른 사용자들에게 알림 전송 (로컬 전용)
+        console.log(`[알림] 로컬 알림 전송 중...`);
+        
+        // 모든 사용자 키 찾기
         const allUserKeys = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
@@ -305,6 +331,7 @@ export default function OutSoon() {
         console.log(`[알림] 발견된 다른 사용자들:`, allUserKeys);
         
         // 각 사용자가 이 주차장을 구독하고 있는지 확인
+        let notifiedUsers = 0;
         allUserKeys.forEach(userKey => {
           const watchedIdsKey = `watchedPlaceIds__${userKey}`;
           const watchedNamesKey = `watchedPlaceNames__${userKey}`;
@@ -321,17 +348,19 @@ export default function OutSoon() {
             
             // 이 주차장을 구독하고 있는지 확인
             if (watchedIds.includes(normalizeId(placeId))) {
-              console.log(`[알림] 사용자 ${userKey}가 이 주차장을 구독하고 있음!`);
+              console.log(`[알림] ✅ 사용자 ${userKey}가 이 주차장을 구독하고 있음!`);
               
               // 알림 데이터 생성
               const notificationData = {
-                id: Date.now() + Math.random(), // 고유 ID
+                id: `soonout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // 고유 ID
                 type: 'SOON_OUT',
                 parkingId: normalizeId(placeId),
                 placeName: watchedNames[normalizeId(placeId)] || placeName,
                 minutesAgo: minute,
                 timestamp: Date.now(),
-                targetUserKey: userKey
+                soonOutId: soonOutId || null,
+                targetUserKey: userKey,
+                senderUserKey: currentUserKey
               };
               
               console.log(`[알림] 생성된 알림 데이터:`, notificationData);
@@ -342,28 +371,31 @@ export default function OutSoon() {
               existingNotifications.push(notificationData);
               localStorage.setItem(notificationsKey, JSON.stringify(existingNotifications));
               
-              console.log(`[알림] 사용자 ${userKey}의 알림 목록에 추가됨:`, {
+              notifiedUsers++;
+              
+              console.log(`[알림] ✅ 사용자 ${userKey}의 알림 목록에 추가됨:`, {
                 key: notificationsKey,
                 count: existingNotifications.length,
-                notifications: existingNotifications
+                newNotification: notificationData
               });
               
-              console.log(`[알림] 사용자 ${userKey}에게 ${placeName} 곧 나감 알림 전송 완료`);
+              console.log(`[알림] 🎯 사용자 ${userKey}에게 "${placeName}" 곧 나감 알림 전송 완료`);
             } else {
-              console.log(`[알림] 사용자 ${userKey}는 이 주차장을 구독하지 않음`);
+              console.log(`[알림] ❌ 사용자 ${userKey}는 이 주차장을 구독하지 않음`);
             }
           } catch (error) {
             console.error(`[알림] 사용자 ${userKey} 알림 처리 실패:`, error);
           }
         });
         
-        // 개발 중에만 로그 출력 (테스트 알림은 제거)
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[알림] 개발 모드: 현재 사용자 ${currentUserKey}에게는 테스트 알림을 추가하지 않음`);
+        if (notifiedUsers > 0) {
+          console.log(`[알림] 🎉 총 ${notifiedUsers}명의 사용자에게 알림 전송 완료`);
+        } else {
+          console.log(`[알림] 📭 이 주차장을 구독한 다른 사용자가 없음`);
         }
         
       } catch (error) {
-        console.error("[알림] 알림 시뮬레이션 실패:", error);
+        console.error("[알림] 알림 시스템 오류:", error);
       }
 
       // ✅ cancel 화면/자동 종료를 위해 시간 & 장소를 함께 전달 + 세션에도 저장
@@ -447,7 +479,7 @@ export default function OutSoon() {
           <img src={clock_icon} alt="시계 아이콘" className="clock-icon" />
           <span className="outsoon-time-text">
             {formatHHMM(startAt)} ~ {formatHHMM(endAt)} (
-            {formatDiff(startAt, endAt)})
+            {Math.floor(minsLeft)}분)
           </span>
         </div>
       </div>

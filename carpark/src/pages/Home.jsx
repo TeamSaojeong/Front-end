@@ -8,7 +8,7 @@ import Aiforecast from "../components/Aiforecast";
 import greenFire from "../Assets/greenfire.svg";
 import "../Styles/map-poi.css";
 import OutModal from "../components/Modal/OutModal";
-import { getNearby } from "../apis/parking";
+import { getNearby, getAllPrivateParkings } from "../apis/parking";
 import { postMyLocation } from "../apis/location";
 import { useMyParkings } from "../store/MyParkings";
 
@@ -211,10 +211,105 @@ export default function Home() {
 
   const navigate = useNavigate();
   const myParks = useMyParkings((s) => s.items);
+  const getCurrentUser = useMyParkings((s) => s.getCurrentUser);
   const userKey = getUserKey();
   const watchedIds = useWatchedIds(userKey);
+  
+  // ✅ 모든 사용자의 주차장 데이터 (서버 + 로컬)
+  const [allUserParkings, setAllUserParkings] = useState([]);
 
   const isPrivate = (p) => String(p?.type || "").toUpperCase() === "PRIVATE";
+
+  // ✅ 모든 사용자 주차장 데이터 로드 (캐싱으로 중복 호출 방지)
+  const fetchAllUserParkingsRef = useRef(null);
+  const fetchAllUserParkings = async () => {
+    // 이미 로딩 중이면 기존 Promise 반환
+    if (fetchAllUserParkingsRef.current) {
+      return fetchAllUserParkingsRef.current;
+    }
+    
+    fetchAllUserParkingsRef.current = (async () => {
+      try {
+        console.log('[Home] 🔄 모든 사용자 주차장 로드 중...');
+        
+        // 1. 서버에서 모든 주차장 가져오기
+        const serverResponse = await getAllPrivateParkings();
+        const serverParkings = serverResponse?.data?.data || [];
+        console.log('[Home] 📡 서버 주차장:', serverParkings.length, '개');
+        
+        // 2. 로컬 스토리지에서 모든 사용자 주차장 가져오기
+        const allLocalParkings = [];
+        const currentUser = getCurrentUser();
+        
+        // 로컬 스토리지의 모든 키 스캔
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('my-parkings')) {
+            try {
+              const data = JSON.parse(localStorage.getItem(key));
+              if (data?.state?.items) {
+                const userParkings = data.state.items.filter(item => 
+                  item.enabled && 
+                  typeof item.lat === "number" && 
+                  typeof item.lng === "number"
+                );
+                allLocalParkings.push(...userParkings);
+              }
+            } catch (e) {
+              console.warn('[Home] 로컬 스토리지 파싱 오류:', key, e);
+            }
+          }
+        }
+        
+        console.log('[Home] 💾 로컬 주차장:', allLocalParkings.length, '개');
+        
+        // 3. 서버 데이터를 프론트엔드 형식으로 변환
+        const normalizedServerData = serverParkings.map(parking => ({
+          id: String(parking.parkingId || parking.parking_id),
+          name: parking.parkingName || parking.name,
+          lat: parking.lat,
+          lng: parking.lng,
+          enabled: parking.operate,
+          charge: parking.charge || null,
+          type: "PRIVATE",
+          owner: 'server_user', // 서버 데이터는 소유자 불명
+          isFromServer: true,
+        }));
+        
+        // 4. 중복 제거하며 병합 (로컬 데이터 우선)
+        const merged = [...allLocalParkings];
+        normalizedServerData.forEach(serverItem => {
+          // 같은 ID가 로컬에 없는 경우만 추가
+          if (!merged.find(local => local.id === serverItem.id)) {
+            merged.push(serverItem);
+          }
+        });
+        
+        console.log('[Home] 🔀 병합된 모든 주차장:', merged.length, '개');
+        console.log('[Home] 📊 주차장 분포:', {
+          로컬데이터: allLocalParkings.length,
+          서버데이터: normalizedServerData.length,
+          병합결과: merged.length,
+          현재사용자: currentUser
+        });
+        
+        setAllUserParkings(merged);
+        return merged;
+        
+      } catch (error) {
+        console.error('[Home] ❌ 모든 사용자 주차장 로드 실패:', error);
+        // 실패 시 로컬 데이터만 사용
+        const fallbackData = [...myParks];
+        setAllUserParkings(fallbackData);
+        return fallbackData;
+      } finally {
+        // 완료 후 캐시 초기화
+        fetchAllUserParkingsRef.current = null;
+      }
+    })();
+    
+    return fetchAllUserParkingsRef.current;
+  };
 
   const onSelectPlace = (p) => {
     const payload = {
@@ -348,7 +443,7 @@ export default function Home() {
         console.log('위치 권한 오류 메시지:', error.message);
         clearTimeout(hard);
       },
-      { enableHighAccuracy: false, timeout: 3500, maximumAge: 120000 }
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
     );
   };
 
@@ -356,7 +451,10 @@ export default function Home() {
     try {
       setCachedLoc(lat, lng);
       await postMyLocation({ lat, lng });
-    } catch {}
+    } catch (error) {
+      // ✅ 위치 API 오류는 조용히 처리 (필수 기능 아님)
+      console.log('[Home] 위치 전송 실패 (무시):', error.message);
+    }
     await fetchNearby(lat, lng);
   };
 
@@ -528,18 +626,23 @@ export default function Home() {
         });
       }
 
-      console.log('지도 표시 조건 체크:', myParks?.map(m => ({
+      // ✅ 먼저 모든 사용자 주차장 데이터 로드
+      const allParkings = await fetchAllUserParkings();
+      
+      console.log('지도 표시 조건 체크:', allParkings?.map(m => ({
         id: m.id,
         name: m.name,
         enabled: m.enabled,
         lat: m.lat,
         lng: m.lng,
+        owner: m.owner,
         latType: typeof m.lat,
         lngType: typeof m.lng,
         canShow: m.enabled && typeof m.lat === "number" && typeof m.lng === "number"
       })));
 
-      const mine = (myParks || [])
+      // ✅ 모든 사용자의 주차장을 지도에 표시
+      const allPrivates = (allParkings || [])
         .filter(
           (m) =>
             m.enabled && typeof m.lat === "number" && typeof m.lng === "number"
@@ -547,11 +650,13 @@ export default function Home() {
         .map((m) => {
           // 현재 위치에서 주차장까지의 거리 계산
           const distance = distKm({ lat, lng }, { lat: m.lat, lng: m.lng });
+          const currentUser = getCurrentUser();
+          const isMine = m.owner === currentUser;
           
           return {
             id: String(m.id),
             kakaoId: String(m.id),
-            name: m.name || "내 주차장",
+            name: m.name || (isMine ? "내 주차장" : "다른 사용자 주차장"),
             lat: m.lat,
             lng: m.lng,
             price: m.charge != null ? Number(m.charge) : null,
@@ -563,13 +668,22 @@ export default function Home() {
             etaMin: null, // 시간 정보는 제거
             leavingSoon: false,
             _localOnly: m.origin === "local",
+            _isMine: isMine, // 내 주차장인지 표시
+            _owner: m.owner, // 소유자 정보
           };
         });
 
       const yg =
         forceYangjae || isNearYangjae(lat, lng) ? getYangjaeDummies() : [];
 
-      const merged = uniqueById([...yg, ...mine, ...rows]);
+      const merged = uniqueById([...yg, ...allPrivates, ...rows]);
+      
+      console.log('[Home] 🗺️ 지도에 표시할 주차장:', {
+        양재더미: yg.length,
+        모든개인주차장: allPrivates.length,
+        공용주차장: rows.length,
+        총합계: merged.length
+      });
 
       setPlaces(merged);
       renderBubbles(merged);
@@ -606,54 +720,267 @@ export default function Home() {
 
   const ensurePolling = () => {
     if (pollRef.current) return;
+    
+    // ✅ 알림 확인은 더 자주 (3초마다)
     pollRef.current = setInterval(() => {
+      checkNotifications();
+    }, 3000);
+    
+    // ✅ 지도 데이터는 10초마다
+    const mapPolling = setInterval(() => {
       const c = mapRef.current?.getCenter?.();
       if (!c) return;
       fetchNearby(c.getLat(), c.getLng());
-      
-      // 실시간 알림 확인
-      checkNotifications();
     }, 10_000);
+    
+    // 컴포넌트 언마운트 시 둘 다 정리하도록 저장
+    pollRef.mapInterval = mapPolling;
   };
   const stopPolling = () => {
     if (pollRef.current) {
       clearInterval(pollRef.current);
       pollRef.current = null;
     }
+    if (pollRef.mapInterval) {
+      clearInterval(pollRef.mapInterval);
+      pollRef.mapInterval = null;
+    }
   };
 
-  // 실시간 알림 확인
+  // ✅ 서버 기반 크로스 브라우저 알림 확인
   const checkNotifications = async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
     try {
-      const response = await fetch('https://api.parkhere.store/api/alerts/notifications', {
+      console.log('[Home] 🔔 서버 기반 실시간 알림 확인 중...');
+      
+      // ✅ 서버에서 최근 soonOut 활동 확인
+      await checkServerSoonOutActivity();
+      
+      // ✅ 기존 localStorage 방식 (호환성)
+      await checkCrossBrowserNotifications();
+
+    } catch (error) {
+      console.error('[Home] ❌ 알림 확인 실패:', error);
+    }
+  };
+
+  // ✅ 서버 기반 soonOut 활동 확인
+  const checkServerSoonOutActivity = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+      console.log('[Home] 🔍 서버에서 최근 soonOut 활동 확인 중...');
+
+      // 1. 내가 구독한 알림 목록 확인 (서버에서)
+      // 2. 각 구독한 주차장의 최근 soonOut 확인
+      
+      // 임시: localStorage에서 마지막 확인 시간 가져오기
+      const lastCheckKey = 'lastSoonOutCheck';
+      const lastCheck = localStorage.getItem(lastCheckKey) || '0';
+      const lastCheckTime = parseInt(lastCheck);
+      const currentTime = Date.now();
+      
+      console.log('[Home] 📅 마지막 확인:', new Date(lastCheckTime).toLocaleTimeString());
+      
+      // 최근 30초 내의 soonOut만 확인
+      const thirtySecondsAgo = currentTime - 30000;
+      const checkFrom = Math.max(lastCheckTime, thirtySecondsAgo);
+      
+      // 구독한 주차장들 확인
+      if (watchedIds.length > 0) {
+        console.log('[Home] 🎯 구독한 주차장들:', watchedIds);
+        
+        // 각 구독한 주차장에 대해 최근 soonOut 조회
+        for (const parkingId of watchedIds) {
+          await checkParkingSoonOut(parkingId, checkFrom);
+        }
+      }
+      
+      // 확인 시간 업데이트
+      localStorage.setItem(lastCheckKey, currentTime.toString());
+      
+    } catch (error) {
+      console.error('[Home] ❌ 서버 soonOut 확인 실패:', error);
+    }
+  };
+
+  // ✅ 특정 주차장의 soonOut 활동 확인
+  const checkParkingSoonOut = async (parkingId, fromTime) => {
+    try {
+      console.log(`[Home] 🔍 주차장 ${parkingId} soonOut 확인 (${new Date(fromTime).toLocaleTimeString()} 이후)`);
+      
+      // 방법 1: GET /api/soonout/{id} 활용
+      // 하지만 특정 주차장의 최근 soonOut을 조회하는 API가 없으므로
+      // 다른 방법 사용
+      
+      // 방법 2: 알림 구독 정보를 통한 간접 확인
+      // POST /api/alerts로 구독했으니, 해당 구독에 대한 최근 활동 확인
+      
+      // 임시 방법: localStorage 기반 + 서버 검증
+      const recentSoonOuts = JSON.parse(localStorage.getItem('recentSoonOuts') || '[]');
+      const relevantSoonOuts = recentSoonOuts.filter(soonOut => 
+        soonOut.parkingId === parkingId && 
+        soonOut.timestamp > fromTime
+      );
+      
+      if (relevantSoonOuts.length > 0) {
+        console.log(`[Home] 🚨 주차장 ${parkingId}에서 최근 soonOut 발견:`, relevantSoonOuts);
+        
+        // 가장 최신 soonOut에 대해 모달 표시
+        const latestSoonOut = relevantSoonOuts[relevantSoonOuts.length - 1];
+        
+        // 서버에서 검증 (선택적)
+        if (latestSoonOut.soonOutId) {
+          await verifySoonOutWithServer(latestSoonOut.soonOutId, latestSoonOut);
+        } else {
+          // 서버 검증 없이 바로 모달 표시
+          showSoonOutModal(latestSoonOut);
+        }
+      }
+      
+    } catch (error) {
+      console.error(`[Home] ❌ 주차장 ${parkingId} soonOut 확인 실패:`, error);
+    }
+  };
+
+  // ✅ 서버에서 soonOut 검증 후 모달 표시
+  const verifySoonOutWithServer = async (soonOutId, soonOutData) => {
+    try {
+      console.log(`[Home] 🔍 서버에서 soonOut ${soonOutId} 검증 중...`);
+      
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`https://api.parkhere.store/api/soonout/${soonOutId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-
-      if (!response.ok) return;
-
-      const result = await response.json();
-      const notifications = result.data || [];
-
-      // 새로운 알림이 있으면 OutModal 표시
-      notifications.forEach(notification => {
-        if (notification.type === 'SOON_OUT') {
-          console.log('실시간 알림 수신:', notification);
-          openSoonModalFor(
-            notification.parkingId, 
-            notification.placeName, 
-            notification.minutesAgo || 5
-          );
-        }
-      });
-
+      
+      if (response.ok) {
+        const result = await response.json();
+        const serverData = result.data;
+        
+        console.log('[Home] ✅ 서버 검증 성공:', serverData);
+        
+        // 서버 데이터와 로컬 데이터 매핑
+        const verifiedSoonOut = {
+          parkingId: serverData.externalId || soonOutData.parkingId,
+          placeName: serverData.parkingName || soonOutData.placeName,
+          minutes: serverData.minutes || soonOutData.minutes,
+          timestamp: serverData.createdAt || soonOutData.timestamp
+        };
+        
+        showSoonOutModal(verifiedSoonOut);
+        
+      } else {
+        console.warn(`[Home] ⚠️ 서버 검증 실패 (${response.status}), 로컬 데이터로 표시`);
+        showSoonOutModal(soonOutData);
+      }
+      
     } catch (error) {
-      console.error('알림 확인 실패:', error);
+      console.error('[Home] ❌ 서버 검증 실패, 로컬 데이터로 표시:', error);
+      showSoonOutModal(soonOutData);
+    }
+  };
+
+  // ✅ soonOut 모달 표시
+  const showSoonOutModal = (soonOutData) => {
+    console.log('[Home] 🚨 OutModal 표시:', soonOutData);
+    
+    openSoonModalFor(
+      soonOutData.parkingId,
+      soonOutData.placeName || "주차장",
+      soonOutData.minutes || 5
+    );
+    
+    // 표시된 알림은 중복 방지를 위해 처리됨 표시
+    const processedKey = `processedSoonOut_${soonOutData.parkingId}_${soonOutData.timestamp}`;
+    localStorage.setItem(processedKey, 'true');
+    
+    // 24시간 후 자동 삭제
+    setTimeout(() => {
+      localStorage.removeItem(processedKey);
+    }, 24 * 60 * 60 * 1000);
+  };
+
+  // ✅ 크로스 브라우저 localStorage 알림 확인
+  const checkCrossBrowserNotifications = async () => {
+    const currentUser = localStorage.getItem('userKey') || 'guest';
+    
+    // 모든 브라우저의 pendingNotifications 키 스캔
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('soonOutNotifications_')) {
+        try {
+          const notifications = JSON.parse(localStorage.getItem(key) || '[]');
+          
+          notifications.forEach(notification => {
+            // 나에게 온 알림인지 확인 (내가 구독한 주차장)
+            if (notification.targetUser === currentUser && 
+                notification.timestamp > (Date.now() - 10000)) { // 10초 이내
+              
+              console.log('[Home] 🚨 크로스 브라우저 알림 발견:', notification);
+              
+              openSoonModalFor(
+                notification.parkingId, 
+                notification.placeName || "주차장", 
+                notification.minutes || 5
+              );
+              
+              // 처리된 알림 제거
+              const updatedNotifications = notifications.filter(n => n.id !== notification.id);
+              localStorage.setItem(key, JSON.stringify(updatedNotifications));
+            }
+          });
+          
+        } catch (e) {
+          console.warn('[Home] localStorage 알림 파싱 오류:', key, e);
+        }
+      }
+    }
+  };
+
+  // ✅ 구독한 알림들의 활동 확인 (백엔드 연동)
+  const checkSubscribedAlertsActivity = async () => {
+    // 내가 구독한 주차장 목록 확인 (Hook을 컴포넌트에서 미리 가져옴)
+    if (!watchedIds.length) return;
+
+    console.log('[Home] 📍 구독한 주차장들:', watchedIds);
+
+    // 각 구독한 주차장의 최근 soonOut 활동 확인
+    // (여기서는 localStorage 기반으로 구현, 필요시 백엔드 연동 가능)
+    const recentSoonOuts = localStorage.getItem('recentSoonOuts');
+    if (recentSoonOuts) {
+      try {
+        const soonOuts = JSON.parse(recentSoonOuts);
+        const currentTime = Date.now();
+        
+        soonOuts.forEach(soonOut => {
+          if (watchedIds.includes(soonOut.parkingId) && 
+              (currentTime - soonOut.timestamp) < 5000) { // 5초 이내
+            
+            console.log('[Home] 🚨 구독한 주차장 SOON_OUT:', soonOut);
+            
+            openSoonModalFor(
+              soonOut.parkingId,
+              soonOut.placeName || "주차장",
+              soonOut.minutes || 5
+            );
+          }
+        });
+        
+        // 오래된 알림 정리 (30초 이상)
+        const filteredSoonOuts = soonOuts.filter(s => 
+          (currentTime - s.timestamp) < 30000
+        );
+        localStorage.setItem('recentSoonOuts', JSON.stringify(filteredSoonOuts));
+        
+      } catch (e) {
+        console.warn('[Home] recentSoonOuts 파싱 오류:', e);
+      }
     }
   };
 
@@ -734,7 +1061,7 @@ export default function Home() {
     if (!c) return;
     fetchNearby(c.getLat(), c.getLng());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myParks]);
+  }, [myParks]); // allUserParkings 의존성 제거로 무한 루프 방지
 
   return (
     <div ref={wrapRef} className="map-wrap">

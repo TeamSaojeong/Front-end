@@ -16,6 +16,7 @@ const AIPredict = () => {
 
   const [time, setTime] = useState({ ampm: "오전", h12: 1, m: 0 });
   const [address, setAddress] = useState(""); // ✅ 선택된 주소
+  const [locationData, setLocationData] = useState(null); // ✅ 좌표 정보
 
   const label = useMemo(() => to24(time), [time]);
 
@@ -32,7 +33,22 @@ const AIPredict = () => {
   const handleNext = () => {
     if (!isActive) return;
     navigate("/airesult", {
-      state: { selectedTime: label, address }, // ✅ 주소 같이 전달
+      state: { 
+        selectedTime: label, 
+        address,
+        locationData // ✅ 좌표 정보도 함께 전달
+      },
+    });
+  };
+
+  // 주소 선택 핸들러
+  const handleAddressSelect = (data) => {
+    console.log('[AIPredict] 주소 선택:', data);
+    setAddress(data.address);
+    setLocationData({
+      lat: data.lat,
+      lng: data.lng,
+      placeName: data.placeName
     });
   };
 
@@ -50,7 +66,7 @@ const AIPredict = () => {
         <p className="ai-name">주차 장소 이름</p>
         <AISearch
           value={address}
-          onSelect={(v) => setAddress(v)} // ✅ 클릭 시 주소 확정
+          onSelect={handleAddressSelect} // ✅ 좌표 정보와 함께 처리
           onChange={(v) => setAddress(v)} // 입력 중에도 주소 반영 원하면 유지
         />
       </div>
