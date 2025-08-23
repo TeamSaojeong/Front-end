@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../../Styles/Pay/PayPage.css";
 
-import arrow from "../../Assets/arrow.png";
+import arrow from "../../Assets/arrow.svg";
 import kakaopay from "../../Assets/kakaopay.svg";
 
 import { getPublicDetail, createReservation, preparePayment } from "../../apis/parking"; // ← 명세 기반 API 사용
