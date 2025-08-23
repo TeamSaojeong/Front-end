@@ -159,15 +159,17 @@ letter-spacing: -0.35px;
   padding-top: 12px;
 }
 .pt-item.active {
-  color: #2E80EC;
+  /* color: #2E80EC;
 text-align: right;
 font-family: Pretendard;
 font-size: 20px;
 font-style: normal;
 font-weight: 500;
 line-height: 28px; /* 140% */
-height: 52px;
-padding-bottom: 0px;
+/*height: 52px;
+padding-bottom: 0px; */
+
+  color: #303030;
 }
 
 .pt-spacer {
