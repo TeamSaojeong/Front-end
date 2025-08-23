@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NextBtn from "../../components/Register/NextBtn";
 import PreviousBtn from "../../components/Register/PreviousBtn";
-import TimePicker from "../../components/Register/TimePicker";
+import TimePicker from "../../components/Register/Timepicker";
 import "../../Styles/Register/TimePage.css";
 const TimePage = () => {
   const [time, setTime] = useState("");
