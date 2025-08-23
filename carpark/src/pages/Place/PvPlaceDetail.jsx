@@ -420,6 +420,62 @@ export default function PvPlaceDetail() {
     }
   };
 
+  // 운영 시간 체크 함수
+  const checkOperatingHours = (operateTimes) => {
+    if (!operateTimes || !Array.isArray(operateTimes) || operateTimes.length === 0) {
+      // 운영 시간 정보가 없으면 항상 이용 가능으로 간주
+      return { isAvailable: true, message: "" };
+    }
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // 현재 시간을 분으로 변환
+    const currentDay = now.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+
+    console.log('[PvPlaceDetail] 운영 시간 체크:', {
+      operateTimes,
+      currentTime,
+      currentDay,
+      currentTimeString: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    });
+
+    for (const timeSlot of operateTimes) {
+      const { start, end } = timeSlot;
+      
+      // 시간 문자열을 분으로 변환 (예: "09:00" -> 540)
+      const parseTime = (timeStr) => {
+        if (!timeStr || typeof timeStr !== 'string') return null;
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) return null;
+        return hours * 60 + minutes;
+      };
+
+      const startMinutes = parseTime(start);
+      const endMinutes = parseTime(end);
+
+      if (startMinutes === null || endMinutes === null) continue;
+
+      // 운영 시간 체크
+      let isInRange = false;
+      
+      if (startMinutes <= endMinutes) {
+        // 일반적인 경우 (예: 09:00 ~ 18:00)
+        isInRange = currentTime >= startMinutes && currentTime <= endMinutes;
+      } else {
+        // 자정을 넘나드는 경우 (예: 22:00 ~ 06:00)
+        isInRange = currentTime >= startMinutes || currentTime <= endMinutes;
+      }
+
+      if (isInRange) {
+        return { isAvailable: true, message: "" };
+      }
+    }
+
+    return { 
+      isAvailable: false, 
+      message: "지금은 이용 시간이 아닙니다." 
+    };
+  };
+
   const startUse = () => {
     const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
     const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
@@ -431,6 +487,82 @@ export default function PvPlaceDetail() {
       Number.isNaN(targetLng)
     ) {
       alert("목적지 좌표가 없어 진행할 수 없습니다.");
+      return;
+    }
+
+    // 운영 시간 체크 - 디버깅 강화
+    console.log('[PvPlaceDetail] 운영 시간 체크 시작:', {
+      operateTimes: detail?.operateTimes,
+      availableTimes: detail?.availableTimes,
+      detail: detail
+    });
+
+    // 1차: 배열 형태 운영 시간 체크
+    let timeCheck = checkOperatingHours(detail?.operateTimes);
+    
+    // 2차: 문자열 형태 운영 시간 체크 (개인 주차장용)
+    if (timeCheck.isAvailable && detail?.availableTimes) {
+      const checkStringOperatingHours = (availableTimes) => {
+        if (!availableTimes || typeof availableTimes !== 'string') {
+          return { isAvailable: true };
+        }
+        
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
+        console.log('[PvPlaceDetail] 문자열 운영 시간 체크:', {
+          availableTimes,
+          currentTime,
+          currentTimeString: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+        });
+        
+        // "09:00 ~ 18:00" 또는 "09:00~18:00" 형태 파싱
+        const timeMatch = availableTimes.match(/(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/);
+        if (!timeMatch) {
+          console.log('[PvPlaceDetail] 시간 형식을 파싱할 수 없음:', availableTimes);
+          return { isAvailable: true }; // 파싱 실패 시 이용 가능으로 간주
+        }
+        
+        const [, startH, startM, endH, endM] = timeMatch.map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+        
+        console.log('[PvPlaceDetail] 파싱된 시간:', {
+          start: `${startH}:${startM}`,
+          end: `${endH}:${endM}`,
+          startMinutes,
+          endMinutes
+        });
+        
+        let isInRange = false;
+        if (startMinutes <= endMinutes) {
+          // 일반적인 경우 (예: 09:00 ~ 18:00)
+          isInRange = currentTime >= startMinutes && currentTime <= endMinutes;
+        } else {
+          // 자정을 넘나드는 경우 (예: 22:00 ~ 06:00)
+          isInRange = currentTime >= startMinutes || currentTime <= endMinutes;
+        }
+        
+        console.log('[PvPlaceDetail] 시간 범위 체크:', {
+          isInRange,
+          currentTime,
+          startMinutes,
+          endMinutes
+        });
+        
+        return { 
+          isAvailable: isInRange,
+          message: isInRange ? "" : "지금은 이용 시간이 아닙니다."
+        };
+      };
+      
+      timeCheck = checkStringOperatingHours(detail.availableTimes);
+    }
+    
+    console.log('[PvPlaceDetail] 최종 운영 시간 체크 결과:', timeCheck);
+    
+    if (!timeCheck.isAvailable) {
+      alert(timeCheck.message);
       return;
     }
 
