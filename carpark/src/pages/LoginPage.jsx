@@ -109,7 +109,7 @@ const LoginPage = () => {
         client.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       }
 
-      // ✅ 사용자 키 저장 (이메일/아이디). 응답에 값이 없으면 입력값 사용
+      // 사용자 키 저장 (이메일/아이디). 응답에 값이 없으면 입력값 사용
       const userKey =
         res.data?.data?.memberId ||
         res.data?.memberId ||

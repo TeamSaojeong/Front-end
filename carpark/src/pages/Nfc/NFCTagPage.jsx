@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../../Styles/Nfc/NFCTagPage.css";
 
 import arrow from "../../Assets/arrow.png";
-import nfc_icon from "../../Assets/nfc.svg";
+import nfc_icon from "../../Assets/Vector.svg";
 import pin_icon from "../../Assets/pin.svg";
 import PreviousBtn from "../../components/Register/PreviousBtn";
 
@@ -97,7 +97,7 @@ const NFCTagPage = () => {
         </div>
 
       <div className="nfc-section">
-        <img src={nfc_icon} alt="nfc 아이콘" />
+        <img src={nfc_icon} alt="nfc 아이콘" className="nfc-icon-img"/>
         
         {/* 테스트용 NFC 태그 버튼 */}
         <button
@@ -163,6 +163,15 @@ const NFCTagPage = () => {
         </button>
       </div>
 
+
+      <div className="nfc-time-box">
+        <div className="nfc-time-inner">
+          <img src={pin_icon} alt="핀 아이콘" className="pin-icon" />
+          <span className="nfc-time-text">
+            {parkingInfo ? parkingInfo.name : "주차장 정보를 불러오는 중..."}
+          </span>
+        </div>
+      </div>
       {/* 버튼 */}
         <button
           className="nfc-outsoon"
@@ -188,15 +197,6 @@ const NFCTagPage = () => {
           
         </button>
       
-
-      <div className="nfc-time-box">
-        <div className="nfc-time-inner">
-          <img src={pin_icon} alt="핀 아이콘" className="pin-icon" />
-          <span className="nfc-time-text">
-            {parkingInfo ? parkingInfo.name : "주차장 정보를 불러오는 중..."}
-          </span>
-        </div>
-      </div>
     </div>
   );
 };

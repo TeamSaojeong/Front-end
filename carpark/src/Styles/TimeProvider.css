@@ -38,7 +38,7 @@
   line-height: 18px;
 }
 
-/* ✅ 전용 스크롤 영역 */
+/* 전용 스크롤 영역 */
 .time-scroll {
   height: calc(100% - 96px); /* 헤더 높이만큼 뺌 */
   overflow-y: auto;
