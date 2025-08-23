@@ -27,6 +27,8 @@ export default function PayPage() {
   const navigate = useNavigate();
   const { state } = useLocation() || {};
 
+  console.log('[PayPage] 받은 state 정보:', state);
+
   // 상세에서 넘어올 수 있는 값들
   // A) 바로 리디렉트 모드: paymentUrl 또는 reservationId 만 넘어온 경우
   const paymentUrl =
@@ -42,32 +44,60 @@ export default function PayPage() {
     : new Date(startAt.getTime() + 2 * 60 * 60 * 1000);
   const startInMinutes = state?.startInMinutes; // RESERVABLE에서 넘겨줄 수 있음(곧 나감 n분 뒤)
 
-  // 화면 데이터
-  const [loading, setLoading] = useState(true);
-  const [lotName, setLotName] = useState("");
-  const [pricePer10Min, setPricePer10Min] = useState(0);
+  // C) NFC/PvTimeSelect에서 넘어온 정보들
+  const parkName = state?.parkName || state?.parkingInfo?.name || "";
+  const total = state?.total || state?.estimatedCost || 0;
+  const usingMinutes = state?.usingMinutes || state?.durationMin || 0;
+
+  console.log('[PayPage] 추출된 정보:', {
+    parkingId,
+    parkName,
+    total,
+    usingMinutes,
+    startAt,
+    endAt
+  });
+
+  // 화면 데이터 - NFC에서 넘어온 정보 우선 사용
+  const [loading, setLoading] = useState(!parkName); // 이름이 있으면 로딩 스킵
+  const [lotName, setLotName] = useState(parkName); // NFC에서 넘어온 이름 우선
+  const [pricePer10Min, setPricePer10Min] = useState(
+    state?.parkingInfo?.charge || 0
+  );
   const [nearbyAvg10Min, setNearbyAvg10Min] = useState(null); // 선택: 표시만
   const [posting, setPosting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 이용 시간(분)
+  // 이용 시간(분) - NFC에서 넘어온 정보 우선 사용
   const minutes = useMemo(() => {
+    // NFC에서 넘어온 시간이 있으면 우선 사용
+    if (usingMinutes > 0) {
+      return usingMinutes;
+    }
+    // 아니면 시작/종료 시간으로 계산
     const diff = Math.max(0, Math.round((endAt - startAt) / 60000));
     return diff;
-  }, [startAt, endAt]);
+  }, [startAt, endAt, usingMinutes]);
 
   const hoursPart = Math.floor(minutes / 60);
   const minsPart = minutes % 60;
 
-  // 요금 (10분 단위 올림)
+  // 요금 (10분 단위 올림) - NFC에서 넘어온 총액이 있으면 우선 사용
   const billableUnits = useMemo(() => Math.ceil(minutes / 10), [minutes]);
-  const fee = useMemo(
-    () => billableUnits * pricePer10Min,
-    [billableUnits, pricePer10Min]
-  );
+  const fee = useMemo(() => {
+    // NFC에서 넘어온 총액이 있으면 우선 사용 (서비스 수수료 제외)
+    if (total > 0) {
+      return Math.round(total / 1.1); // 서비스 수수료 10% 제외
+    }
+    return billableUnits * pricePer10Min;
+  }, [billableUnits, pricePer10Min, total]);
+  
   const svcRate = 0.1;
   const svcFee = useMemo(() => Math.round(fee * svcRate), [fee]);
-  const total = useMemo(() => fee + svcFee, [fee, svcFee]);
+  const finalTotal = useMemo(() => {
+    // NFC에서 넘어온 총액이 있으면 우선 사용
+    return total > 0 ? total : fee + svcFee;
+  }, [fee, svcFee, total]);
 
   // ───────────────────────────────────────────────────────────
   // 1) 바로 리디렉트 모드 처리: paymentUrl/reservationId만 넘어온 케이스
@@ -141,15 +171,22 @@ export default function PayPage() {
     if (posting) return;
     if (!parkingId) return alert("주차장 정보가 없습니다.");
     if (minutes <= 0) return alert("이용 시간을 확인해 주세요.");
-    if (pricePer10Min <= 0) return alert("요금 정보가 없습니다.");
+
+    console.log('[PayPage] 결제 시작:', {
+      parkingId,
+      lotName,
+      minutes,
+      finalTotal,
+      pricePer10Min
+    });
 
     setPosting(true);
     try {
       // 카카오페이 결제 준비
       const paymentPayload = {
-        parkName: lotName,
+        parkName: lotName || "주차장",
         parkingId: parkingId,
-        total: total,
+        total: finalTotal,
         usingMinutes: minutes
       };
 
@@ -240,7 +277,7 @@ export default function PayPage() {
         <div className="paypage__pair paypage__total">
           <span>총 합계</span>
           <span className="total-amount">
-            <span className="num">{KRW_NUM(total)}</span>
+            <span className="num">{KRW_NUM(finalTotal)}</span>
             <span className="won">원</span>
           </span>
         </div>
@@ -263,9 +300,9 @@ export default function PayPage() {
         <button
           className={`primary ${posting || loading ? "disabled" : ""}`}
           onClick={handlePay}
-          disabled={posting || loading || minutes <= 0 || pricePer10Min <= 0}
+          disabled={posting || loading || minutes <= 0}
         >
-          {KRW(total)} 결제하기
+          {KRW(finalTotal)} 결제하기
         </button>
       </div>
     </div>
