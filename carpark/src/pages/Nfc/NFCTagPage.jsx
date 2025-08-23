@@ -12,23 +12,50 @@ const NFCTagPage = () => {
   const [parkingInfo, setParkingInfo] = useState(null);
 
   useEffect(() => {
-    console.log('NFCTagPage 정보 로드 시작');
+    console.log('[NFCTagPage] 정보 로드 시작 (모바일 환경)');
     
     // 1. location.state에서 받기 (PvPlaceDetail에서 전달)
     let info = location.state;
-    console.log('location.state:', info);
+    console.log('[NFCTagPage] location.state:', info);
     
-    // 2. sessionStorage에서 백업 정보 받기
+    // 2. sessionStorage에서 백업 정보 받기 (모바일에서 중요)
     if (!info) {
       try {
         const saved = sessionStorage.getItem('nfcParkingInfo');
+        console.log('[NFCTagPage] sessionStorage raw:', saved);
         if (saved) {
           info = JSON.parse(saved);
-          console.log('sessionStorage에서 불러온 정보:', info);
+          console.log('[NFCTagPage] sessionStorage에서 불러온 정보:', info);
         }
       } catch (error) {
-        console.error('sessionStorage 로드 실패:', error);
+        console.error('[NFCTagPage] sessionStorage 로드 실패:', error);
       }
+    }
+    
+    // 3. localStorage에서도 백업 확인 (모바일 추가 보완)
+    if (!info) {
+      try {
+        const backup = localStorage.getItem('lastNfcParkingInfo');
+        if (backup) {
+          info = JSON.parse(backup);
+          console.log('[NFCTagPage] localStorage 백업 사용:', info);
+        }
+      } catch (error) {
+        console.error('[NFCTagPage] localStorage 로드 실패:', error);
+      }
+    }
+    
+    // 4. 모바일에서 URL 파라미터도 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const placeIdFromUrl = urlParams.get('placeId');
+    if (!info && placeIdFromUrl) {
+      console.log('[NFCTagPage] URL에서 placeId 발견:', placeIdFromUrl);
+      // 기본 정보라도 설정
+      info = {
+        id: placeIdFromUrl,
+        name: "주차장",
+        isPrivate: true
+      };
     }
     
     if (info) {

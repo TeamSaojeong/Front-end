@@ -109,6 +109,13 @@ export default function PvPlaceDetail() {
   // 현재 위치 가져오기
   useEffect(() => {
     console.log("[PvPlaceDetail] 현재 위치 가져오기 시작");
+    console.log("[PvPlaceDetail] 환경 정보:", {
+      userAgent: navigator.userAgent,
+      isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+      hasGeolocation: !!navigator.geolocation,
+      isSecureContext: window.isSecureContext
+    });
+    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -120,16 +127,40 @@ export default function PvPlaceDetail() {
           console.log("[PvPlaceDetail] 현재 위치 획득:", location);
         },
         (error) => {
-          console.error('위치 가져오기 실패:', error);
+          console.error('[PvPlaceDetail] 위치 가져오기 실패:', error.code, error.message);
+          
+          // 모바일에서 자주 발생하는 오류들 처리
+          switch(error.code) {
+            case 1: // PERMISSION_DENIED
+              console.warn('[PvPlaceDetail] 위치 권한 거부됨');
+              alert('위치 권한을 허용해야 거리를 계산할 수 있습니다. 브라우저 설정에서 위치 권한을 허용해주세요.');
+              break;
+            case 2: // POSITION_UNAVAILABLE
+              console.warn('[PvPlaceDetail] 위치 정보 사용 불가');
+              break;
+            case 3: // TIMEOUT
+              console.warn('[PvPlaceDetail] 위치 가져오기 시간 초과');
+              break;
+          }
+          
           // 캐시된 위치 사용
           try {
             const cached = JSON.parse(localStorage.getItem("lastKnownLoc") || "{}");
             if (cached.lat && cached.lng) {
               setCurrentLocation({ lat: cached.lat, lng: cached.lng });
+              console.log('[PvPlaceDetail] 캐시된 위치 사용:', cached);
+            } else {
+              console.warn('[PvPlaceDetail] 캐시된 위치도 없음');
             }
-          } catch {}
+          } catch (e) {
+            console.error('[PvPlaceDetail] 캐시 로드 실패:', e);
+          }
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+        { 
+          enableHighAccuracy: false, // 모바일에서 더 빠른 응답
+          timeout: 15000, // 타임아웃 증가
+          maximumAge: 600000 // 10분간 캐시 사용
+        }
       );
     }
   }, []);
@@ -417,8 +448,16 @@ export default function PvPlaceDetail() {
 
     console.log('PvPlaceDetail에서 NFC로 전달하는 정보:', parkingInfo);
     
-    // 세션 스토리지에도 저장 (백업용)
-    sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
+    // 세션 스토리지에도 저장 (모바일에서 중요)
+    try {
+      sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
+      console.log('[PvPlaceDetail] sessionStorage 저장 완료');
+      
+      // 모바일에서 localStorage에도 백업 저장
+      localStorage.setItem('lastNfcParkingInfo', JSON.stringify(parkingInfo));
+    } catch (error) {
+      console.error('[PvPlaceDetail] 스토리지 저장 실패:', error);
+    }
     
     navigate(
       {
