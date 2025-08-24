@@ -231,6 +231,7 @@ export default function MapRoute() {
       <div className="route-endbar">
         <button
           className="route-endbtn"
+          style={{ whiteSpace: 'nowrap' }}
           onClick={() =>
             navigate("/home", { replace: true, state: { recenter: true } })
           }

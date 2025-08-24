@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import PreviousBtn from "../components/Register/PreviousBtn";
 import ai_time from "../Assets/ai_time.svg";
@@ -72,6 +72,7 @@ const levelMessages = {
 };
 
 const AIResult = () => {
+  const navigate = useNavigate();
   const { state } = useLocation();
   const selectedTime = state?.selectedTime || ""; // "HH:MM"
   const name = state?.name || ""; // 장소 이름
@@ -323,7 +324,7 @@ const AIResult = () => {
                 </p>
               </div>
 
-              {/* 상세보기 버튼 */}
+              {/* 경로 안내 보기 버튼 */}
               <button
                 style={{
                   padding: '8px 16px',
@@ -336,11 +337,27 @@ const AIResult = () => {
                   flexShrink: 0
                 }}
                 onClick={() => {
-                  // 주차장 상세 페이지로 이동
-                  window.location.href = `/place/${parking.id}`;
+                  // 양재 AT센터에서 해당 주차장까지 경로 안내
+                  const yangjaeAtCenter = { lat: 37.4707, lng: 127.0389 };
+                  const destLat = parking.y || parking.lat || parking.latitude;
+                  const destLng = parking.x || parking.lon || parking.lng || parking.longitude;
+                  
+                  if (destLat && destLng) {
+                    navigate("/MapRoute", {
+                      state: {
+                        dest: { lat: destLat, lng: destLng },
+                        name: parking.placeName || parking.name || "주차장",
+                        address: parking.addressName || parking.address || "",
+                        placeId: parking.id,
+                        isPrivate: false,
+                      },
+                    });
+                  } else {
+                    alert("주차장 위치 정보가 없어 경로를 표시할 수 없습니다.");
+                  }
                 }}
               >
-                상세보기
+                경로 안내 보기
               </button>
             </div>
           ))
