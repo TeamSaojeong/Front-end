@@ -127,7 +127,8 @@ export default function DescriptionPage() {
       </div>
 
       <div className="ds-input-wrapper">
-        <InputBox
+        <textarea
+          raw={3}
           className="ds-input"
           value={content}
           onChange={(e) => setField("content", e.target.value)}
