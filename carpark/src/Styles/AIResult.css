@@ -19,13 +19,6 @@ font-style: normal;
 font-weight: 400;
 letter-spacing: -0.45px;
 height: 28px;
-/* MO/Title/KR/T3_KR_Rg */
-font-family: Pretendard;
-font-size: 18px;
-font-style: normal;
-font-weight: 400;
-letter-spacing: -0.45px;
-height: 28px;
 }
 
 .ar-pred-title{
@@ -35,13 +28,6 @@ height: 28px;
 .ar-pred-sub{
   color: #303030;
 
-/* MO/Title/KR/T2_KR_Rg */
-font-family: Pretendard;
-font-size: 20px;
-font-style: normal;
-font-weight: 400;
-line-height: 28px; /* 140% */
-letter-spacing: -0.5px;
 /* MO/Title/KR/T2_KR_Rg */
 font-family: Pretendard;
 font-size: 20px;
@@ -86,13 +72,6 @@ letter-spacing: -0.45px;
     color: #5C5C5C;
 text-align: center;
 
-/* MO/Body/KR/B4_KR_Rg */
-font-family: Pretendard;
-font-size: 12px;
-font-style: normal;
-font-weight: 400;
-line-height: 18px; /* 150% */
-letter-spacing: -0.3px;
 /* MO/Body/KR/B4_KR_Rg */
 font-family: Pretendard;
 font-size: 12px;
