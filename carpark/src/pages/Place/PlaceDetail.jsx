@@ -8,6 +8,8 @@ import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
 import alarmFilledIcon from "../../Assets/alarm1.svg";
+import close from "../../Assets/close.svg";
+import upload_img from "../../Assets/upload_img.svg";
 
 import {
   getPublicDetail,
@@ -145,7 +147,7 @@ export default function PlaceDetail() {
 
         const normalized = {
           id: pid ?? kakaoId,
-          name: d.placeName ?? d.name ?? placeFromSession?.name ?? "주차 장소",
+          name: d.placeName ?? d.name ?? placeFromSession?.name ?? "주차 장소 이름",
           distanceKm:
             d.distanceMeters != null
               ? d.distanceMeters / 1000
@@ -308,7 +310,7 @@ export default function PlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close}/>
           </button>
         </div>
         <h1 className="pub-title">불러오는 중…</h1>
@@ -385,24 +387,20 @@ export default function PlaceDetail() {
 
       <div className="pub-chips">
         <div className="pub-chip">
-          <div className="pub-chip-icon">
-            <img src={pinIcon} alt="위치" />
-          </div>
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{distanceKm ?? "-"}km</strong>
+              <img src={pinIcon} alt="위치" className="pub-chip-locationicon"/>
+              <strong className="pub-chip-locationtext">{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
           </div>
         </div>
 
         <div className="pub-chip">
-          <div className="pub-chip-icon">
-            <img src={moneyIcon} alt="요금" />
-          </div>
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
+              <img src={moneyIcon} alt="요금" className="pub-chip-moneyicon"/>
+              <strong className="pub-chip-moneytext">{Number(pricePer10m || 0).toLocaleString()}원</strong>
             </div>
             <div className="pub-chip-sub">10분당 주차 비용</div>
           </div>
@@ -432,7 +430,7 @@ export default function PlaceDetail() {
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소 설명</h2>
         <div className="pub-photo-box" role="img" aria-label="주차 장소 사진">
-          <div className="pub-photo-placeholder">🖼️</div>
+          <div className="pub-photo-placeholder"><img src={upload_img}/></div>
         </div>
         <pre className="pub-note">{note}</pre>
       </section>

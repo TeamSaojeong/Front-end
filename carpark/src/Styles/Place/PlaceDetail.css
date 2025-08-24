@@ -7,25 +7,24 @@
   margin: 0 auto;
   position: relative;
   box-sizing: border-box;
-  padding: 0 24px 24px;
+  padding: 0 24px 46px;
 }
 
 /* Top bar */
 .pub-topbar {
   position: relative;
-  height: 56px;
+  height: 84px;
 }
 .pub-close {
   position: absolute;
-  top: 40px;
   left: 0;
-  width: 28px;
   height: 28px;
   font-size: 18px;
   line-height: 28px;
   background: transparent;
   border: 0;
   cursor: pointer;
+  height: 107px;
 }
 .pub-bell {
   position: absolute;
@@ -59,13 +58,13 @@
 /* Title */
 .pub-title {
   color: #303030;
-  font-family: Pretendard, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 34px;
-  letter-spacing: -0.6px;
-  margin: 35px 0 12px;
+font-family: Pretendard;
+font-size: 20px;
+font-style: normal;
+font-weight: 600;
+line-height: 28px; /* 140% */
+letter-spacing: -0.5px;
+  margin: 20px 0 12px;
 }
 
 /* Chips */
@@ -75,17 +74,37 @@
   gap: 12px;
   margin-bottom: 20px;
 }
+.pub-chip-moneyicon,
+.pub-chip-locationicon{
+  margin-right: 6px;
+}
+
+.pub-chip-moneytext,
+.pub-chip-locationtext{
+  color: #303030;
+font-family: Pretendard;
+font-size: 14px;
+font-style: normal;
+font-weight: 600;
+letter-spacing: -0.35px;
+}
+
+.pub-chip-value{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .pub-chip {
   display: flex;
   align-items: center;
   gap: 8px;
 
-  /* ✅ 고정 크기 */
+  /* 고정 크기 */
   width: 169px;
-  height: 68px;
+  height: 68px !important;
 
-  padding: 8px 12px; /* 크기 맞추기 위해 여백 줄임 */
+  padding: 12px 30px;
   border: 1px solid #eaeaea;
   border-radius: 12px;
   background: #eaeaea;
@@ -96,9 +115,13 @@
   color: #303030;
 }
 .pub-chip-sub {
-  font-size: 12px;
   color: #767676;
-  margin-top: 2px;
+font-family: Pretendard;
+font-size: 12px;
+font-style: normal;
+font-weight: 400;
+line-height: 18px; /* 150% */
+letter-spacing: -0.3px;
 }
 
 /* Section */
@@ -150,10 +173,10 @@
   height: 220px;
   background: #eaeaea;
   border: 1px solid #eaeaea;
-  border-radius: 12px;
+  border-radius: 6px;
   display: grid;
   place-items: center;
-  margin: 8px 0 12px;
+  margin: 8px 0 8px;
 }
 .pub-photo-placeholder {
   font-size: 28px;
@@ -182,6 +205,7 @@
   gap: 12px;
   padding: 20px 0 0;
   margin-top: 35px;
+  top: 742px;
 }
 .pub-btn {
   height: 52px;
