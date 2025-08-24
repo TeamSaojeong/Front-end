@@ -32,17 +32,33 @@ const AIPredict = () => {
 
   const addrValid = !!address?.trim();
   const isActive = timeValid && !!name?.trim() && !!lat && !!lon;
+  
+  // 디버깅용 로그
+  console.log('[AIPredict] 상태:', { 
+    timeValid, 
+    name: name?.trim(), 
+    lat, 
+    lon, 
+    isActive 
+  });
 
   const handleNext = () => {
     if (!isActive) return;
+    
+    console.log('[AIPredict] AIResult로 이동:', {
+      selectedTime: label,
+      address,
+      name,
+      locationData: { lat, lng: lon }
+    });
+    
     navigate("/airesult", {
       state: { 
-        arrival: label, //HH:MM
+        selectedTime: label, // HH:MM 형식
         address,
         name,
-        lat,
-        lon,
-       }, // 주소 같이 전달
+        locationData: { lat, lng: lon }, // AIResult에서 기대하는 형식
+      },
     });
   };
 

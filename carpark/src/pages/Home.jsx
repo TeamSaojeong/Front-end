@@ -104,7 +104,7 @@ export default function Home() {
     <div ref={wrapRef} className="map-wrap">
       <div ref={mapEl} className="map-fill" />
       <Mapmenu />
-      <Aiforecast />
+      <Aiforecast onClick={() => navigate('/aipredict')} />
 
       {showRequery && !isSheetOpen && (
         <button className="requery-btn" onClick={requeryHere}>

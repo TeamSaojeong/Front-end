@@ -8,8 +8,6 @@ import emoji_s from "../Assets/emoji_s.svg";
 import emoji_t from "../Assets/emoji_t.svg";
 import "../Styles/AIResult.css";
 import NextBtn from "../components/Register/NextBtn";
-import ParkingCard from "../components/ParkingCard";
-import BottomSheet from "../components/BottomSheet";
 
 function formatKoreanTime(hhmm) {
   if (!hhmm || !/^\d{2}:\d{2}$/.test(hhmm)) return "시간 정보 없음";
@@ -40,6 +38,20 @@ const levelMessages = {
     emoji: emoji_s, // ✅ 경로 자체를 값으로
     sub: "좋은 소식이에요! <br/>가까운 주차 장소를 추천해드릴게요.",
   },
+  보통: {
+    title: "차가 반 정도 차있을 가능성이 높아요",
+    color: "#FFA500", // 주황색
+    typography: {
+      fontFamily: "Pretendard",
+      fontSize: "24px",
+      fontStyle: "normal",
+      fontWeight: 600,
+      lineHeight: "34px",
+      letterSpacing: "-0.6px",
+    },
+    emoji: emoji_s, // 여유일 때와 동일한 이모티콘
+    sub: "적당한 수준이에요! <br/>가까운 주차 장소를 추천해드릴게요.",
+  },
   혼잡: {
     title: "주차가 혼잡할 확률이 높아요",
     color: "#DE5E56",
@@ -66,7 +78,6 @@ const AIResult = () => {
   const [predictionData, setPredictionData] = useState(null);
   const [nearbyParkings, setNearbyParkings] = useState([]);
   const [error, setError] = useState("");
-  const [showBottomSheet, setShowBottomSheet] = useState(false);
 
   const timeLabel = formatKoreanTime(selectedTime);
 
@@ -95,10 +106,11 @@ const AIResult = () => {
         });
         
         // 검색한 위치의 좌표 사용
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
         const payload = {
           lat: locationData.lat, // ✅ 검색한 위치의 위도
           lon: locationData.lng, // ✅ 검색한 위치의 경도
-          arrival: `2025-08-18T${selectedTime}:00`, // 도착 시간
+          arrival: `${today}T${selectedTime}:00`, // 오늘 날짜 + 선택한 시간
           radius: 1.0, // 1km 반경
           top_k: 15,
           exact_radius: true,
@@ -160,7 +172,14 @@ const AIResult = () => {
 
   // 예측 결과 사용
   const first = predictionData?.items?.[0];
-  const msg = levelMessages[first?.pred_level] || levelMessages["여유"];
+  const predLevel = first?.pred_level || "여유";
+  const msg = levelMessages[predLevel] || levelMessages["여유"];
+  
+  console.log('[AIResult] 예측 결과:', {
+    predLevel,
+    firstItem: first,
+    totalItems: predictionData?.items?.length
+  });
 
   return (
     <div className="airesult-wrap">
@@ -199,87 +218,112 @@ const AIResult = () => {
           ))}
       </p>
 
-      {/* 주변 주차장 추천 버튼 */}
-      <button 
-        className="ar-nearby-btn"
-        onClick={() => setShowBottomSheet(true)}
-        style={{
-          width: '100%',
-          padding: '16px',
+      {/* 주차장 추천 목록 - 스크롤 가능한 컨테이너 */}
+      <div 
+        style={{ 
           margin: '20px 0',
-          backgroundColor: '#007AFF',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: '16px',
-          fontWeight: '600',
-          cursor: 'pointer'
+          height: '312px', // 3개 카드 (92px + 12px 마진) = 312px
+          overflowY: 'auto',
+          paddingRight: '5px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#C1C1C1 #F1F1F1'
         }}
+        className="parking-list-scroll"
       >
-        주변 주차장 추천 보기 ({nearbyParkings.length}개)
-      </button>
+        {nearbyParkings.length > 0 ? (
+          nearbyParkings.map((parking, index) => (
+            <div 
+              key={parking.id || index}
+              style={{
+                display: 'flex',
+                padding: '16px',
+                border: '1px solid #E5E5E5',
+                borderRadius: '12px',
+                marginBottom: '12px',
+                backgroundColor: 'white',
+                gap: '12px',
+                alignItems: 'center',
+                height: '92px', // 고정 높이 설정
+                boxSizing: 'border-box'
+              }}
+            >
+              {/* 주차장 이미지 플레이스홀더 */}
+              <div style={{
+                width: '60px',
+                height: '60px',
+                backgroundColor: '#F5F5F5',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <span style={{ fontSize: '24px' }}>🏔️</span>
+              </div>
 
-      {/* 리스트 예시 */}
-      <ParkingCard />
+              {/* 주차장 정보 */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ 
+                  margin: '0 0 4px 0', 
+                  fontSize: '16px', 
+                  fontWeight: '600',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {parking.placeName || parking.name || '주차장 이름'}
+                </h3>
+                <p style={{ 
+                  margin: '0 0 4px 0', 
+                  fontSize: '14px', 
+                  color: '#666',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  📍 {parking.addressName || parking.address || '주차장 주소'}
+                </p>
+                <p style={{ 
+                  margin: 0, 
+                  fontSize: '14px', 
+                  color: '#666',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  💰 {parking.price || '0,000원'}
+                </p>
+              </div>
 
-      <NextBtn className="ar-next" label="확인" />
-
-      {/* 주변 주차장 바텀시트 */}
-      <BottomSheet
-        isOpen={showBottomSheet}
-        onClose={() => setShowBottomSheet(false)}
-        title="주변 주차장 추천"
-      >
-        <div style={{ padding: '20px' }}>
-          {nearbyParkings.length > 0 ? (
-            nearbyParkings.map((parking, index) => (
-              <div 
-                key={parking.id || index}
+              {/* 상세보기 버튼 */}
+              <button
                 style={{
-                  padding: '16px',
-                  border: '1px solid #E5E5E5',
-                  borderRadius: '12px',
-                  marginBottom: '12px',
-                  backgroundColor: 'white'
+                  padding: '8px 16px',
+                  backgroundColor: '#007AFF',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  flexShrink: 0
+                }}
+                onClick={() => {
+                  // 주차장 상세 페이지로 이동
+                  window.location.href = `/place/${parking.id}`;
                 }}
               >
-                <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600' }}>
-                  {parking.placeName || parking.name || '주차장'}
-                </h3>
-                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
-                  {parking.addressName || parking.address || '주소 정보 없음'}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: '#007AFF' }}>
-                    {parking.distance ? `${parking.distance}m` : '거리 정보 없음'}
-                  </span>
-                  <button
-                    style={{
-                      padding: '8px 16px',
-                      backgroundColor: '#007AFF',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => {
-                      // 주차장 상세 페이지로 이동
-                      window.location.href = `/place/${parking.id}`;
-                    }}
-                  >
-                    상세보기
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-              주변에 주차장이 없습니다.
+                상세보기
+              </button>
             </div>
-          )}
-        </div>
-      </BottomSheet>
+          ))
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+            주변에 주차장이 없습니다.
+          </div>
+        )}
+      </div>
+
+      <NextBtn className="ar-next" label="확인" />
     </div>
   );
 };

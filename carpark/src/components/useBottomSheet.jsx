@@ -22,9 +22,9 @@ export default function useBottomSheet({
   });
 
   useEffect(() => {
-    const host = hostRef.current;
-    const sheet = sheetRef.current;
-    const content = contentRef.current;
+    const host = hostRef?.current;
+    const sheet = sheetRef?.current;
+    const content = contentRef?.current;
     const header = headerRef?.current || sheet;
     if (!host || !sheet || !content || !header) return;
 
@@ -40,9 +40,11 @@ export default function useBottomSheet({
       const MIN_Y = H - sh;
       const MAX_Y = topRel;
 
-      m.current.bounds = { MIN_Y, MAX_Y };
+      if (m?.current) {
+        m.current.bounds = { MIN_Y, MAX_Y };
+      }
 
-      const open = m.current.isOpen;
+      const open = m?.current?.isOpen || false;
       sheet.style.transform = open
         ? `translateY(${MIN_Y - MAX_Y}px)`
         : `translateY(0)`;
@@ -50,11 +52,13 @@ export default function useBottomSheet({
 
     const setOpenState = (open) => {
       recalcBounds();
-      const { MIN_Y, MAX_Y } = m.current.bounds;
+      const { MIN_Y, MAX_Y } = m?.current?.bounds || { MIN_Y: 0, MAX_Y: 0 };
       sheet.style.transform = open
         ? `translateY(${MIN_Y - MAX_Y}px)`
         : `translateY(0)`;
-      m.current.isOpen = open;
+      if (m?.current) {
+        m.current.isOpen = open;
+      }
       sheet.dataset.open = open ? "1" : "0";
       onOpenChange?.(open);
     };
@@ -70,7 +74,9 @@ export default function useBottomSheet({
     window.addEventListener("resize", onResize);
 
     const onContentStart = () => {
-      m.current.isContentTouched = true;
+      if (m?.current) {
+        m.current.isContentTouched = true;
+      }
     };
 
     const onStart = (e) => {
@@ -78,24 +84,26 @@ export default function useBottomSheet({
       const now = performance.now();
       recalcBounds();
 
-      m.current.touchStart.sheetY = sheet.getBoundingClientRect().y;
-      m.current.touchStart.touchY = t.clientY;
-      m.current.touchStart.time = now;
+      if (m?.current) {
+        m.current.touchStart.sheetY = sheet.getBoundingClientRect().y;
+        m.current.touchStart.touchY = t.clientY;
+        m.current.touchStart.time = now;
 
-      m.current.touchMove.prevTouchY = t.clientY;
-      m.current.lastMove = { y: t.clientY, time: now };
+        m.current.touchMove.prevTouchY = t.clientY;
+        m.current.lastMove = { y: t.clientY, time: now };
 
-      m.current.startedOnHeader = true;
-      m.current.isContentTouched = false;
+        m.current.startedOnHeader = true;
+        m.current.isContentTouched = false;
+      }
     };
 
     const canMove = () => {
-      if (!m.current.startedOnHeader) return false;
+      if (!m?.current?.startedOnHeader) return false;
 
-      const { MIN_Y } = m.current.bounds;
-      if (m.current.isContentTouched) {
+      const { MIN_Y } = m?.current?.bounds || { MIN_Y: 0 };
+      if (m?.current?.isContentTouched) {
         const atTop = sheet.getBoundingClientRect().y === MIN_Y;
-        const movingDown = m.current.touchMove.moving === "down";
+        const movingDown = m?.current?.touchMove?.moving === "down";
         return atTop && movingDown && content.scrollTop <= 0;
       }
       return true;
@@ -105,22 +113,24 @@ export default function useBottomSheet({
       const t = e.touches ? e.touches[0] : e;
       const now = performance.now();
 
-      m.current.touchMove.moving =
-        m.current.touchMove.prevTouchY < t.clientY
-          ? "down"
-          : m.current.touchMove.prevTouchY > t.clientY
-          ? "up"
-          : "none";
-      m.current.touchMove.prevTouchY = t.clientY;
+      if (m?.current) {
+        m.current.touchMove.moving =
+          m.current.touchMove.prevTouchY < t.clientY
+            ? "down"
+            : m.current.touchMove.prevTouchY > t.clientY
+            ? "up"
+            : "none";
+        m.current.touchMove.prevTouchY = t.clientY;
 
-      m.current.lastMove = { y: t.clientY, time: now };
+        m.current.lastMove = { y: t.clientY, time: now };
+      }
 
       if (!canMove()) return;
 
       e.preventDefault();
-      const { MIN_Y, MAX_Y } = m.current.bounds;
-      const offset = t.clientY - m.current.touchStart.touchY;
-      let nextY = m.current.touchStart.sheetY + offset;
+      const { MIN_Y, MAX_Y } = m?.current?.bounds || { MIN_Y: 0, MAX_Y: 0 };
+      const offset = t.clientY - (m?.current?.touchStart?.touchY || 0);
+      let nextY = (m?.current?.touchStart?.sheetY || 0) + offset;
 
       if (nextY < MIN_Y) nextY = MIN_Y;
       if (nextY > MAX_Y) nextY = MAX_Y;
@@ -129,17 +139,17 @@ export default function useBottomSheet({
     };
 
     const onEnd = () => {
-      const { MIN_Y, MAX_Y } = m.current.bounds;
+      const { MIN_Y, MAX_Y } = m?.current?.bounds || { MIN_Y: 0, MAX_Y: 0 };
       const range = Math.max(1, MAX_Y - MIN_Y);
 
       const DIST_THRESHOLD = Math.min(36, range * 0.18);
       const TAP_THRESHOLD = 8;
 
       const currY = sheet.getBoundingClientRect().y;
-      const moved = currY - m.current.touchStart.sheetY;
+      const moved = currY - (m?.current?.touchStart?.sheetY || 0);
 
-      const dt = Math.max(1, performance.now() - m.current.lastMove.time);
-      const dy = m.current.lastMove.y - m.current.touchStart.touchY;
+      const dt = Math.max(1, performance.now() - (m?.current?.lastMove?.time || 0));
+      const dy = (m?.current?.lastMove?.y || 0) - (m?.current?.touchStart?.touchY || 0);
       const velocity = dy / dt;
 
       if (Math.abs(moved) < TAP_THRESHOLD) {
@@ -162,7 +172,7 @@ export default function useBottomSheet({
       }
 
       if (Math.abs(moved) >= DIST_THRESHOLD) {
-        if (m.current.touchMove.moving === "up") setOpenState(true);
+        if (m?.current?.touchMove?.moving === "up") setOpenState(true);
         else setOpenState(false);
       } else {
         const toOpen = Math.abs(currY - MIN_Y) <= Math.abs(currY - MAX_Y) + 6;
@@ -173,9 +183,11 @@ export default function useBottomSheet({
     };
 
     const reset = () => {
-      m.current.touchMove = { prevTouchY: 0, moving: "none" };
-      m.current.isContentTouched = false;
-      m.current.startedOnHeader = false;
+      if (m?.current) {
+        m.current.touchMove = { prevTouchY: 0, moving: "none" };
+        m.current.isContentTouched = false;
+        m.current.startedOnHeader = false;
+      }
     };
 
     header.addEventListener("touchstart", onStart, { passive: false });
@@ -208,20 +220,24 @@ export default function useBottomSheet({
 
   // ✅ 외부 제어용 함수
   const open = () => {
-    const sheet = sheetRef.current;
+    const sheet = sheetRef?.current;
     if (!sheet) return;
-    const { MIN_Y, MAX_Y } = m.current.bounds;
+    const { MIN_Y, MAX_Y } = m?.current?.bounds || { MIN_Y: 0, MAX_Y: 0 };
     sheet.style.transform = `translateY(${MIN_Y - MAX_Y}px)`;
-    m.current.isOpen = true;
+    if (m?.current) {
+      m.current.isOpen = true;
+    }
     sheet.dataset.open = "1";
     onOpenChange?.(true);
   };
 
   const close = () => {
-    const sheet = sheetRef.current;
+    const sheet = sheetRef?.current;
     if (!sheet) return;
     sheet.style.transform = `translateY(0)`;
-    m.current.isOpen = false;
+    if (m?.current) {
+      m.current.isOpen = false;
+    }
     sheet.dataset.open = "0";
     onOpenChange?.(false);
   };

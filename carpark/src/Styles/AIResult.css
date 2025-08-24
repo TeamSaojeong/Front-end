@@ -103,3 +103,21 @@ display:flex;
 justify-content: center;
 }
 
+/* 주차장 목록 스크롤바 스타일 */
+.parking-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.parking-list-scroll::-webkit-scrollbar-track {
+  background: #F1F1F1;
+  border-radius: 3px;
+}
+
+.parking-list-scroll::-webkit-scrollbar-thumb {
+  background: #C1C1C1;
+  border-radius: 3px;
+}
+
+.parking-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: #A8A8A8;
+}

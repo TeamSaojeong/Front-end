@@ -24,9 +24,9 @@ export default function TimeWheel({ value, onChange, ariaLabelPrefix = "" }) {
     const idxA = AMPM.indexOf(target.ampm);
     const idxH = HOURS12.indexOf(target.h12);
     const idxM = MINUTES10.indexOf(target.m);
-    if (refA.current) refA.current.scrollTop = (idxA >= 0 ? idxA : 0) * ITEM_H;
-    if (refH.current) refH.current.scrollTop = (idxH >= 0 ? idxH : 0) * ITEM_H;
-    if (refM.current) refM.current.scrollTop = (idxM >= 0 ? idxM : 0) * ITEM_H;
+    if (refA?.current) refA.current.scrollTop = (idxA >= 0 ? idxA : 0) * ITEM_H;
+    if (refH?.current) refH.current.scrollTop = (idxH >= 0 ? idxH : 0) * ITEM_H;
+    if (refM?.current) refM.current.scrollTop = (idxM >= 0 ? idxM : 0) * ITEM_H;
   }, [target.ampm, target.h12, target.m]);
 
   const snap = (el, idx) =>
@@ -46,11 +46,13 @@ export default function TimeWheel({ value, onChange, ariaLabelPrefix = "" }) {
       else apply({ m: MINUTES10[clamp(idx, MINUTES10)] });
     };
 
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      snap(el, idx);
-      doSet();
-    }, 100);
+    if (timerRef?.current) clearTimeout(timerRef.current);
+    if (timerRef) {
+      timerRef.current = setTimeout(() => {
+        snap(el, idx);
+        doSet();
+      }, 100);
+    }
   };
 
   return (
