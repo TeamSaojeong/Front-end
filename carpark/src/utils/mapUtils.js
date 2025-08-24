@@ -3,8 +3,8 @@ import React from "react";
 
 const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
 
-// 양재AT센터 고정 위치
-const FIXED_LOCATION = { lat: 37.4923, lng: 127.0276 };
+// 양재AT센터 고정 위치 (정확한 좌표)
+const FIXED_LOCATION = { lat: 37.468358, lng: 127.039229 };
 
 /** 로컬 저장 유틸 - 양재AT센터로 고정 */
 export const getCachedLoc = () => {

@@ -1,16 +1,17 @@
-// import axios from "axios";
+import { client } from "./client";
 
-// export const fetchParkingPrediction = async (payload) => {
-//   try {
-//     const res = await axios.post("/api/parking/predict", payload, {
-//       headers: { "Content-Type": "application/json" }
-//     });
-//     return res.data; // { pred_level: "혼잡", ... }
-//   } catch (err) {
-//     console.error("API 호출 오류:", err);
-//     return null;
-//   }
-// };
+export const fetchParkingPrediction = async (payload) => {
+  try {
+    const res = await client.post("/api/parking/predict", payload, {
+      headers: { "Content-Type": "application/json" }
+    });
+    return res.data; // { pred_level: "혼잡", ... }
+  } catch (err) {
+    console.error("API 호출 오류:", err);
+    // 에러 시 모의 데이터 반환
+    return mockPredictResponse;
+  }
+};
 
 // 모의 응답 데이터
 export const mockPredictResponse = {

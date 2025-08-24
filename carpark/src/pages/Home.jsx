@@ -41,28 +41,46 @@ export default function Home() {
   // OutModal 훅 사용 (places 전달)
   const modalHandlers = useOutModal(places);
 
-  // 주기적으로 모달 관련 처리
+  // 10초마다 테스트 모달 표시 (단순화된 버전)
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      modalHandlers.checkNotifications();
-      modalHandlers.showTestOutModal();
+    console.log('[디버그] 10초 모달 타이머 시작');
+    
+    const showModal = () => {
+      console.log('[디버그] 10초 타이머 실행 - 모달 표시 시도');
+      console.log('[디버그] modalHandlers:', modalHandlers);
+      console.log('[디버그] places 개수:', places.length);
       
-      // 모달 표시 후 잠시 기다린 다음 지도 다시 렌더링 (말풍선 업데이트)
+      if (modalHandlers && modalHandlers.showTestOutModal) {
+        modalHandlers.showTestOutModal();
+      } else {
+        console.warn('[디버그] modalHandlers.showTestOutModal이 없습니다');
+      }
+      
+      // 말풍선 업데이트
       setTimeout(() => {
         if (mapRef.current) {
           const c = mapRef.current.getCenter();
           if (c) {
-            // 현재 위치에서 다시 페치하여 말풍선 업데이트
             window.dispatchEvent(new CustomEvent('refreshMap', {
               detail: { lat: c.getLat(), lng: c.getLng() }
             }));
           }
         }
       }, 100);
-    }, 10_000);
+    };
 
-    return () => clearInterval(interval);
-  }, [modalHandlers, mapRef]);
+    // 첫 번째 모달은 5초 후에 표시 (빠른 테스트용)
+    const firstTimeout = setTimeout(showModal, 5000);
+    
+    // 이후 10초마다 반복
+    const interval = setInterval(showModal, 10_000);
+
+    return () => {
+      console.log('[디버그] 10초 모달 타이머 정리');
+      clearTimeout(firstTimeout);
+      clearInterval(interval);
+    };
+  }, [modalHandlers, places, mapRef]);
 
   // places 변경 시 모달 체크
   React.useEffect(() => {

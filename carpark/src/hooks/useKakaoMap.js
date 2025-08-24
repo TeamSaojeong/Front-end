@@ -179,8 +179,15 @@ export const useKakaoMap = (mapEl, myParks) => {
     const kakao = window.kakao;
     if (!mapRef.current) return;
 
+    console.log('[디버그] renderBubbles 호출됨. 렌더링할 주차장 수:', rows.length);
+    
+    let renderedCount = 0;
     rows.forEach((p) => {
-      if (!p.lat || !p.lng) return;
+      if (!p.lat || !p.lng) {
+        console.log('[디버그] 좌표 없음:', p.name);
+        return;
+      }
+      renderedCount++;
 
       const chip = document.createElement("div");
       chip.className = "poi-chip";
@@ -230,6 +237,9 @@ export const useKakaoMap = (mapEl, myParks) => {
         });
       }
     });
+    
+    console.log('[디버그] 실제 렌더링된 말풍선 수:', renderedCount);
+    console.log('[디버그] 현재 overlays 총 개수:', overlaysRef.current.length);
   };
 
   const updateBubbleStyles = (selId = selectedId) => {
@@ -245,6 +255,8 @@ export const useKakaoMap = (mapEl, myParks) => {
     setIsLoading(true);
     setErrorMsg("");
     setSelectedId(null);
+    
+    console.log('[디버그] 기존 오버레이 제거 중. 제거할 개수:', overlaysRef.current.length);
     overlaysRef.current.forEach((o) => o.overlay?.setMap(null));
     overlaysRef.current = [];
 
@@ -310,10 +322,21 @@ export const useKakaoMap = (mapEl, myParks) => {
           };
         });
 
-      const yg = forceYangjae || isNearYangjae(lat, lng) ? getYangjaeDummies() : [];
-      const sg = forceSeochoGangnam || isNearSeochoGangnam(lat, lng) ? getSeochoGangnamDummies() : [];
+      // 더미 데이터 항상 표시 (디버깅용)
+      const yg = getYangjaeDummies();
+      const sg = getSeochoGangnamDummies();
+      
+      console.log('[디버그] 더미 데이터 개수:', {
+        yangjaeDummies: yg.length,
+        seochoGangnamDummies: sg.length,
+        myParks: mine.length,
+        apiRows: rows.length
+      });
 
       const merged = uniqueById([...yg, ...sg, ...mine, ...rows]);
+      
+      console.log('[디버그] 병합 후 총 주차장 개수:', merged.length);
+      console.log('[디버그] 병합된 주차장 이름들:', merged.map(p => p.name));
 
       setPlaces(merged);
       renderBubbles(merged);
