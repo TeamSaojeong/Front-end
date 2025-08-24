@@ -22,7 +22,7 @@ const hhmm = new Intl.DateTimeFormat("ko-KR", {
   minute: "2-digit",
   hour12: false,
 });
-//이건 그냥 커밋밋
+
 export default function PayPage() {
   const navigate = useNavigate();
   const { state } = useLocation() || {};
