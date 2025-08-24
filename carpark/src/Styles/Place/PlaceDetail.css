@@ -1,230 +1,261 @@
-/* src/Styles/Place/PlaceDetail.css */
+  .pub-wrap {
+    background: #fff;
+    width: 390px;
+    min-height: 844px;
+    margin: 0 auto;
+    position: relative;
+    box-sizing: border-box;
+    padding: 0 24px 46px;
+  }
 
-.pub-wrap {
-  background: #fff;
-  width: 390px;
-  min-height: 844px;
-  margin: 0 auto;
-  position: relative;
-  box-sizing: border-box;
-  padding: 0 24px 24px;
-}
+  /* Top bar */
+  .pub-topbar {
+    position: relative;
+    height: 84px;
+  }
+  .pub-close {
+    position: absolute;
+    padding: 0 !important;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+  .pub-close img{
+    height: 24px !important;
+    width: 24px !important;
+    margin-top: 60px;
 
-/* Top bar */
-.pub-topbar {
-  position: relative;
-  height: 56px;
-}
-.pub-close {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  width: 28px;
-  height: 28px;
-  font-size: 18px;
-  line-height: 28px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-.pub-bell {
-  position: absolute;
-  top: 40px;
-  right: 0;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-.pub-alarm {
-  position: absolute;
-  top: 40px;
-  right: 36px;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-.pub-bell img,
-.pub-alarm img,
-.pub-chip-icon img,
-.pub-copy-btn img {
-  width: 20px;
-  height: 20px;
-  display: block;
-}
+  }
+  .pub-chip-icon img,
+  .pub-copy-btn{
+    width: 20px !important;
+    height: 20px !important;
+    display: flex;
+  }
 
-/* Title */
-.pub-title {
-  color: #303030;
-  font-family: Pretendard, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
-  font-size: 24px;
+  /* Title */
+  .pub-title {
+    color: #303030;
+  font-family: Pretendard;
+  font-size: 20px;
+  font-style: normal;
   font-weight: 600;
-  line-height: 34px;
-  letter-spacing: -0.6px;
-  margin: 35px 0 12px;
-}
+  letter-spacing: -0.5px;
+    margin: 24px 0 14px;
+  }
 
-/* Chips */
-.pub-chips {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
-}
+  /* Chips */
+  .pub-chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .pub-chip-moneyicon,
+  .pub-chip-locationicon{
+    margin-right: 6px !important;
+  }
+  .pub-bell,
+  .pub-alarm{
+    background: transparent;
+    border: 0;
+  }
 
-.pub-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  .pub-alarm-img,
+  .pub-report-img{
+    position: absolute;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
 
-  /* ✅ 고정 크기 */
-  width: 169px;
-  height: 68px;
+  .pub-alarm-img{
+    width: 24px;
+    height: 24px;
+    margin-left: 274px;
+    margin-top: 40px;
+    
+  }
 
-  padding: 8px 12px; /* 크기 맞추기 위해 여백 줄임 */
-  border: 1px solid #eaeaea;
-  border-radius: 12px;
-  background: #eaeaea;
-  box-sizing: border-box;
-}
+  .pub-report-img{
+    width: 24px;
+    height: 24px;
+    margin-left: 300px;
+    margin-top: 40px;
+    
+  }
 
-.pub-chip-text strong {
-  color: #303030;
-}
-.pub-chip-sub {
+
+  .pub-chip-moneytext,
+  .pub-chip-locationtext{
+    color: #303030;
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: -0.35px;
+  }
+
+  .pub-chip-value{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pub-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    /* 고정 크기 */
+    width: 169px;
+    height: 68px !important;
+
+    padding: 12px 30px;
+    border: 1px solid #eaeaea;
+    border-radius: 12px;
+    background: #eaeaea;
+    box-sizing: border-box;
+  }
+
+  .pub-chip-text strong {
+    color: #303030;
+  }
+  .pub-chip-sub {
+    color: #767676;
+  font-family: Pretendard;
   font-size: 12px;
-  color: #767676;
-  margin-top: 2px;
-}
-
-/* Section */
-.pub-section {
-  margin-top: 16px;
-}
-.pub-section-title {
-  color: #767676;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
-  margin-bottom: 8px;
-}
-
-/* Address */
-.pub-address-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-}
-.pub-address {
-  font-size: 14px;
-  color: #303030;
-  line-height: 20px;
-  word-break: break-word;
-}
-.pub-copy-btn {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  margin-right: 80px;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  outline: none;
-  cursor: pointer;
-}
-
-/* Time */
-.pub-times {
-  font-size: 14px;
-  color: #303030;
-}
-
-/* Photo */
-.pub-photo-box {
-  width: 100%;
-  height: 220px;
-  background: #eaeaea;
-  border: 1px solid #eaeaea;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  margin: 8px 0 12px;
-}
-.pub-photo-placeholder {
-  font-size: 28px;
-  opacity: 0.6;
-}
-
-/* Note */
-.pub-note {
-  color: #303030;
-  font-size: 14px;
+  font-style: normal;
   font-weight: 400;
-  line-height: 20px;
-  white-space: pre-wrap;
-}
+  line-height: 18px; /* 150% */
+  letter-spacing: -0.3px;
+  }
 
-/* Bottom buttons */
-.pub-actions {
-  position: sticky;
-  bottom: 0;
-  background: #fff;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 24px;
-  gap: 12px;
-  padding: 20px 0 0;
-  margin-top: 35px;
-}
-.pub-btn {
-  height: 52px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.pub-btn-outline {
-  width: 167px;
-  height: 56px;
-  border: 1px solid #e1e1e1;
-  border-radius: 6px;
-  background: #fff;
-  color: #303030;
-}
-.pub-btn-primary {
-  width: 167px;
-  height: 56px;
-  border: none;
-  border-radius: 6px;
-  background: #3b82f6; /* 파랑 */
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
-.pub-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+  /* Section */
+  .pub-section {
+    margin-top: 16px;
+  }
+  .pub-section-title {
+    color: #767676;
+    font-family: Pretendard;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px; /* 142.857% */
+    letter-spacing: -0.35px;
+    margin-bottom: 8px;
+  }
 
-.pub-btn-primary:disabled {
-  background: #eaeaea; /* 흐린 회색 */
-  color: #767676; /* 글자도 어둡게 */
-  cursor: not-allowed; /* 클릭 차단 */
-  opacity: 1; /* 흐림 효과 제거 */
-}
+  /* Address */
+  .pub-address-row {
+    display: flex;
+    align-items: flex-start !important;
+  }
+  .pub-address {
+    color: #303030;
+    font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px; /* 142.857% */
+  letter-spacing: -0.35px;
+  margin-right: 8px;
+  }
 
-/* 이용 중 상태 */
-.pub-btn-primary.in-use {
-  background: #eaeaea; /* 밝은 회색 */
-  color: #5c5c5c; /* 어두운 회색 글씨 */
-  cursor: not-allowed; /* 클릭 불가 */
-}
+  /* Time */
+  .pub-times {
+    color: #303030;
+    font-family: Pretendard;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px; /* 142.857% */
+    letter-spacing: -0.35px;
+  }
 
+  /* Photo */
+  .pub-photo-box {
+    width: 342px;
+    height: 192px;
+    background: #eaeaea;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    margin: 8px 0 8px;
+  }
+  .pub-photo-placeholder {
+    font-size: 28px;
+    opacity: 0.6;
+  }
 
+  /* Note */
+  .pub-note {
+    color: #303030;
+    font-family: Pretendard;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px; /*줄 간격(행간)*/
+    letter-spacing: -0.35px;
+    white-space: pre-wrap;
+  }
+
+  /* Bottom buttons */
+  .pub-actions {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    gap: 12px;
+    padding: 20px 0 0;
+    margin-top: 35px;
+    top: 742px;
+  }
+  .pub-btn {
+    height: 52px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pub-btn-outline {
+    width: 167px;
+    height: 56px;
+    border: 1px solid #e1e1e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #303030;
+  }
+  .pub-btn-primary {
+    width: 167px;
+    height: 56px;
+    border: none;
+    border-radius: 6px;
+    background: #3b82f6; /* 파랑 */
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pub-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pub-btn-primary:disabled {
+    background: #eaeaea; /* 흐린 회색 */
+    color: #767676; /* 글자도 어둡게 */
+    cursor: not-allowed; /* 클릭 차단 */
+    opacity: 1; /* 흐림 효과 제거 */
+  }
+
+  /* 이용 중 상태 */
+  .pub-btn-primary.in-use {
+    background: #eaeaea; /* 밝은 회색 */
+    color: #5c5c5c; /* 어두운 회색 글씨 */
+    cursor: not-allowed; /* 클릭 불가 */
+  }

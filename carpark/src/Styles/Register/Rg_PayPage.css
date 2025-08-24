@@ -1,23 +1,23 @@
-.rg-pay-wrapper {
+.rg-pay-wrapper{
   background-color: rgba(255, 255, 255, 1);
-  width: 24.375rem;
-  min-height: 52.75rem;
-  margin: 0 auto;
-  position: relative;
-  box-sizing: border-box;
-  padding: 0 1.5rem;
+width: 24.375rem;
+min-height: 52.75rem;
+margin: 0 auto;
+position: relative;
+box-sizing: border-box;
+padding: 0 1.5rem;
 }
 
-.rg-nextBtn {
+.rg-nextBtn{
   margin-top: 12px !important;
 }
 
-.rg-description {
+.rg-description{
   margin-top: 8px;
   margin-bottom: 0;
 }
 
-.rg-pay-title {
+.rg-pay-title{
   color: #303030;
   font-family: Pretendard;
   font-size: 24px;
@@ -29,46 +29,46 @@
   margin-bottom: 0 !important;
 }
 
-.rg-desc-point {
+.rg-desc-point{
   color: #767676;
-  font-family: Pretendard;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 20px;
-  letter-spacing: -0.35px;
+font-family: Pretendard;
+font-size: 14px;
+font-style: normal;
+font-weight: 600;
+line-height: 20px;
+letter-spacing: -0.35px;
 
-  margin-top: 8px;
+margin-top:8px; 
 }
-.rg-desc {
+.rg-desc{
   color: #767676;
-  font-family: Pretendard;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: -0.35px;
+font-family: Pretendard;
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 20px;
+letter-spacing: -0.35px;
 }
 
-.rg-pay {
+.rg-pay{
   margin-top: 24px;
   margin-left: 113px;
-  margin: 24px auto 0 113px;
+  margin : 24px auto 0 113px; 
 }
 
-.rg-ten {
-  color: #2e80ec;
-  text-align: center;
+.rg-ten{
+  color: #2E80EC;
+text-align: center;
 
-  font-family: Pretendard;
-  font-size: 18px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 28px;
-  letter-spacing: -0.45px;
+font-family: Pretendard;
+font-size: 18px;
+font-style: normal;
+font-weight: 400;
+line-height: 28px;
+letter-spacing: -0.45px;
 }
 
-.rg-charge {
+.rg-charge{
   color: var(--Font-04_Gray, #767676);
 
   font-family: Pretendard;
@@ -79,127 +79,127 @@
   letter-spacing: -0.45px;
 }
 
-.rg-won {
+.rg-won{
   color: #303030;
-  text-align: center;
-  font-family: Pretendard;
-  font-size: 48px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 62px;
-  letter-spacing: -1.2px;
-  margin-top: 2px;
+text-align: center;
+font-family: Pretendard;
+font-size: 48px;
+font-style: normal;
+font-weight: 600;
+line-height: 62px;
+letter-spacing: -1.2px;
+margin-top:2px;
 }
 
-.rg-paypad {
+.rg-paypad{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  width: 342px;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-top: 16px;
+width: 342px;
+flex-direction: column;
+align-items: flex-start;
+margin-top:16px;
 }
 
-.last-row {
-  display: grid;
+.last-row{
+  display:grid;
 }
 
 .rg-num-key,
-.rg-space,
+.rg-space, 
 .rg-zero,
-.rg-backspace {
+.rg-backspace{
   display: flex;
   background-color: #ffff;
   border: none;
-  width: 114px;
-  padding: 21px 0;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  font-family: Pretendard;
-  font-size: 28px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 38px;
-  letter-spacing: -0.7px;
+width: 114px;
+padding: 21px 0;
+justify-content: center;
+align-items: center;
+text-align: center;
+font-family: Pretendard;
+font-size: 28px;
+font-style: normal;
+font-weight: 600;
+line-height: 38px;
+letter-spacing: -0.7px;
 }
 
-.rg-address-wrap {
-  margin-top: 8px;
+.rg-address-wrap{
+  margin-top:8px;
   width: 197px;
   height: 20px;
   display: inline-flex;
-  padding: 6px 72px 6px 73px;
-  justify-content: center;
-  align-items: center;
-  border-radius: 6px;
-  background: #f1f1f5;
+padding: 6px 72px 6px 73px;
+justify-content: center;
+align-items: center;
+border-radius: 6px;
+background: #F1F1F5;
 
-  color: #5c5c5c;
-  text-align: center;
-  /* MO/Body/KR/B4_KR_Rg */
-  font-family: Pretendard;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 18px; /* 150% */
-  letter-spacing: -0.3px;
-  gap: 3px;
+color: #5C5C5C;
+text-align: center;
+/* MO/Body/KR/B4_KR_Rg */
+font-family: Pretendard;
+font-size: 12px;
+font-style: normal;
+font-weight: 400;
+line-height: 18px; /* 150% */
+letter-spacing: -0.3px;
+gap: 3px;
 }
 
-.rg-bubble-wrap {
+.rg-bubble-wrap{
   margin-left: 26px;
-  margin-top: 16px;
+  margin-top:16px;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
-.rg-bubble {
+.rg-bubble{
   box-sizing: border-box;
   width: 290px;
-  height: 30px;
-  border-radius: 4px;
-  background: #fff;
-  box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.1);
+height: 30px;
+border-radius: 4px;
+background: #FFF;
+box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.1);
+color: #434343;
+
+/* MO/Body/KR/B3_KR_Rg */
+font-family: Pretendard;
+font-size: 13px;
+font-style: normal;
+font-weight: 400;
+letter-spacing: -0.325px;
+padding: 6px 21px;
+
+.rg-desc-charge{
   color: #434343;
 
-  /* MO/Body/KR/B3_KR_Rg */
-  font-family: Pretendard;
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 400;
-  letter-spacing: -0.325px;
-  padding: 6px 21px;
-
-  .rg-desc-charge {
-    color: #434343;
-
-    font-family: Pretendard;
-    font-size: 13px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 18px;
-    letter-spacing: -0.325px;
-  }
-
-  .rg-desc {
-    color: #434343;
-
-    /* MO/Body/KR/B3_KR_Rg */
-    font-family: Pretendard;
-    font-size: 13px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 18px; /* 138.462% */
-    letter-spacing: -0.325px;
-  }
+font-family: Pretendard;
+font-size: 13px;
+font-style: normal;
+font-weight: 600;
+line-height: 18px;
+letter-spacing: -0.325px;
 }
 
-.rg-bubble-bottom {
+.rg-desc{
+  color: #434343;
+
+/* MO/Body/KR/B3_KR_Rg */
+font-family: Pretendard;
+font-size: 13px;
+font-style: normal;
+font-weight: 400;
+line-height: 18px; /* 138.462% */
+letter-spacing: -0.325px;
+}}
+
+.rg-bubble-bottom{
   width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid #fff;
+height: 0;
+border-left: 5px solid transparent;
+border-right: 5px solid transparent;
+border-top: 6px solid #fff;
 }

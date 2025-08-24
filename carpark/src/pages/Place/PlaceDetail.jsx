@@ -8,6 +8,8 @@ import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
 import alarmFilledIcon from "../../Assets/alarm1.svg";
+import close from "../../Assets/close.svg";
+import upload_img from "../../Assets/upload_img.svg";
 
 import {
   getPublicDetail,
@@ -19,6 +21,26 @@ import { mapStatusToUI } from "../../utils/parkingStatus";
 
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
 const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
+
+// 양재 AT센터 좌표
+const YANGJAE_AT_CENTER = { lat: 37.4707, lng: 127.0389 };
+
+// 두 지점 간의 거리 계산 (km 단위, 소수점 2자리까지)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  if (!lat1 || !lng1 || !lat2 || !lng2) return null;
+  
+  const R = 6371; // 지구의 반지름 (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  
+  return Math.round(distance * 100) / 100; // 소수점 2자리까지
+};
 
 /** 사용자별 로컬 키 (동일 브라우저 내 다른 계정 분리용) */
 const getUserKey = () => localStorage.getItem("userKey") || "guest";
@@ -199,6 +221,11 @@ export default function PlaceDetail() {
             const lat = toNum(d?.lat) ?? sessionLat ?? null;
             const lng = toNum(d?.lng) ?? sessionLng ?? null;
             
+            // 양재 AT센터에서의 거리 계산
+            const calculatedDistance = lat && lng 
+              ? calculateDistance(YANGJAE_AT_CENTER.lat, YANGJAE_AT_CENTER.lng, lat, lng)
+              : null;
+            
             // leavingSoon 상태 확인
             const leavingSoon = !!d.leavingSoon;
             setIsLeavingSoon(leavingSoon);
@@ -207,7 +234,7 @@ export default function PlaceDetail() {
             const normalized = {
               id: pid ?? kakaoId,
               name: d.name ?? placeFromSession?.name ?? "주차 장소",
-              distanceKm: d.distanceKm ?? placeFromSession?.distanceKm ?? null,
+              distanceKm: calculatedDistance ?? d.distanceKm ?? placeFromSession?.distanceKm ?? null,
               pricePer10m: d.charge != null ? Number(d.charge) : (placeFromSession?.price ?? 0),
               address: d.address ?? placeFromSession?.address ?? "",
               availableTimes: Array.isArray(d.operateTimes)
@@ -245,13 +272,17 @@ export default function PlaceDetail() {
         const lng =
           toNum(d?.x ?? d?.lon ?? d?.lng ?? d?.longitude) ?? sessionLng ?? null;
 
+        // 양재 AT센터에서의 거리 계산
+        const calculatedDistance = lat && lng 
+          ? calculateDistance(YANGJAE_AT_CENTER.lat, YANGJAE_AT_CENTER.lng, lat, lng)
+          : null;
+
         const normalized = {
           id: pid ?? kakaoId,
-          name: d.placeName ?? d.name ?? placeFromSession?.name ?? "주차 장소",
-          distanceKm:
-            d.distanceMeters != null
-              ? d.distanceMeters / 1000
-              : d.distanceKm ?? placeFromSession?.distanceKm ?? null,
+          name: d.placeName ?? d.name ?? placeFromSession?.name ?? "주차 장소 이름",
+          distanceKm: calculatedDistance ?? (d.distanceMeters != null
+            ? d.distanceMeters / 1000
+            : d.distanceKm ?? placeFromSession?.distanceKm ?? null),
           pricePer10m:
             d.timerate && d.addrate
               ? Math.round((d.addrate * 10) / d.timerate)
@@ -410,7 +441,7 @@ export default function PlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">불러오는 중…</h1>
@@ -423,7 +454,7 @@ export default function PlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">오류</h1>
@@ -437,7 +468,7 @@ export default function PlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">데이터가 없습니다.</h1>
@@ -452,7 +483,7 @@ export default function PlaceDetail() {
     <div className="pub-wrap">
       <div className="pub-topbar">
         <button className="pub-close" onClick={goBack} aria-label="닫기">
-          ✕
+          <img src={close}/>
         </button>
 
         <button
@@ -464,6 +495,7 @@ export default function PlaceDetail() {
           <img
             src={isSubscribed ? alarmFilledIcon : alarmIcon}
             alt={isSubscribed ? "알림 설정됨" : "알림"}
+            className="pub-alarm-img"
           />
         </button>
 
@@ -479,7 +511,7 @@ export default function PlaceDetail() {
           })}
           aria-label="신고하기"
         >
-          <img src={reportIcon} alt="신고" />
+          <img src={reportIcon} alt="신고" className="pub-report-img"/>
         </button>
       </div>
 
@@ -487,24 +519,20 @@ export default function PlaceDetail() {
 
       <div className="pub-chips">
         <div className="pub-chip">
-          <div className="pub-chip-icon">
-            <img src={pinIcon} alt="위치" />
-          </div>
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{distanceKm ?? "-"}km</strong>
+              <img src={pinIcon} alt="위치" className="pub-chip-locationicon"/>
+              <strong className="pub-chip-locationtext">{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
           </div>
         </div>
 
         <div className="pub-chip">
-          <div className="pub-chip-icon">
-            <img src={moneyIcon} alt="요금" />
-          </div>
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
+              <img src={moneyIcon} alt="요금" className="pub-chip-moneyicon"/>
+              <strong className="pub-chip-moneytext">{Number(pricePer10m || 0).toLocaleString()}원</strong>
             </div>
             <div className="pub-chip-sub">10분당 주차 비용</div>
           </div>
@@ -514,15 +542,15 @@ export default function PlaceDetail() {
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소와 가장 근접한 위치</h2>
         <div className="pub-address-row">
-          <div className="pub-address">{address || "-"}</div>
-          <button
+          <span className="pub-address">{address || "-"}</span>
+          <img
+            src={copyIcon} 
             className="pub-copy-btn"
             onClick={copyAddress}
             aria-label="주소 복사"
             title="주소 복사"
-          >
-            <img src={copyIcon} alt="복사" />
-          </button>
+            alt="복사"
+             />
         </div>
       </section>
 
@@ -534,7 +562,7 @@ export default function PlaceDetail() {
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소 설명</h2>
         <div className="pub-photo-box" role="img" aria-label="주차 장소 사진">
-          <div className="pub-photo-placeholder">🖼️</div>
+          <div className="pub-photo-placeholder"><img src={upload_img}/></div>
         </div>
         <pre className="pub-note">{note}</pre>
       </section>

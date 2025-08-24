@@ -1,243 +1,248 @@
 /* 고정 높이 부모(app-shell) 안에서 페이지 자체는 100% 채우고,
    실제 스크롤은 .time-scroll에서 처리 */
-.time-container {
-  position: relative;
-  width: 390px;
-  height: 100%; /* ← 부모 높이(디자인 844px) 꽉 채움 */
-  margin: 0 auto;
-  background: #fff;
-  color: #303030;
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow: hidden; /* 바깥은 숨기고 */
-}
-
-.time-back {
-  position: absolute;
-  top: 40px;
-  left: 24px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-  z-index: 10;
-}
-
-.time-header {
-  padding: 96px 24px 0;
-}
-.time-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #303030;
-  line-height: 1.4;
-}
-.time-desc {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #8c8c8c;
-  line-height: 18px;
-}
-
-/* ✅ 전용 스크롤 영역 */
-.time-scroll {
-  height: calc(100% - 96px); /* 헤더 높이만큼 뺌 */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
-  overscroll-behavior: contain;
-  padding: 16px 24px 24px;
-  box-sizing: border-box;
-}
-
-/* 슬롯/카드 */
-.time-slots {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.time-slot {
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
-  padding: 12px;
-  background: #fff;
-}
-.time-slot.active {
-  border-color: #2e80ec;
-  box-shadow: 0 0 0 3px rgba(46, 128, 236, 0.08);
-}
-
-.time-slot-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.time-slot-label {
-  font-size: 14px;
-  color: #303030;
-  font-weight: 600;
-}
-.time-slot-remove {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: #f5f5f5;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.time-slot-remove img {
-  width: 12px;
-  height: 12px;
-}
-
-.time-slot-input {
-  margin-top: 8px;
-  height: 36px;
-  border-radius: 6px;
-  border: 1px solid #eaeaea;
-  background: #fff;
-  color: #303030;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  font-size: 14px;
-}
-.time-slot-input.invalid {
-  border-color: #ffd3d0;
-  background: #fff5f4;
-}
-
-/* 시작/마무리 버튼 */
-.time-toggle {
-  margin-top: 10px;
-  display: flex;
-  gap: 12px;
-}
-.time-toggle-btn {
-  flex: 0 0 116px;
-  height: 44px;
-  border-radius: 22px;
-  border: 1px solid #dcdcdc;
-  background: #fff;
-  color: #666;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.time-toggle-btn.on {
-  background: #2e80ec;
-  color: #fff;
-  border-color: #2e80ec;
-}
-
-/* 휠 */
-.time-wheel-wrap {
-  position: relative;
-  margin: 14px 0 6px;
-  height: 132px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  overflow: hidden;
-}
-.time-wheel {
-  width: 100px;
-  height: 100%;
-  overflow-y: auto;
-  scroll-snap-type: y mandatory;
-  scrollbar-width: none;
-}
-.time-wheel::-webkit-scrollbar {
-  display: none;
-}
-.time-item {
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  color: #2e80ec;
-  scroll-snap-align: center;
-}
-.time-item.active {
-  font-size: 22px;
-  font-weight: 700;
-  color: #2e80ec;
-}
-.time-spacer {
-  height: 44px;
-}
-.time-col-suffix {
-  width: 12px;
-  font-size: 24px;
-  font-weight: 700;
-  color: #2e80ec;
-  text-align: center;
-}
-.time-guide-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 0;
-  border-top: 1px solid #2e80ec;
-  pointer-events: none;
-}
-.time-guide-top {
-  top: calc(50% - 22px);
-}
-.time-guide-bot {
-  top: calc(50% + 22px);
-}
-
-.time-divider {
-  height: 1px;
-  background: #eeeeee;
-  margin-top: 12px;
-}
-
-/* + 항목 추가하기 */
-.time-add {
-  height: 44px;
-  border-radius: 6px;
-  border: 1px dashed #d7d7d7;
-  background: #f7f7f9;
-  color: #2e80ec;
-  font-size: 14px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-/* 하단 버튼 */
-.time-bottom {
-  margin-top: 8px;
-}
-.time-next {
-  width: 100%;
-  height: 52px;
-  border-radius: 6px;
-  border: none;
-  font-size: 16px;
-  font-weight: 700;
-  background: #2e80ec;
-  color: #fff;
-  cursor: pointer;
-}
-.time-next:disabled {
-  background: #e9e9e9;
-  color: #b5b5b5;
-  cursor: not-allowed;
-}
-
-/* 에러 */
-.time-error {
-  margin-top: 8px;
-  font-size: 13px;
-  color: #de5e56;
-  text-align: center;
-}
+   .time-container {
+    position: relative;
+    width: 390px;
+    height: 100%; /* ← 부모 높이(디자인 844px) 꽉 채움 */
+    margin: 0 auto;
+    background: #fff;
+    color: #303030;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden; /* 바깥은 숨기고 */
+  }
+  .time-top{
+    position:sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .time-back {
+    position: absolute;
+    top: 40px;
+    left: 24px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    z-index: 10;
+  }
+  
+  .time-header {
+    padding: 96px 24px 0;
+  }
+  .time-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #303030;
+    line-height: 1.4;
+  }
+  .time-desc {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #8c8c8c;
+    line-height: 18px;
+  }
+  
+  /* 전용 스크롤 영역 */
+  .time-scroll {
+    height: calc(100% - 96px); /* 헤더 높이만큼 뺌 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+    overscroll-behavior: contain;
+    padding: 16px 24px 24px;
+    box-sizing: border-box;
+  }
+  
+  /* 슬롯/카드 */
+  .time-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .time-slot {
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff;
+  }
+  .time-slot.active {
+    border-color: #2e80ec;
+    box-shadow: 0 0 0 3px rgba(46, 128, 236, 0.08);
+  }
+  
+  .time-slot-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .time-slot-label {
+    font-size: 14px;
+    color: #303030;
+    font-weight: 600;
+  }
+  .time-slot-remove {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .time-slot-remove img {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .time-slot-input {
+    margin-top: 8px;
+    height: 36px;
+    border-radius: 6px;
+    border: 1px solid #eaeaea;
+    background: #fff;
+    color: #303030;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+  .time-slot-input.invalid {
+    border-color: #ffd3d0;
+    background: #fff5f4;
+  }
+  
+  /* 시작/마무리 버튼 */
+  .time-toggle {
+    margin-top: 10px;
+    display: flex;
+    gap: 12px;
+  }
+  .time-toggle-btn {
+    flex: 0 0 116px;
+    height: 44px;
+    border-radius: 22px;
+    border: 1px solid #dcdcdc;
+    background: #fff;
+    color: #666;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .time-toggle-btn.on {
+    background: #2e80ec;
+    color: #fff;
+    border-color: #2e80ec;
+  }
+  
+  /* 휠 */
+  .time-wheel-wrap {
+    position: relative;
+    margin: 14px 0 6px;
+    height: 132px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .time-wheel {
+    width: 100px;
+    height: 100%;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+  }
+  .time-wheel::-webkit-scrollbar {
+    display: none;
+  }
+  .time-item {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #2e80ec;
+    scroll-snap-align: center;
+  }
+  .time-item.active {
+    font-size: 22px;
+    font-weight: 700;
+    color: #2e80ec;
+  }
+  .time-spacer {
+    height: 44px;
+  }
+  .time-col-suffix {
+    width: 12px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2e80ec;
+    text-align: center;
+  }
+  .time-guide-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 1px solid #2e80ec;
+    pointer-events: none;
+  }
+  .time-guide-top {
+    top: calc(50% - 22px);
+  }
+  .time-guide-bot {
+    top: calc(50% + 22px);
+  }
+  
+  .time-divider {
+    height: 1px;
+    background: #eeeeee;
+    margin-top: 12px;
+  }
+  
+  /* + 항목 추가하기 */
+  .time-add {
+    height: 44px;
+    border-radius: 6px;
+    border: 1px dashed #d7d7d7;
+    background: #f7f7f9;
+    color: #2e80ec;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  
+  /* 하단 버튼 */
+  .time-bottom {
+    margin-top: 8px;
+  }
+  .time-next {
+    width: 100%;
+    height: 52px;
+    border-radius: 6px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    background: #2e80ec;
+    color: #fff;
+    cursor: pointer;
+  }
+  .time-next:disabled {
+    background: #e9e9e9;
+    color: #b5b5b5;
+    cursor: not-allowed;
+  }
+  
+  /* 에러 */
+  .time-error {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #de5e56;
+    text-align: center;
+  }

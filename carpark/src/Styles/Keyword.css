@@ -8,7 +8,7 @@
     --radius-2xl: 20px;
     --shadow: 0 10px 28px rgba(0,0,0,0.08);
   }
-  
+  /*.*/
   /* 검색 필드(둥근 캡슐) */
   .kkm-search {
     position: relative;
@@ -43,9 +43,6 @@
     border-radius: var(--radius-2xl);
     box-shadow: var(--shadow);
     padding: 10px 12px;
-    border: 1px solid #e0e0e0;
-    z-index: 1000;
-    position: relative;
   }
   .kkm-suggest-item {
     width: 100%;
@@ -57,18 +54,9 @@
     font-size: 14px;
     color: var(--text-strong);
     cursor: pointer;
-    transition: background-color 0.2s ease;
   }
   .kkm-suggest-item + .kkm-suggest-item { margin-top: 2px; }
-  .kkm-suggest-item:hover { 
-    background: #eef4ff; 
-    color: #2e80ec;
-  }
-  
-  .kkm-suggest-item:active {
-    background: #d4e4ff;
-    transform: scale(0.98);
-  }
+  .kkm-suggest-item:hover { background: #eef4ff; }
   
   /* 리스트 */
   .kkm-list { margin-top: 16px; max-height: 440px; overflow: auto; }

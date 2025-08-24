@@ -25,6 +25,9 @@ import { useMyParkings } from "../../store/MyParkings";
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
 const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
 
+// 양재 AT센터 좌표
+const YANGJAE_AT_CENTER = { lat: 37.4707, lng: 127.0389 };
+
 /** 사용자별 로컬 키 (동일 브라우저 내 다른 계정 분리용) */
 const getUserKey = () => localStorage.getItem("userKey") || "guest";
 const lsk = (key) => `watchedPlaceIds__${key}`;
@@ -48,11 +51,11 @@ const addWatched = (id, userKey = getUserKey()) => {
   saveWatched([...set], userKey);
 };
 
-// 거리 계산 함수 (Haversine formula)
+// 두 지점 간의 거리 계산 (km 단위, 소수점 2자리까지)
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
   if (!lat1 || !lng1 || !lat2 || !lng2) return null;
   
-  const R = 6371; // 지구 반지름 (km)
+  const R = 6371; // 지구의 반지름 (km)
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
   const a = 
@@ -62,7 +65,7 @@ const calculateDistance = (lat1, lng1, lat2, lng2) => {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   const distance = R * c;
   
-  return Math.round(distance * 10) / 10; // 소수점 첫째 자리까지
+  return Math.round(distance * 100) / 100; // 소수점 2자리까지
 };
 
 export default function PvPlaceDetail() {
@@ -80,7 +83,7 @@ export default function PvPlaceDetail() {
     }
   }, []);
 
-  // ✅ 로컬 여부 판단: 내가 등록한 주차장인지 확인
+  // 로컬 여부 판단: 내가 등록한 주차장인지 확인
   const isLocal = !!myParks.find((p) => String(p.id) === String(placeId));
   const isMyParking = isLocal; // 내가 등록한 주차장인지 여부
 
@@ -228,8 +231,9 @@ export default function PvPlaceDetail() {
           targetLng: lng
         });
         
-        const calculatedDistance = currentLocation && lat && lng 
-          ? calculateDistance(currentLocation.lat, currentLocation.lng, lat, lng)
+        // 양재 AT센터에서의 거리 계산
+        const calculatedDistance = lat && lng 
+          ? calculateDistance(YANGJAE_AT_CENTER.lat, YANGJAE_AT_CENTER.lng, lat, lng)
           : null;
           
         console.log("[PvPlaceDetail] 계산된 거리:", calculatedDistance);
@@ -312,9 +316,9 @@ export default function PvPlaceDetail() {
       const lat = toNum(src.lat) ?? sessionLat ?? null;
       const lng = toNum(src.lng) ?? sessionLng ?? null;
 
-      // 현재 위치 기준 거리 계산
-      const calculatedDistance = currentLocation && lat && lng 
-        ? calculateDistance(currentLocation.lat, currentLocation.lng, lat, lng)
+      // 양재 AT센터에서의 거리 계산
+      const calculatedDistance = lat && lng 
+        ? calculateDistance(YANGJAE_AT_CENTER.lat, YANGJAE_AT_CENTER.lng, lat, lng)
         : null;
 
       const normalized = {
@@ -670,6 +674,7 @@ export default function PvPlaceDetail() {
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
             <img src={close}/>
+            <img src={close}/>
           </button>
         </div>
         <h1 className="pub-title">불러오는 중…</h1>
@@ -805,7 +810,7 @@ export default function PvPlaceDetail() {
               aria-label={isSubscribed ? "알림 해지" : "알림 설정"}
               title={isSubscribed ? "알림 해지" : "알림 설정"}
             >
-              <img src={isSubscribed ? alarmFilledIcon : alarmIcon} alt="알림" />
+              <img src={isSubscribed ? alarmFilledIcon : alarmIcon} alt="알림" className="pub-alarm-img"/>
             </button>
             <button
               className="pub-bell"
@@ -819,7 +824,7 @@ export default function PvPlaceDetail() {
               })}
               aria-label="신고하기"
             >
-              <img src={reportIcon} alt="신고" />
+              <img src={reportIcon} alt="신고" className="pub-report-img"/>
             </button>
           </>
         )}
@@ -830,11 +835,10 @@ export default function PvPlaceDetail() {
       <div className="pub-chips">
         <div className="pub-chip">
           
+          
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <div className="pub-chip-icon">
             <img src={pinIcon} alt="위치" className="pub-chip-locationicon"/>
-          </div>
               <strong className="pub-chip-locationtext">{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
@@ -843,11 +847,10 @@ export default function PvPlaceDetail() {
 
         <div className="pub-chip">
           
+          
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <div className="pub-chip-icon">
             <img src={moneyIcon} alt="요금" className="pub-chip-moneyicon"/>
-          </div>
               <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
             </div>
             <div className="pub-chip-sub">10분당 주차 비용</div>
@@ -858,14 +861,14 @@ export default function PvPlaceDetail() {
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소와 가장 근접한 위치</h2>
         <div className="pub-address-row">
-          <div className="pub-address">{address || "-"}</div>
-          <button
+          <span className="pub-address">{address || "-"}</span>
+          <img
             className="pub-copy-btn"
             onClick={copyAddress}
-            title="주소 복사"
-          >
-            <img src={copyIcon} alt="복사" />
-          </button>
+            src={copyIcon} 
+            alt="복사"
+            title="주소복사"
+          />
         </div>
       </section>
 
@@ -892,7 +895,7 @@ export default function PvPlaceDetail() {
           <div className="pub-photo-placeholder"><img src={upload_img}/></div>
           )}
         </div>
-        
+
         <pre className="pub-note">{note || "-"}</pre>
       </section>
 

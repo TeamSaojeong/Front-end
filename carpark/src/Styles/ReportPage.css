@@ -17,7 +17,10 @@
   box-sizing: border-box;
   padding: 0 1.5rem;
 }
-
+.previousImg{
+  width: 24px;
+  height: 24px;
+}
 .rp-title {
   margin-top: 8px;
   color: #303030;

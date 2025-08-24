@@ -2,6 +2,9 @@ import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import PreviousBtn from "../components/Register/PreviousBtn";
 import ai_time from "../Assets/ai_time.svg";
+import ai_location2 from "../Assets/ai_location2.svg";
+import ai_location from "../Assets/ai_location.svg";
+import cantfind from "../Assets/cantfind.svg";
 import { fetchParkingPrediction } from "../apis/aipredict";
 import { getNearby } from "../apis/parking";
 import emoji_s from "../Assets/emoji_s.svg";
@@ -71,6 +74,7 @@ const levelMessages = {
 const AIResult = () => {
   const { state } = useLocation();
   const selectedTime = state?.selectedTime || ""; // "HH:MM"
+  const name = state?.name || ""; // 장소 이름
   const address = state?.address || "";
   const locationData = state?.locationData || null; // ✅ 좌표 정보
   
@@ -193,30 +197,60 @@ const AIResult = () => {
         </span>
       </div>
 
-      <div className="ar-address">{address}</div>
+      <div className="ar-address-wrap">
+        <span className="ar-address">{name || "장소 미선택"}</span>
+        <span className="ar-address-selected">
+          <img src={ai_location2} className="ar-address-img" alt="" />
+          <span className="ar-picked">{address || "주소 없음"}</span>
+        </span>
+      </div>
 
-      {/* 혼잡도 문구: 가운데만 색상, 이모지는 이미지로 */}
-      <p className="ar-pred-title" style={msg.typography}>
-        주차가{" "}
-        <span className="ar-pred-title-text" style={{ color: msg.color }}>
-          {msg.title.replace("주차가 ", "")}
-        </span>{" "}
-        <img
-          src={msg.emoji}
-          alt=""
-          style={{ width: 32, height: 32, verticalAlign: "middle" }}
-        />
-      </p>
-      <p className="ar-pred-sub">
-        {msg.sub //줄바꿈
-          .split(/<br\s*\/?>/i)
-          .map((chunk, i, arr) => (
-            <>
-              {chunk.trim()}
-              {i < arr.length - 1 && <br />}
-            </>
-          ))}
-      </p>
+      {/* 혼잡도 문구: 주차장이 있을 때만 표시 */}
+      {nearbyParkings.length > 0 && (
+        <>
+          <p className="ar-pred-title" style={msg.typography}>
+            주차가{" "}
+            <span className="ar-pred-title-text" style={{ color: msg.color }}>
+              {msg.title.replace("주차가 ", "")}
+            </span>{" "}
+            <img
+              src={msg.emoji}
+              alt=""
+              style={{ width: 32, height: 32, verticalAlign: "middle" }}
+            />
+          </p>
+          <p className="ar-pred-sub">
+            {msg.sub //줄바꿈
+              .split(/<br\s*\/?>/i)
+              .map((chunk, i, arr) => (
+                <>
+                  {chunk.trim()}
+                  {i < arr.length - 1 && <br />}
+                </>
+              ))}
+          </p>
+        </>
+      )}
+
+      {/* 주차장이 없을 때는 혼잡 메시지만 표시 */}
+      {nearbyParkings.length === 0 && (
+        <p className="ar-pred-title" style={{
+          fontFamily: "Pretendard",
+          fontSize: "24px",
+          fontStyle: "normal",
+          fontWeight: 600,
+          lineHeight: "34px",
+          letterSpacing: "-0.6px",
+          textAlign: "center",
+          margin: "20px 0"
+        }}>
+          주차가{" "}
+          <span style={{ color: "#DE5E56" }}>
+            혼잡할 확률이 높아요
+          </span>{" "}
+          😵‍💫
+        </p>
+      )}
 
       {/* 주차장 추천 목록 - 스크롤 가능한 컨테이너 */}
       <div 
@@ -237,7 +271,7 @@ const AIResult = () => {
               style={{
                 display: 'flex',
                 padding: '16px',
-                border: '1px solid #E5E5E5',
+                border: 'none',
                 borderRadius: '12px',
                 marginBottom: '12px',
                 backgroundColor: 'white',
@@ -274,24 +308,18 @@ const AIResult = () => {
                   {parking.placeName || parking.name || '주차장 이름'}
                 </h3>
                 <p style={{ 
-                  margin: '0 0 4px 0', 
-                  fontSize: '14px', 
-                  color: '#666',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  📍 {parking.addressName || parking.address || '주차장 주소'}
-                </p>
-                <p style={{ 
                   margin: 0, 
                   fontSize: '14px', 
                   color: '#666',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  💰 {parking.price || '0,000원'}
+                  <img src={ai_location} alt="위치" style={{ width: '12px', height: '12px' }} />
+                  {parking.addressName || parking.address || '주차장 주소'}
                 </p>
               </div>
 
@@ -317,8 +345,40 @@ const AIResult = () => {
             </div>
           ))
         ) : (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-            주변에 주차장이 없습니다.
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '40px 20px', 
+            color: '#666',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px'
+          }}>
+            {/* 주차 아이콘 */}
+            <img src={cantfind} alt="주차장을 찾을 수 없음" style={{ width: '80px', height: '80px' }} />
+            
+            {/* 메시지 */}
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ 
+                margin: '0 0 4px 0', 
+                fontSize: '17px',
+                fontWeight: '400',
+                lineHeight: '28px',
+                color: '#767676',
+                whiteSpace: 'nowrap'
+              }}>
+                해당 지역에서 대체할 주차장을 찾지 못했어요...
+              </p>
+              <p style={{ 
+                margin: 0, 
+                fontSize: '18px',
+                fontWeight: '400',
+                lineHeight: '28px',
+                color: '#767676'
+              }}>
+                앞으로 더 많은 주차장을 공부할게요!!
+              </p>
+            </div>
           </div>
         )}
       </div>
