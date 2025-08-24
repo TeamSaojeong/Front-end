@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
+import "./Styles/fonts.css";
 import App from "./App";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -17,25 +18,12 @@ function renderApp() {
   );
 }
 
-// CRA(.env) -> REACT_APP_KAKAO_JS_KEY
-// Vite(.env) -> VITE_KAKAO_JS_KEY  둘 다 지원
-function getJsKey() {
-  const k1 = process.env.REACT_APP_KAKAO_JS_KEY;
-  const k2 =
-    typeof import.meta !== "undefined" ? import.meta.env?.VITE_KAKAO_JS_KEY : undefined;
-  return k1 || k2;
-}
-
 function loadKakaoSdkAndRender() {
-  const jsKey = getJsKey();
+  // 하드코딩된 키
+  const SDK_SRC =
+    "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
 
-  if (!jsKey) {
-    console.warn("[Kakao] JS Key가 없습니다. (.env에 REACT_APP_KAKAO_JS_KEY 또는 VITE_KAKAO_JS_KEY 설정)");
-    renderApp(); // 키 없어도 앱은 먼저 뜨게
-    return;
-  }
-
-  // 이미 로드되어 있으면 재사용
+  // 이미 로드된 경우
   if (document.querySelector('script[data-kakao-sdk="true"]')) {
     if (window.kakao?.maps?.load) {
       window.kakao.maps.load(renderApp);
@@ -48,16 +36,11 @@ function loadKakaoSdkAndRender() {
   const s = document.createElement("script");
   s.async = true;
   s.setAttribute("data-kakao-sdk", "true");
-  // autoload=false 필수 -> window.kakao.maps.load로 초기화
-  s.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(
-    jsKey
-  )}&libraries=services&autoload=false`;
-
+  s.src = SDK_SRC;
   s.onload = () => {
     if (window.kakao?.maps?.load) {
       window.kakao.maps.load(renderApp);
     } else {
-      console.error("[Kakao] window.kakao.maps.load 없음");
       renderApp();
     }
   };

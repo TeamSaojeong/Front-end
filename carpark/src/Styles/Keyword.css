@@ -71,12 +71,56 @@
   border-radius: 12px;
 }
 .kkm-li + .kkm-li { margin-top: 2px; }
-.kkm-li-no { font-weight: 700; color: var(--primary); }
-.kkm-li-name { font-weight: 700; color: var(--text-strong); }
-.kkm-li-addr { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.kkm-li-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.kkm-li-link { font-size: 12px; color: var(--primary); display: inline-block; margin-top: 4px; }
+.kkm-li-body {
+  all: unset;           /* 버튼 기본 스타일 초기화 */
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  cursor: pointer;
+  padding: 8px 12px;
+  text-align: left;     /* 버튼이니까 텍스트 좌측 정렬 */
+}
 
+.kkm-li-body:hover {
+  background: #f5f5f5;  /* 호버 시 강조 */
+}
+
+.kkm-li {
+  display: flex;
+  align-items: flex-start;
+  border-bottom: 1px solid #eee;
+}
+
+.kkm-li-no {
+  flex: 0 0 32px;
+  font-weight: bold;
+  color: #2e80ec;
+  padding-top: 4px;
+}
+
+.kkm-li-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.kkm-li-addr {
+  font-size: 13px;
+  color: #666;
+}
+
+.kkm-li-sub {
+  font-size: 12px;
+  color: #999;
+}
+
+.kkm-li-link {
+  font-size: 12px;
+  color: #2e80ec;
+  text-decoration: underline;
+  margin-left: auto; /* 오른쪽 끝으로 */
+  padding: 8px 0;
+}
 /* 페이지네이션 */
 .kkm-pages {
   margin-top: 8px;

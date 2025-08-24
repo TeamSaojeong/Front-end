@@ -16,7 +16,10 @@ const AIPredict = () => {
   const navigate = useNavigate();
 
   const [time, setTime] = useState({ ampm: "오전", h12: 1, m: 0 });
+  const [name, setName] = useState("");
   const [address, setAddress] = useState(""); // 선택된 주소
+  const [lat, setLAT] = useState(null);
+  const [lon, setLon] = useState(null);
 
   const label = useMemo(() => to24(time), [time]);
 
@@ -28,12 +31,18 @@ const AIPredict = () => {
     [0, 10, 20, 30, 40, 50].includes(time.m);
 
   const addrValid = !!address?.trim();
-  const isActive = timeValid && addrValid;
+  const isActive = timeValid && !!name?.trim() && !!lat && !!lon;
 
   const handleNext = () => {
     if (!isActive) return;
     navigate("/airesult", {
-      state: { selectedTime: label, address }, // ✅ 주소 같이 전달
+      state: { 
+        arrival: label, //HH:MM
+        address,
+        name,
+        lat,
+        lon,
+       }, // 주소 같이 전달
     });
   };
 
@@ -49,13 +58,16 @@ const AIPredict = () => {
 
       <div>
         <p className="ai-name">주차 장소 이름</p>
-        {/* <AISearch
-          value={address}
-          onSelect={(v) => setAddress(v)} // 클릭 시 주소 확정
-          onChange={(v) => setAddress(v)} // 입력 중에도 주소 반영 원하면 유지
-        /> */}
 
-        <Keyword />
+        <Keyword 
+          value={name}
+          onSelect={({name, address: addr, lat:y, lon: x}) =>{
+            setName(name || "");
+            setAddress(addr || "");
+            setLAT(y ?? null);
+            setLon(x ?? null);
+          }}
+        />
       </div>
 
       <div className="ai-time-wrap">

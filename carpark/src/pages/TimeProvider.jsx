@@ -40,7 +40,7 @@ export default function TimeProvider() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [picking, setPicking] = useState("start");
 
-  // ✅ 등록 폼 저장소
+  // 등록 폼 저장소
   const setField = useParkingForm((s) => s.setField);
 
   // 휠 refs & 타이머
@@ -128,7 +128,7 @@ export default function TimeProvider() {
       start: fmt24(s.start),
       end: fmt24(s.end),
     }));
-    // ✅ 스토어에 저장 (register 호출 시 사용)
+    // 스토어에 저장 (register 호출 시 사용)
     setField("operateTimes", payload);
 
     navigate("/registerpay", {

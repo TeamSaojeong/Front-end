@@ -17,11 +17,10 @@ font-family: Pretendard;
 font-size: 18px;
 font-style: normal;
 font-weight: 400;
-line-height: 28px; /* 155.556% */
 letter-spacing: -0.45px;
-width:105px;
 height: 28px;
 }
+
 .ar-pred-title{
   margin-bottom: 48px;
 }
@@ -40,7 +39,6 @@ letter-spacing: -0.5px;
 
 .ar-address,
 .ar-time{
-  margin-top: 20px;
   color: #303030;
   
 /* MO/Title/KR/T3_KR_Rg */
@@ -55,6 +53,7 @@ letter-spacing: -0.45px;
 .ar-address-wrap{
   display: flex;
   align-items:center;
+  margin-top: 16px;
 
 }
 .ar-time-wrap{

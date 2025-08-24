@@ -1,4 +1,5 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import React, {useEffect} from "react";
 import PreviousBtn from "../components/Register/PreviousBtn";
 import ai_time from "../Assets/ai_time.svg";
 import { mockApiResponse } from "../apis/mockApiResponse";
@@ -54,10 +55,15 @@ const levelMessages = {
 
 const AIResult = () => {
   const { state } = useLocation();
-  const selectedTime = state?.selectedTime || ""; // "HH:MM"
-  const address = state?.address || "주소 없음";
+  const navigate = useNavigate();
 
-  const timeLabel = formatKoreanTime(selectedTime);
+  const arrival = state?.arrival ?? state?.selectedTime ?? ""; //HH:MM
+  const name = state?.name ?? ""; //장소 이름
+  const address = state?.address || "주소 없음"; //주소
+  const lat = state?.lat ?? null;
+  const lon = state?.lon ?? null; // 경도
+
+  const timeLabel = formatKoreanTime(arrival);
 
   // 모의 응답에서 첫 번째 결과 사용
   const first = mockApiResponse.items?.[0];
@@ -72,15 +78,15 @@ const AIResult = () => {
         <span className="ar-time">{timeLabel}</span>
         <span className="ar-time-selected">
           <img src={ai_time} className="ar-time-img" alt="" />
-          <span className="ar-picked">{selectedTime}</span>
+          <span className="ar-picked">{arrival || "--:--"}</span>
         </span>
       </div>
 
     <div className="ar-address-wrap">
-      <span className="ar-address">{address}</span>
+      <span className="ar-address">{name || "장소 미선택"}</span>
       <span className="ar-address-selected">
           <img src={ai_location2} className="ar-address-img" alt="" />
-          <span className="ar-picked">{address}</span>
+          <span className="ar-picked">{address || "주소 없음"}</span>
         </span>
     </div>
 
