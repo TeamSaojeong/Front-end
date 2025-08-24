@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import PreviousBtn from "../components/Register/PreviousBtn";
 import ai_time from "../Assets/ai_time.svg";
 import { fetchParkingPrediction } from "../apis/aipredict";
@@ -58,6 +58,8 @@ const levelMessages = {
 
 const AIResult = () => {
   const { state } = useLocation();
+   const arrival = state?.arrival ?? state?.selectedTime ?? ""; //HH:MM
+  const name = state?.name ?? ""; //장소 이름
   const selectedTime = state?.selectedTime || ""; // "HH:MM"
   const address = state?.address || "";
   const locationData = state?.locationData || null; // 좌표 정보
