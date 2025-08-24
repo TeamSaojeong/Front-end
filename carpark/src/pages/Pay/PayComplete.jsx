@@ -43,6 +43,9 @@ const PayComplete = () => {
       console.error('주차장 정보 파싱 실패:', e);
     }
   }
+  
+  // 주차장 이름 설정 (parkingInfo에서 우선 가져오고, 없으면 parkName, 없으면 기본값)
+  const finalParkName = parkingInfo?.name || parkName || "교장 앞 주차장(구간 182)";
 
   console.log('[PayComplete] URL 파라미터:', {
     orderId,
@@ -104,8 +107,14 @@ const PayComplete = () => {
       return result;
     }
     
-    console.log('[PayComplete] 시간 정보 없음');
-    return "시간 정보 없음";
+    // usingMinutes도 없으면 기본값으로 10분 계산
+    const now = new Date();
+    const startTime = new Date(now);
+    const endTime = new Date(now.getTime() + 10 * 60 * 1000); // 기본 10분
+    
+    const result = `${fmt.format(startTime)} ~ ${fmt.format(endTime)} (10분)`;
+    console.log('[PayComplete] 기본값으로 계산된 시간:', result);
+    return result;
   };
 
   const timeText = getReservationTimeText();
@@ -114,6 +123,15 @@ const PayComplete = () => {
     timeText,
     startAtParam,
     endAtParam,
+    usingMinutes
+  });
+  
+  console.log('[PayComplete] 주차장 정보:', {
+    parkingInfo,
+    parkName,
+    finalParkName,
+    parkingId,
+    total,
     usingMinutes
   });
 
@@ -148,7 +166,7 @@ const PayComplete = () => {
           onClick={() => navigate("/privateoutsoon", { 
             state: {
               parkingId,
-              parkName,
+              parkName: finalParkName,
               total,
               usingMinutes,
               parkingInfo,

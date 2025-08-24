@@ -87,9 +87,11 @@ export default function PrivateOutSoon() {
   const navigate = useNavigate();
   const { state } = useLocation() || {};
 
+  console.log('[PrivateOutSoon] 받은 state:', state);
+
   const selectedPlace = useMemo(readSelectedPlace, []);
   const placeName =
-    state?.placeName ?? selectedPlace?.name ?? "콘하스 DDP 앞 주차장";
+    state?.parkName ?? state?.placeName ?? selectedPlace?.name ?? "교장 앞 주차장(구간 182)";
   const placeId = state?.placeId ?? selectedPlace?.id ?? placeName;
   const address = state?.address ?? selectedPlace?.address ?? "";
 
