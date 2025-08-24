@@ -5,7 +5,6 @@ import "./Styles/app-frame.css";
 
 import LocationPinger from "./components/LocationPinger";
 import NotificationListener from "./components/NotificationListener";
-import SoonOutDeepLinker from "./components/SoonOutDeepLinker";
 import { client } from "./apis/client";
 
 // --- pages (모두 최상단으로 이동) ---
@@ -52,11 +51,10 @@ import PayComplete from "./pages/Pay/PayComplete";
 import ParkingPlaceManage from "./pages/ParkingPlaceManage";
 
 // ---- 토큰 복원(컴포넌트 밖, 모든 import 아래) ----
-// ✅ 토큰은 interceptor에서만 처리하도록 변경
-// const saved = localStorage.getItem("accessToken");
-// if (saved) {
-//   client.defaults.headers.common.Authorization = `Bearer ${saved}`;
-// }
+const saved = localStorage.getItem("accessToken");
+if (saved) {
+  client.defaults.headers.common.Authorization = `Bearer ${saved}`;
+}
 
 function App() {
   const isAuthed = !!localStorage.getItem("accessToken");
@@ -66,8 +64,6 @@ function App() {
       <div className="app-shell">
         {isAuthed && <LocationPinger intervalMinutes={10} />}
         {isAuthed && <NotificationListener />}
-        {/* URL에 soonOutId 파라미터가 있을 때 OutModal로 연결 */}
-        {isAuthed && <SoonOutDeepLinker />}
         <Routes>
           {/* 시작 흐름 */}
           <Route path="/" element={<Splash />} />

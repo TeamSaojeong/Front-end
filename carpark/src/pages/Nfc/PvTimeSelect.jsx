@@ -12,18 +12,6 @@ export default function PvTimeSelect() {
   const { state, search } = useLocation() || {};
   const qs = new URLSearchParams(search || "");
   
-  // 로그인 정보 확인
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem('accessToken');
-    const userEmail = localStorage.getItem('userEmail');
-    console.log('[PvTimeSelect] 로그인 상태 확인:', {
-      hasToken: !!token,
-      userEmail: userEmail,
-      tokenPreview: token ? token.substring(0, 20) + '...' : null
-    });
-    return { token, userEmail };
-  };
-  
   // NFC 태그로 진입 시 저장된 주차장 정보 불러오기
   const getNfcParkingInfo = () => {
     try {
@@ -35,8 +23,6 @@ export default function PvTimeSelect() {
     }
   };
 
-  // 로그인 상태 확인
-  const loginInfo = checkLoginStatus();
   const nfcInfo = getNfcParkingInfo();
   
   // NFC URL 진입 시 ?placeId=xxx 지원
@@ -49,21 +35,10 @@ export default function PvTimeSelect() {
     pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || 800,
   };
   
-  console.log('[PvTimeSelect] 초기화 정보:', {
+  console.log('PvTimeSelect NFC 정보:', {
     nfcInfo,
-    defaults: DEFAULTS,
-    loginInfo
+    defaults: DEFAULTS
   });
-
-  // 로그인 체크 (NFC 태그로 직접 진입한 경우)
-  useEffect(() => {
-    if (!loginInfo.token) {
-      console.warn('[PvTimeSelect] 로그인 토큰 없음 - 로그인 페이지로 리다이렉트');
-      alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
-      navigate('/login');
-      return;
-    }
-  }, [loginInfo.token, navigate]);
 
   // ------- 백엔드에서 받아올 값들 -------
   const [loading, setLoading] = useState(!state?.prefetched);
@@ -200,7 +175,6 @@ export default function PvTimeSelect() {
       usingMinutes: totalMinutes,
       estimatedCost,
       total: estimatedCost,
-      pricePer10Min: pricePer10Min, // 10분당 요금 명시적 전달
       // 주차장 정보
       parkingInfo: {
         id: nfcInfo?.id || placeId,

@@ -28,7 +28,6 @@ export default function PayPage() {
   const { state } = useLocation() || {};
 
   console.log('[PayPage] 받은 state 정보:', state);
-  console.log('[PayPage] location 전체:', useLocation());
 
   // 상세에서 넘어올 수 있는 값들
   // A) 바로 리디렉트 모드: paymentUrl 또는 reservationId 만 넘어온 경우
@@ -50,20 +49,6 @@ export default function PayPage() {
   const total = state?.total || state?.estimatedCost || 0;
   const usingMinutes = state?.usingMinutes || state?.durationMin || 0;
 
-  // D) state가 비어있으면 sessionStorage에서 백업 확인
-  let backupInfo = null;
-  if (!state || Object.keys(state).length === 0) {
-    try {
-      const saved = sessionStorage.getItem('nfcParkingInfo');
-      if (saved) {
-        backupInfo = JSON.parse(saved);
-        console.log('[PayPage] sessionStorage 백업 사용:', backupInfo);
-      }
-    } catch (error) {
-      console.error('[PayPage] sessionStorage 로드 실패:', error);
-    }
-  }
-
   console.log('[PayPage] 추출된 정보:', {
     parkingId,
     parkName,
@@ -73,20 +58,12 @@ export default function PayPage() {
     endAt
   });
 
-  // 화면 데이터 - NFC에서 넘어온 정보 또는 백업 정보 사용
-  const finalParkName = parkName || backupInfo?.name || "";
-  const finalCharge = state?.pricePer10Min || state?.parkingInfo?.charge || backupInfo?.charge || 0;
-  
-  console.log('[PayPage] 10분당 요금 확인:', {
-    statePricePer10Min: state?.pricePer10Min,
-    parkingInfoCharge: state?.parkingInfo?.charge,
-    backupCharge: backupInfo?.charge,
-    finalCharge
-  });
-  
-  const [loading, setLoading] = useState(!finalParkName); // 이름이 있으면 로딩 스킵
-  const [lotName, setLotName] = useState(finalParkName); // NFC에서 넘어온 이름 우선
-  const [pricePer10Min, setPricePer10Min] = useState(finalCharge);
+  // 화면 데이터 - NFC에서 넘어온 정보 우선 사용
+  const [loading, setLoading] = useState(!parkName); // 이름이 있으면 로딩 스킵
+  const [lotName, setLotName] = useState(parkName); // NFC에서 넘어온 이름 우선
+  const [pricePer10Min, setPricePer10Min] = useState(
+    state?.parkingInfo?.charge || 0
+  );
   const [nearbyAvg10Min, setNearbyAvg10Min] = useState(null); // 선택: 표시만
   const [posting, setPosting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -154,31 +131,9 @@ export default function PayPage() {
       };
     }
 
-    // 개인 주차장 여부 확인
-    const isPrivateParking = state?.parkingInfo?.isPrivate || 
-                           state?.demo || 
-                           backupInfo?.isPrivate;
-
-    console.log('[PayPage] 주차장 타입 확인:', {
-      isPrivateParking,
-      hasDemo: !!state?.demo,
-      parkingInfoIsPrivate: state?.parkingInfo?.isPrivate,
-      backupIsPrivate: backupInfo?.isPrivate
-    });
-
-    if (isPrivateParking) {
-      // 개인 주차장: API 호출 없이 전달받은 정보 사용
-      console.log('[PayPage] 개인 주차장 - API 호출 스킵');
-      setLotName(finalParkName || "개인 주차장");
-      setPricePer10Min(finalCharge);
-      setLoading(false);
-      return () => { mounted = false; };
-    }
-
-    // 공영 주차장만 API 호출
     (async () => {
       try {
-        console.log('[PayPage] 공영 주차장 - API 호출 시작');
+        // 공영/민영 상세에서 가격 가져오기
         const lotRes = await getPublicDetail(parkingId); // { data: {...} }
         if (!mounted) return;
 
@@ -189,7 +144,7 @@ export default function PayPage() {
         );
         setNearbyAvg10Min(null); // 서버 준비되면 채우기
       } catch (e) {
-        console.error('[PayPage] API 호출 실패:', e);
+        console.error(e);
         setLotName(state?.lotName ?? "주차장");
         setPricePer10Min(state?.pricePer10m ?? 0);
         setErrorMsg("요금 정보를 불러오지 못했습니다.");

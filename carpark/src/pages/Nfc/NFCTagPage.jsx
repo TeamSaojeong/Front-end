@@ -103,69 +103,6 @@ const NFCTagPage = () => {
 
       <div className="nfc-section">
         <img src={nfc_icon} alt="nfc 아이콘" />
-        
-        {/* 테스트용 NFC 태그 버튼 */}
-        <button
-          className="nfc-test-tag-btn"
-          onClick={() => {
-            console.log('[NFCTagPage] 테스트 NFC 태그 버튼 클릭');
-            if (parkingInfo) {
-              // 운영 시간 체크 (간단 버전)
-              const checkSimpleOperatingHours = (availableTimes) => {
-                if (!availableTimes) return { isAvailable: true };
-                
-                const now = new Date();
-                const currentTime = now.getHours() * 60 + now.getMinutes();
-                
-                // "09:00 ~ 18:00" 형태의 문자열 파싱
-                const timeMatch = availableTimes.match(/(\d{2}):(\d{2})\s*~\s*(\d{2}):(\d{2})/);
-                if (!timeMatch) return { isAvailable: true };
-                
-                const [, startH, startM, endH, endM] = timeMatch.map(Number);
-                const startMinutes = startH * 60 + startM;
-                const endMinutes = endH * 60 + endM;
-                
-                const isInRange = startMinutes <= endMinutes 
-                  ? (currentTime >= startMinutes && currentTime <= endMinutes)
-                  : (currentTime >= startMinutes || currentTime <= endMinutes);
-                
-                return { isAvailable: isInRange };
-              };
-
-              const timeCheck = checkSimpleOperatingHours(parkingInfo.availableTimes);
-              if (!timeCheck.isAvailable) {
-                alert("지금은 이용 시간이 아닙니다.");
-                return;
-              }
-
-              // PvTimeSelect로 이동 (NFC 태그된 것처럼)
-              navigate("/pv/time-select", {
-                state: {
-                  placeId: parkingInfo.id,
-                  placeName: parkingInfo.name,
-                  prefetched: true
-                }
-              });
-            } else {
-              alert("주차장 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
-            }
-          }}
-          style={{
-            position: 'absolute',
-            bottom: '10px',
-            right: '10px',
-            padding: '8px 12px',
-            fontSize: '12px',
-            backgroundColor: '#ff6b6b',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            zIndex: 1000
-          }}
-        >
-          🏷️ 테스트 태그
-        </button>
       </div>
 
       {/* 버튼 */}
