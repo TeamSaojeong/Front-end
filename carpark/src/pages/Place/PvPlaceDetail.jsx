@@ -443,7 +443,9 @@ export default function PvPlaceDetail() {
       // 주문/예약 ID 추가 (실제로는 백엔드에서 생성된 값 사용)
       orderId: `order_${Date.now()}_${placeId}`, // 임시 주문 ID
       reservationId: `reservation_${Date.now()}_${placeId}`, // 임시 예약 ID
+      // 주차장 상세 정보
       parkingInfo: {
+        id: placeId,
         name: detail?.name || "주차 장소",
         charge: detail?.pricePer10m || 1000,
         address: detail?.address || "",
@@ -451,6 +453,10 @@ export default function PvPlaceDetail() {
         isPrivate: true,
         lat: targetLat,
         lng: targetLng,
+        pricePer10m: detail?.pricePer10m || 1000,
+        note: detail?.note || "",
+        distanceKm: detail?.distanceKm || null,
+        etaMin: detail?.etaMin || null,
       }
     };
 

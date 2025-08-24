@@ -1,136 +1,89 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useMemo } from "react";
 import PreviousBtn from "../components/Register/PreviousBtn";
+import AISearch from "../components/AISearch";
+import Keyword from "../components/Keyword";
+import "../Styles/AIPredict.css"; 
 import NextBtn from "../components/Register/NextBtn";
+import { useNavigate } from "react-router-dom";
 import TimeWheel from "../components/TimeWheel";
-import "../Styles/AIPredict.css";
+import ai_time from "../Assets/ai_time.svg";
+
+const pad2 = (n) => String(n).padStart(2, "0");
+const to24 = ({ ampm, h12, m }) =>
+  `${pad2((h12 % 12) + (ampm === "오후" ? 12 : 0))}:${pad2(m)}`;
 
 const AIPredict = () => {
   const navigate = useNavigate();
-  const [selectedTime, setSelectedTime] = useState("18:00");
-  const [address, setAddress] = useState("");
-  const [locationData, setLocationData] = useState(null);
-  const [isSearching, setIsSearching] = useState(false);
 
-  const handleAddressSearch = async () => {
-    if (!address.trim()) {
-      alert("주소를 입력해주세요.");
-      return;
-    }
+  const [time, setTime] = useState({ ampm: "오전", h12: 1, m: 0 });
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState(""); // 선택된 주소
+  const [lat, setLAT] = useState(null);
+  const [lon, setLon] = useState(null);
 
-    setIsSearching(true);
-    try {
-      // 카카오 주소 검색 API 호출
-      const response = await fetch(
-        `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`,
-        {
-          headers: {
-            Authorization: `KakaoAK ${process.env.REACT_APP_KAKAO_REST_API_KEY || 'your-kakao-api-key'}`
-          }
-        }
-      );
+  const label = useMemo(() => to24(time), [time]);
 
-      const data = await response.json();
-      
-      if (data.documents && data.documents.length > 0) {
-        const firstResult = data.documents[0];
-        setLocationData({
-          lat: parseFloat(firstResult.y),
-          lng: parseFloat(firstResult.x),
-          address: firstResult.address_name
-        });
-        setAddress(firstResult.address_name);
-        console.log('주소 검색 결과:', firstResult);
-      } else {
-        alert("주소를 찾을 수 없습니다. 다시 입력해주세요.");
-      }
-    } catch (error) {
-      console.error('주소 검색 실패:', error);
-      alert("주소 검색에 실패했습니다. 다시 시도해주세요.");
-    } finally {
-      setIsSearching(false);
-    }
-  };
+  const timeValid =
+    ["오전", "오후"].includes(time.ampm) &&
+    Number.isInteger(time.h12) &&
+    time.h12 >= 1 &&
+    time.h12 <= 12 &&
+    [0, 10, 20, 30, 40, 50].includes(time.m);
+
+  const addrValid = !!address?.trim();
+  const isActive = timeValid && !!name?.trim() && !!lat && !!lon;
 
   const handleNext = () => {
-    if (!address.trim()) {
-      alert("주소를 입력해주세요.");
-      return;
-    }
-
-    if (!locationData) {
-      alert("주소를 검색해주세요.");
-      return;
-    }
-
-    // AIResult로 이동
+    if (!isActive) return;
     navigate("/airesult", {
-      state: {
-        selectedTime,
+      state: { 
+        arrival: label, //HH:MM
         address,
-        locationData
-      }
+        name,
+        lat,
+        lon,
+       }, // 주소 같이 전달
     });
   };
 
   return (
-    <div className="aipredict-wrap">
+    <div className="ai-wrap">
       <PreviousBtn />
-      
-      <div className="ap-header">
-        <h1 className="ap-title">AI 주차 혼잡도 예측</h1>
-        <p className="ap-subtitle">
-          도착할 장소와 시간을 알려주시면<br />
-          AI가 주차 혼잡도를 예측해드려요
-        </p>
-      </div>
 
-      <div className="ap-content">
-        {/* 주소 입력 */}
-        <div className="ap-section">
-          <h2 className="ap-section-title">도착할 장소</h2>
-          <div className="ap-address-input">
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="주소를 입력해주세요"
-              className="ap-input"
-            />
-            <button
-              onClick={handleAddressSearch}
-              disabled={isSearching}
-              className="ap-search-btn"
-            >
-              {isSearching ? "검색 중..." : "검색"}
-            </button>
-          </div>
-          {locationData && (
-            <div className="ap-address-result">
-              <span className="ap-address-text">✓ {locationData.address}</span>
-            </div>
-          )}
-        </div>
+      <h1 className="ai-title">AI 주차 예보</h1>
+      <p className="ai-desc">
+        장소와 시간을 입력하면,
+        <br />그 주변 구역의 주차 혼잡도를 미리 알려드립니다!
+      </p>
 
-        {/* 시간 선택 */}
-        <div className="ap-section">
-          <h2 className="ap-section-title">도착할 시간</h2>
-          <div className="ap-time-selector">
-            <TimeWheel
-              selectedTime={selectedTime}
-              onTimeChange={setSelectedTime}
-            />
-          </div>
-        </div>
-      </div>
+      <div>
+        <p className="ai-name">주차 장소 이름</p>
 
-      <div className="ap-footer">
-        <NextBtn
-          label="AI 예측 시작"
-          onClick={handleNext}
-          disabled={!locationData}
+        <Keyword 
+          value={name}
+          onSelect={({name, address: addr, lat:y, lon: x}) =>{
+            setName(name || "");
+            setAddress(addr || "");
+            setLAT(y ?? null);
+            setLon(x ?? null);
+          }}
         />
       </div>
+
+      <div className="ai-time-wrap">
+        <div className="ai-time">
+          <img src={ai_time} className="ai-time-img" alt="" />
+          <span className="ai-picked">{label}</span>
+        </div>
+
+        <TimeWheel value={time} onChange={setTime} ariaLabelPrefix="예보" />
+      </div>
+
+      <NextBtn
+        onClick={handleNext}
+        className="ai-next"
+        isActive={isActive} // Next 활성/비활성
+      />
     </div>
   );
 };

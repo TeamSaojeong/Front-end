@@ -37,7 +37,7 @@ export default function PayPage() {
     state?.reservationId || state?.data?.reservationId || null;
 
   // B) 계산/예약 모드: parkingId/시작/종료 등
-  const parkingId = state?.parkingId ?? state?.lotId ?? 25; // 실제 주차장 ID 사용
+  const parkingId = state?.parkingId ?? state?.lotId ?? 28; // 실제 주차장 ID 사용
   const startAt = state?.startAt ? new Date(state.startAt) : new Date();
   const endAt = state?.endAt
     ? new Date(state.endAt)
@@ -254,8 +254,29 @@ export default function PayPage() {
 
       if (paymentRedirectUrl) {
         // 실제 API 성공: 카카오페이로 이동
-        console.log('API 성공 - 카카오페이로 이동:', paymentRedirectUrl);
-        window.location.href = paymentRedirectUrl;
+        // 주차장 정보를 URL 파라미터로 추가
+        const url = new URL(paymentRedirectUrl);
+        url.searchParams.set('parkingId', parkingId);
+        url.searchParams.set('parkName', lotName || "주차장");
+        url.searchParams.set('total', finalTotal.toString());
+        url.searchParams.set('usingMinutes', minutes.toString());
+        
+        // 예약 시간 정보 추가 (PvTimeSelect에서 전달받은 값)
+        if (state?.startAt) {
+          url.searchParams.set('startAt', state.startAt);
+        }
+        if (state?.endAt) {
+          url.searchParams.set('endAt', state.endAt);
+        }
+        
+        // 주차장 상세 정보도 추가
+        if (state?.parkingInfo) {
+          url.searchParams.set('parkingInfo', JSON.stringify(state.parkingInfo));
+        }
+        
+        const finalRedirectUrl = url.toString();
+        console.log('API 성공 - 카카오페이로 이동:', finalRedirectUrl);
+        window.location.href = finalRedirectUrl;
       } else {
         alert("결제 준비에 실패했습니다. 응답을 확인해주세요.");
         console.error('결제 URL을 찾을 수 없음:', res);
