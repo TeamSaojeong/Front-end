@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomSheet from "../components/BottomSheet";
 import "../Styles/app-frame.css";
@@ -7,98 +7,135 @@ import Mapmenu from "../components/Mapmenu";
 import Aiforecast from "../components/Aiforecast";
 import "../Styles/map-poi.css";
 import OutModal from "../components/Modal/OutModal";
+import { getNearby, getAllPrivateParkings } from "../apis/parking";
+import { postMyLocation } from "../apis/location";
 import { useMyParkings } from "../store/MyParkings";
 import { useWatchedIds } from "../utils/mapUtils";
-import { useKakaoMap } from "../hooks/useKakaoMap";
-import { useOutModal } from "../hooks/useOutModal";
 
-const getUserKey = () => localStorage.getItem("userKey") || "guest";
+// ⚡ main 코드 기반 통합: seongwon 의 useKakaoMap/useOutModal 대신 직접 로직 사용
+// (필요하면 hooks 내부 로직 재사용 가능)
 
 export default function Home() {
   const wrapRef = useRef(null);
   const mapEl = useRef(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [places, setPlaces] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [showRequery, setShowRequery] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   const navigate = useNavigate();
   const myParks = useMyParkings((s) => s.items);
-  const userKey = getUserKey();
-  const watchedIds = useWatchedIds(userKey);
+  const getCurrentUser = useMyParkings((s) => s.getCurrentUser);
+  const watchedIds = useWatchedIds(localStorage.getItem("userKey") || "guest");
 
-  // KakaoMap 훅 사용 
-  const {
-    mapRef,
-    places,
-    isLoading,
-    errorMsg,
-    showRequery,
-    selectedId,
-    onSelectPlace,
-    refreshFromCurrentPosition,
-    requeryHere,
-    updateBubbleStyles,
-  } = useKakaoMap(mapEl, myParks);
+  // === 서버 + 로컬 모든 사용자 주차장 로드 ===
+  const [allUserParkings, setAllUserParkings] = useState([]);
+  const fetchAllUserParkingsRef = useRef(null);
 
-  // OutModal 훅 사용 (places 전달)
-  const modalHandlers = useOutModal(places);
+  const fetchAllUserParkings = async () => {
+    if (fetchAllUserParkingsRef.current) return fetchAllUserParkingsRef.current;
 
-  // 10초마다 테스트 모달 표시 (단순화된 버전)
-  React.useEffect(() => {
-    console.log('[디버그] 10초 모달 타이머 시작');
-    
-    const showModal = () => {
-      console.log('[디버그] 10초 타이머 실행 - 모달 표시 시도');
-      console.log('[디버그] modalHandlers:', modalHandlers);
-      console.log('[디버그] places 개수:', places.length);
-      
-      if (modalHandlers && modalHandlers.showTestOutModal) {
-        modalHandlers.showTestOutModal();
-      } else {
-        console.warn('[디버그] modalHandlers.showTestOutModal이 없습니다');
-      }
-      
-      // 말풍선 업데이트
-      setTimeout(() => {
-        if (mapRef.current) {
-          const c = mapRef.current.getCenter();
-          if (c) {
-            window.dispatchEvent(new CustomEvent('refreshMap', {
-              detail: { lat: c.getLat(), lng: c.getLng() }
-            }));
+    fetchAllUserParkingsRef.current = (async () => {
+      try {
+        const serverResponse = await getAllPrivateParkings();
+        const serverParkings = serverResponse?.data?.data || [];
+
+        // 로컬 데이터 수집
+        const allLocal = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.startsWith("my-parkings")) {
+            try {
+              const parsed = JSON.parse(localStorage.getItem(key));
+              if (parsed?.state?.items) {
+                allLocal.push(...parsed.state.items.filter((p) => p.enabled));
+              }
+            } catch {}
           }
         }
-      }, 100);
-    };
 
-    // 첫 번째 모달은 5초 후에 표시 (빠른 테스트용)
-    const firstTimeout = setTimeout(showModal, 5000);
-    
-    // 이후 10초마다 반복
-    const interval = setInterval(showModal, 10_000);
+        // 서버데이터 정규화
+        const normalized = serverParkings.map((p) => ({
+          id: String(p.parkingId),
+          name: p.parkingName,
+          lat: p.lat,
+          lng: p.lng,
+          enabled: p.operate,
+          type: "PRIVATE",
+          isFromServer: true,
+        }));
 
-    return () => {
-      console.log('[디버그] 10초 모달 타이머 정리');
-      clearTimeout(firstTimeout);
-      clearInterval(interval);
-    };
-  }, [modalHandlers, places, mapRef]);
+        const merged = [...allLocal];
+        normalized.forEach((s) => {
+          if (!merged.find((m) => m.id === s.id)) merged.push(s);
+        });
 
-  // places 변경 시 모달 체크
-  React.useEffect(() => {
-    if (places.length > 0) {
-      modalHandlers.maybeOpenOutModal(places, watchedIds);
-    }
-  }, [places, watchedIds, modalHandlers]);
+        setAllUserParkings(merged);
+        return merged;
+      } catch (err) {
+        console.error("[Home] 모든 주차장 로드 실패", err);
+        setAllUserParkings([...myParks]);
+        return [...myParks];
+      } finally {
+        fetchAllUserParkingsRef.current = null;
+      }
+    })();
 
-  // 모달에서 상세 페이지로 이동
+    return fetchAllUserParkingsRef.current;
+  };
+
+  // === 주차장 선택 ===
+  const onSelectPlace = (p) => {
+    try {
+      sessionStorage.setItem("selectedPlace", JSON.stringify(p));
+    } catch {}
+    setSelectedId(p.id);
+  };
+
+  // === OutModal 제어 ===
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalPlace, setModalPlace] = useState({});
+  const [modalMinutes, setModalMinutes] = useState(5);
+
+  const openSoonModalFor = (placeId, placeName, minute = 5) => {
+    setModalPlace({ id: String(placeId), name: placeName, type: "PUBLIC" });
+    setModalMinutes(minute);
+    setModalOpen(true);
+  };
+
   const goDetailFromModal = () => {
-    modalHandlers.setModalOpen(false);
-    if (!modalHandlers.modalPlace?.id) return;
+    setModalOpen(false);
+    if (!modalPlace?.id) return;
     const path =
-      String(modalHandlers.modalPlace.type || "").toUpperCase() === "PRIVATE"
-        ? `/pv/place/${modalHandlers.modalPlace.id}`
-        : `/place/${modalHandlers.modalPlace.id}`;
+      String(modalPlace.type || "").toUpperCase() === "PRIVATE"
+        ? `/pv/place/${modalPlace.id}`
+        : `/place/${modalPlace.id}`;
     navigate(path, { state: { from: "modal" } });
   };
+
+  // === 위치 및 주변 주차장 로딩 ===
+  const fetchNearby = async (lat, lng) => {
+    setIsLoading(true);
+    setErrorMsg("");
+
+    try {
+      const { data } = await getNearby(lat, lng);
+      const rows = Array.isArray(data) ? data : data?.data ?? [];
+      setPlaces(rows);
+    } catch (e) {
+      setErrorMsg(e?.message || "주변 주차장 조회 실패");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!mapEl.current) return;
+    // 임시: 하드코딩된 위치 기준으로 fetchNearby 실행
+    fetchNearby(37.484, 127.034); // 양재 근처
+  }, []);
 
   return (
     <div ref={wrapRef} className="map-wrap">
@@ -107,7 +144,7 @@ export default function Home() {
       <Aiforecast />
 
       {showRequery && !isSheetOpen && (
-        <button className="requery-btn" onClick={requeryHere}>
+        <button className="requery-btn" onClick={() => fetchNearby(37.484, 127.034)}>
           여기에서 다시 검색
         </button>
       )}
@@ -117,19 +154,19 @@ export default function Home() {
         places={places}
         isLoading={isLoading}
         errorMsg={errorMsg}
-        onRefreshHere={refreshFromCurrentPosition}
+        onRefreshHere={() => fetchNearby(37.484, 127.034)}
         onSelectPlace={onSelectPlace}
         onOpenChange={setIsSheetOpen}
       />
 
       <OutModal
-        isOpen={modalHandlers.modalOpen}
-        minutesAgo={modalHandlers.modalMinutes}
-        placeId={modalHandlers.modalPlace.id}
-        placeName={modalHandlers.modalPlace.name}
-        onClose={() => modalHandlers.setModalOpen(false)}
+        isOpen={modalOpen}
+        minutesAgo={modalMinutes}
+        placeId={modalPlace.id}
+        placeName={modalPlace.name}
+        onClose={() => setModalOpen(false)}
         onViewDetail={goDetailFromModal}
       />
     </div>
   );
-}//수정 체크
+}

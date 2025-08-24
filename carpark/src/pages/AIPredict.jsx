@@ -32,10 +32,10 @@ const levelMessages = {
       fontSize: "24px",
       fontStyle: "normal",
       fontWeight: 600,
-      lineHeight: "34px", // 141.667%
+      lineHeight: "34px",
       letterSpacing: "-0.6px",
     },
-    emoji: emoji_s, // ✅ 경로 자체를 값으로
+    emoji: emoji_s,
     sub: "좋은 소식이에요! <br/>가까운 주차 장소를 추천해드릴게요.",
   },
   혼잡: {
@@ -49,7 +49,7 @@ const levelMessages = {
       lineHeight: "34px",
       letterSpacing: "-0.6px",
     },
-    emoji: emoji_t, // ✅
+    emoji: emoji_t,
     sub: "대신, 주변에 여유로운 구역의 <br/>주차 장소를 추천해드릴게요.",
   },
 };
@@ -58,8 +58,8 @@ const AIResult = () => {
   const { state } = useLocation();
   const selectedTime = state?.selectedTime || ""; // "HH:MM"
   const address = state?.address || "";
-  const locationData = state?.locationData || null; // ✅ 좌표 정보
-  
+  const locationData = state?.locationData || null; // 좌표 정보
+
   const [loading, setLoading] = useState(true);
   const [predictionData, setPredictionData] = useState(null);
   const [error, setError] = useState("");
@@ -83,35 +83,36 @@ const AIResult = () => {
 
       try {
         setLoading(true);
-        
-        console.log('[AIResult] 검색 위치 기준 예측:', {
+
+        console.log("[AIResult] 검색 위치 기준 예측:", {
           address,
           coordinates: locationData,
-          selectedTime
+          selectedTime,
         });
-        
+
         // 검색한 위치의 좌표 사용
         const payload = {
-          lat: locationData.lat, // ✅ 검색한 위치의 위도
-          lon: locationData.lng, // ✅ 검색한 위치의 경도
-          arrival: `2025-08-18T${selectedTime}:00`, // 도착 시간
+          lat: locationData.lat,
+          lon: locationData.lng,
+          arrival: `2025-08-18T${selectedTime}:00`,
           radius: 1.0, // 1km 반경
           top_k: 15,
           exact_radius: true,
           list_mode: true,
           sort_by: "score",
           fill_external: true,
-          use_places: true
+          use_places: true,
         };
 
         const result = await fetchParkingPrediction(payload);
         setPredictionData(result);
-        
-        console.log('[AIResult] 예측 결과 수신:', result);
-        
+
+        console.log("[AIResult] 예측 결과 수신:", result);
       } catch (err) {
-        console.error('[AIResult] 예측 실패:', err);
-        setError(`AI 예측 요청에 실패했습니다: ${err.message || '알 수 없는 오류'}`);
+        console.error("[AIResult] 예측 실패:", err);
+        setError(
+          `AI 예측 요청에 실패했습니다: ${err.message || "알 수 없는 오류"}`
+        );
       } finally {
         setLoading(false);
       }
@@ -125,7 +126,7 @@ const AIResult = () => {
     return (
       <div className="airesult-wrap">
         <PreviousBtn />
-        <div style={{ textAlign: 'center', padding: '50px' }}>
+        <div style={{ textAlign: "center", padding: "50px" }}>
           <p>AI가 주차 혼잡도를 예측하고 있어요...</p>
         </div>
       </div>
@@ -137,7 +138,7 @@ const AIResult = () => {
     return (
       <div className="airesult-wrap">
         <PreviousBtn />
-        <div style={{ textAlign: 'center', padding: '50px' }}>
+        <div style={{ textAlign: "center", padding: "50px" }}>
           <p>{error}</p>
         </div>
       </div>
@@ -162,7 +163,6 @@ const AIResult = () => {
 
       <div className="ar-address">{address}</div>
 
-      {/* 혼잡도 문구: 가운데만 색상, 이모지는 이미지로 */}
       <p className="ar-pred-title" style={msg.typography}>
         주차가{" "}
         <span className="ar-pred-title-text" style={{ color: msg.color }}>
@@ -175,7 +175,7 @@ const AIResult = () => {
         />
       </p>
       <p className="ar-pred-sub">
-        {msg.sub //줄바꿈
+        {msg.sub
           .split(/<br\s*\/?>/i)
           .map((chunk, i, arr) => (
             <>
@@ -185,7 +185,6 @@ const AIResult = () => {
           ))}
       </p>
 
-      {/* 리스트 예시 */}
       <ParkingCard />
 
       <NextBtn className="ar-next" label="확인" />
