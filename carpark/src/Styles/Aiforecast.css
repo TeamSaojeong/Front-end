@@ -41,6 +41,7 @@
   flex: 1 1 auto;
   min-width: 0;
   width: 10rem !important; /* 160px */
+  
 }
 
 .aif-title {
@@ -51,7 +52,7 @@
   color: #303030;
   line-height: 1.25rem; /* 20px */
   margin-bottom: 0.125rem; /* 2px */
-  width: 4.375rem; /* 70px */
+  white-space: nowrap;
 }
 
 .aif-sub {

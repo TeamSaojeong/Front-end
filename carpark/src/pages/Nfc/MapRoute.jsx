@@ -138,36 +138,12 @@ export default function MapRoute() {
     };
   };
 
-  // 내 위치 얻기(권한 실패/타임아웃 시 캐시 → 서울역)
+  // 출발지 고정 (양재 AT센터)
   const getOrigin = () =>
     new Promise((resolve) => {
-      const cached = getCachedLoc();
-      if (!navigator.geolocation) {
-        resolve(cached ?? { lat: 37.554722, lng: 126.970833 }); // 서울역
-        return;
-      }
-      let done = false;
-      const timer = setTimeout(() => {
-        if (done) return;
-        done = true;
-        resolve(cached ?? { lat: 37.554722, lng: 126.970833 });
-      }, 6500);
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        },
-        () => {
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          resolve(cached ?? { lat: 37.554722, lng: 126.970833 });
-        },
-        { enableHighAccuracy: false, timeout: 6000, maximumAge: 60_000 }
-      );
+      // 양재 AT센터 좌표로 고정
+      const yangjaeAtCenter = { lat: 37.4707, lng: 127.0389 }; // 양재 AT센터
+      resolve(yangjaeAtCenter);
     });
 
   const showRouteTo = async (destLat, destLng) => {
@@ -252,6 +228,7 @@ export default function MapRoute() {
         <div className="route-endbar">
         <button
           className="route-endbtn"
+          style={{ whiteSpace: 'nowrap' }}
           onClick={() =>
             navigate("/home", { replace: true, state: { recenter: true } })
           }

@@ -71,7 +71,7 @@ export default function Home() {
     };
 
     // 첫 번째 모달은 5초 후에 표시 (빠른 테스트용)
-    const firstTimeout = setTimeout(showModal, 5000);
+    const firstTimeout = setTimeout(showModal, 10_000);
     
     // 이후 10초마다 반복
     const interval = setInterval(showModal, 10_000);
@@ -105,7 +105,7 @@ export default function Home() {
     <div ref={wrapRef} className="map-wrap">
       <div ref={mapEl} className="map-fill" />
       <Mapmenu />
-      <Aiforecast />
+      <Aiforecast onClick={() => navigate('/aipredict')} />
 
       {showRequery && !isSheetOpen && (
         <button className="requery-btn" onClick={requeryHere}>

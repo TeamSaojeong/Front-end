@@ -31,9 +31,9 @@ export default function PvTimeSelect() {
 
   // ✅ 요청 값(기본값) - NFC 정보가 있으면 우선 사용
   const DEFAULTS = {
-    placeName: nfcInfo?.name || nfcInfo?.placeName || state?.placeName || "양재근린공원주차장",
+    placeName: nfcInfo?.name || nfcInfo?.placeName || state?.placeName || "교장 앞 주차장(구간 182)",
     openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || state?.openRangesText || "00:00 ~ 24:00",
-    pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || state?.pricePer10Min || 800,
+    pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || state?.pricePer10Min || 1800,
   };
   
   console.log('PvTimeSelect NFC 정보:', {

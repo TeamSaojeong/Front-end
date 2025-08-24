@@ -22,6 +22,26 @@ import { mapStatusToUI } from "../../utils/parkingStatus";
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
 const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
 
+// 양재 AT센터 좌표
+const YANGJAE_AT_CENTER = { lat: 37.4707, lng: 127.0389 };
+
+// 두 지점 간의 거리 계산 (km 단위, 소수점 2자리까지)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  if (!lat1 || !lng1 || !lat2 || !lng2) return null;
+  
+  const R = 6371; // 지구의 반지름 (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  
+  return Math.round(distance * 100) / 100; // 소수점 2자리까지
+};
+
 /** 사용자별 로컬 키 (동일 브라우저 내 다른 계정 분리용) */
 const getUserKey = () => localStorage.getItem("userKey") || "guest";
 const lsk = (key) => `watchedPlaceIds__${key}`;
@@ -201,6 +221,11 @@ export default function PlaceDetail() {
             const lat = toNum(d?.lat) ?? sessionLat ?? null;
             const lng = toNum(d?.lng) ?? sessionLng ?? null;
             
+            // 양재 AT센터에서의 거리 계산
+            const calculatedDistance = lat && lng 
+              ? calculateDistance(YANGJAE_AT_CENTER.lat, YANGJAE_AT_CENTER.lng, lat, lng)
+              : null;
+            
             // leavingSoon 상태 확인
             const leavingSoon = !!d.leavingSoon;
             setIsLeavingSoon(leavingSoon);
@@ -209,7 +234,7 @@ export default function PlaceDetail() {
             const normalized = {
               id: pid ?? kakaoId,
               name: d.name ?? placeFromSession?.name ?? "주차 장소",
-              distanceKm: d.distanceKm ?? placeFromSession?.distanceKm ?? null,
+              distanceKm: calculatedDistance ?? d.distanceKm ?? placeFromSession?.distanceKm ?? null,
               pricePer10m: d.charge != null ? Number(d.charge) : (placeFromSession?.price ?? 0),
               address: d.address ?? placeFromSession?.address ?? "",
               availableTimes: Array.isArray(d.operateTimes)
@@ -247,13 +272,17 @@ export default function PlaceDetail() {
         const lng =
           toNum(d?.x ?? d?.lon ?? d?.lng ?? d?.longitude) ?? sessionLng ?? null;
 
+        // 양재 AT센터에서의 거리 계산
+        const calculatedDistance = lat && lng 
+          ? calculateDistance(YANGJAE_AT_CENTER.lat, YANGJAE_AT_CENTER.lng, lat, lng)
+          : null;
+
         const normalized = {
           id: pid ?? kakaoId,
           name: d.placeName ?? d.name ?? placeFromSession?.name ?? "주차 장소 이름",
-          distanceKm:
-            d.distanceMeters != null
-              ? d.distanceMeters / 1000
-              : d.distanceKm ?? placeFromSession?.distanceKm ?? null,
+          distanceKm: calculatedDistance ?? (d.distanceMeters != null
+            ? d.distanceMeters / 1000
+            : d.distanceKm ?? placeFromSession?.distanceKm ?? null),
           pricePer10m:
             d.timerate && d.addrate
               ? Math.round((d.addrate * 10) / d.timerate)

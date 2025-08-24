@@ -1,36 +1,36 @@
 .rg-pay-wrapper{
-    background-color: rgba(255, 255, 255, 1);
-  width: 24.375rem;
-  min-height: 52.75rem;
-  margin: 0 auto;
-  position: relative;
-  box-sizing: border-box;
-  padding: 0 1.5rem;
+  background-color: rgba(255, 255, 255, 1);
+width: 24.375rem;
+min-height: 52.75rem;
+margin: 0 auto;
+position: relative;
+box-sizing: border-box;
+padding: 0 1.5rem;
 }
 
 .rg-nextBtn{
-    margin-top: 12px !important;
+  margin-top: 12px !important;
 }
 
 .rg-description{
-    margin-top: 8px;
-    margin-bottom: 0;
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 
 .rg-pay-title{
-    color: #303030;
-    font-family: Pretendard;
-    font-size: 24px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 34px;
-    letter-spacing: -0.6px;
-    margin-top: 24px;
-    margin-bottom: 0 !important;
+  color: #303030;
+  font-family: Pretendard;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 34px;
+  letter-spacing: -0.6px;
+  margin-top: 24px;
+  margin-bottom: 0 !important;
 }
 
 .rg-desc-point{
-    color: #767676;
+  color: #767676;
 font-family: Pretendard;
 font-size: 14px;
 font-style: normal;
@@ -41,7 +41,7 @@ letter-spacing: -0.35px;
 margin-top:8px; 
 }
 .rg-desc{
-    color: #767676;
+  color: #767676;
 font-family: Pretendard;
 font-size: 14px;
 font-style: normal;
@@ -51,13 +51,13 @@ letter-spacing: -0.35px;
 }
 
 .rg-pay{
-    margin-top: 24px;
-    margin-left: 113px;
-    margin : 24px auto 0 113px; 
+  margin-top: 24px;
+  margin-left: 113px;
+  margin : 24px auto 0 113px; 
 }
 
 .rg-ten{
-    color: #2E80EC;
+  color: #2E80EC;
 text-align: center;
 
 font-family: Pretendard;
@@ -69,7 +69,7 @@ letter-spacing: -0.45px;
 }
 
 .rg-charge{
-    color: var(--Font-04_Gray, #767676);
+  color: var(--Font-04_Gray, #767676);
 
     font-family: Pretendard;
     font-size: 18px;
@@ -80,7 +80,7 @@ letter-spacing: -0.45px;
 }
 
 .rg-won{
-    color: #303030;
+  color: #303030;
 text-align: center;
 font-family: Pretendard;
 font-size: 48px;
@@ -92,8 +92,8 @@ margin-top:2px;
 }
 
 .rg-paypad{
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
 width: 342px;
 flex-direction: column;
 align-items: flex-start;
@@ -101,16 +101,16 @@ margin-top:16px;
 }
 
 .last-row{
-    display:grid;
+  display:grid;
 }
 
 .rg-num-key,
 .rg-space, 
 .rg-zero,
 .rg-backspace{
-    display: flex;
-    background-color: #ffff;
-    border: none;
+  display: flex;
+  background-color: #ffff;
+  border: none;
 width: 114px;
 padding: 21px 0;
 justify-content: center;
@@ -125,10 +125,10 @@ letter-spacing: -0.7px;
 }
 
 .rg-address-wrap{
-    margin-top:8px;
-    width: 197px;
-    height: 20px;
-    display: inline-flex;
+  margin-top:8px;
+  width: 197px;
+  height: 20px;
+  display: inline-flex;
 padding: 6px 72px 6px 73px;
 justify-content: center;
 align-items: center;
@@ -148,17 +148,17 @@ gap: 3px;
 }
 
 .rg-bubble-wrap{
-    margin-left: 26px;
-    margin-top:16px;
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  margin-left: 26px;
+  margin-top:16px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .rg-bubble{
-    box-sizing: border-box;
-    width: 290px;
+  box-sizing: border-box;
+  width: 290px;
 height: 30px;
 border-radius: 4px;
 background: #FFF;
@@ -174,7 +174,7 @@ letter-spacing: -0.325px;
 padding: 6px 21px;
 
 .rg-desc-charge{
-    color: #434343;
+  color: #434343;
 
 font-family: Pretendard;
 font-size: 13px;
@@ -185,7 +185,7 @@ letter-spacing: -0.325px;
 }
 
 .rg-desc{
-    color: #434343;
+  color: #434343;
 
 /* MO/Body/KR/B3_KR_Rg */
 font-family: Pretendard;
@@ -197,9 +197,9 @@ letter-spacing: -0.325px;
 }}
 
 .rg-bubble-bottom{
-    width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid #fff;
+  width: 0;
+height: 0;
+border-left: 5px solid transparent;
+border-right: 5px solid transparent;
+border-top: 6px solid #fff;
 }
