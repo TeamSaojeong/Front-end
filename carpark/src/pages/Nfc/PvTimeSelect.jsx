@@ -4,7 +4,6 @@ import "../../Styles/Nfc/PvTimeSelect.css";
 
 import backIcon from "../../Assets/arrow.png";
 import clockIcon from "../../Assets/clock.svg";
-import PreviousBtn from "../../components/Register/PreviousBtn";
 
 const ITEM_H = 44; // CSS의 tp-item 높이와 동일하게 유지
 
@@ -43,7 +42,7 @@ export default function PvTimeSelect() {
   // NFC URL 진입 시 ?placeId=xxx 지원
   const placeId = state?.placeId ?? qs.get("placeId") ?? nfcInfo?.placeId ?? 999;
 
-  // 요청 값(기본값) - nfc 정보가 있으면 우선  사용
+  // ✅ 요청 값(기본값) - NFC 정보가 있으면 우선 사용
   const DEFAULTS = {
     placeName: nfcInfo?.name || nfcInfo?.placeName || "양재근린공원주차장",
     openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || "00:00 ~ 24:00",
@@ -182,7 +181,7 @@ export default function PvTimeSelect() {
     }
   };
 
-  // 데모 값으로 PayPage로 이동 (금액은 PayPage에서 계산/표시)
+  // ✅ 데모 값으로 PayPage로 이동 (금액은 PayPage에서 계산/표시)
   const handlePay = () => {
     if (isDisabled || loading || error) return;
 
@@ -219,30 +218,33 @@ export default function PvTimeSelect() {
   };
 
   return (
-    <div className="pt-container">
-      <PreviousBtn />
+    <div className="tp-container">
+      <img
+        src={backIcon}
+        alt="뒤로가기"
+        className="tp-back"
+        onClick={() => navigate(-1)}
+      />
 
-        <div className="pt-title">
-          주차 이용 시간을
-          <br/>
-          선택해 주세요</div>
+      <div className="tp-header">
+        <div className="tp-title">주차 이용 시간을{"\n"}선택해 주세요</div>
 
-        <div className="pt-meta">
-          <div className="pt-row">
-            <span className="pt-label">주차 장소 이름</span>
-            <span className="pt-value">
+        <div className="tp-meta">
+          <div className="tp-row">
+            <span className="tp-label">주차 장소 이름</span>
+            <span className="tp-value">
               {loading ? "불러오는 중..." : error ? "—" : placeName}
             </span>
           </div>
-          <div className="pt-row">
-            <span className="pt-label">주차 가능 시간</span>
-            <span className="pt-value">
+          <div className="tp-row">
+            <span className="tp-label">주차 가능 시간</span>
+            <span className="tp-value">
               {loading ? "불러오는 중..." : error ? "—" : openRangesText}
             </span>
           </div>
-          <div className="pt-row">
-            <span className="pt-label">10분당 주차 비용</span>
-            <span className="pt-value">
+          <div className="tp-row">
+            <span className="tp-label">10분당 주차 비용</span>
+            <span className="tp-value">
               {loading
                 ? "…"
                 : error
@@ -250,56 +252,57 @@ export default function PvTimeSelect() {
                 : `${pricePer10Min.toLocaleString()}원`}
             </span>
           </div>
-        
-
-        {/* 아이콘 + 선택 시간 */}
-        <div className="pt-chip">
-          <img src={clockIcon} alt="" className="pt-chip-icon" />
-          <span>{durationText}</span>
         </div>
 
+        {/* 아이콘 + 선택 시간 */}
+        <div className="tp-chip">
+          <img src={clockIcon} alt="" className="tp-chip-icon" />
+          <span>{durationText}</span>
+        </div>
+      </div>
+
       {/* Wheel Picker (박스 없이 두 줄 가이드만) */}
-      <div className="pt-wheel-wrap">
+      <div className="tp-wheel-wrap">
         <div
-          className="pt-wheel-hour"
+          className="tp-wheel"
           ref={wheelHRef}
           onScroll={handleScroll("h")}
           aria-label="시간 선택 휠"
         >
-          <div className="pt-spacer" />
+          <div className="tp-spacer" />
           {hours.map((hh) => (
-            <div className={`pt-item ${h === hh ? "active" : ""}`} key={hh}>
+            <div className={`tp-item ${h === hh ? "active" : ""}`} key={hh}>
               {hh}
             </div>
           ))}
-          <div className="pt-spacer" />
+          <div className="tp-spacer" />
         </div>
 
-        <div className="pt-col-suffix">:</div>
+        <div className="tp-col-suffix">:</div>
 
         <div
-          className="pt-wheel-minutes"
+          className="tp-wheel"
           ref={wheelMRef}
           onScroll={handleScroll("m")}
           aria-label="분 선택 휠"
         >
-          <div className="pt-spacer" />
+          <div className="tp-spacer" />
           {minutes.map((mm) => (
-            <div className={`pt-item ${m === mm ? "active" : ""}`} key={mm}>
+            <div className={`tp-item ${m === mm ? "active" : ""}`} key={mm}>
               {fmt2(mm)}
             </div>
           ))}
-          <div className="pt-spacer" />
+          <div className="tp-spacer" />
         </div>
 
         {/* 가운데 가이드 라인 */}
-        <div className="pt-guide-line pt-guide-top" />
-        <div className="pt-guide-line pt-guide-bot" />
+        <div className="tp-guide-line tp-guide-top" />
+        <div className="tp-guide-line tp-guide-bot" />
       </div>
 
-      <div className="pt-bottom">
+      <div className="tp-bottom">
         <button
-          className={`pt-pay ${
+          className={`tp-pay ${
             isDisabled || loading || error ? "disabled" : ""
           }`}
           onClick={handlePay}
@@ -307,9 +310,8 @@ export default function PvTimeSelect() {
         >
           결제하기
         </button>
-        {error && <div className="pt-error">{error}</div>}
+        {error && <div className="tp-error">{error}</div>}
       </div>
-    </div>
     </div>
   );
 }
