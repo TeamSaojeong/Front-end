@@ -1,196 +1,138 @@
-import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PreviousBtn from "../components/Register/PreviousBtn";
-import ai_time from "../Assets/ai_time.svg";
-import { fetchParkingPrediction } from "../apis/aipredict";
-import emoji_s from "../Assets/emoji_s.svg";
-import emoji_t from "../Assets/emoji_t.svg";
-import "../Styles/AIResult.css";
 import NextBtn from "../components/Register/NextBtn";
-import ParkingCard from "../components/ParkingCard";
+import TimeWheel from "../components/TimeWheel";
+import "../Styles/AIPredict.css";
 
-function formatKoreanTime(hhmm) {
-  if (!hhmm || !/^\d{2}:\d{2}$/.test(hhmm)) return "시간 정보 없음";
-  let [hStr, mStr] = hhmm.split(":");
-  let h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  let ampm = "오전";
-  if (h >= 12) {
-    ampm = "오후";
-    if (h > 12) h -= 12;
-  }
-  if (h === 0) h = 12;
-  return `${ampm} ${h}시 ${m}분`;
-}
+const AIPredict = () => {
+  const navigate = useNavigate();
+  const [selectedTime, setSelectedTime] = useState("18:00");
+  const [address, setAddress] = useState("");
+  const [locationData, setLocationData] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
 
-const levelMessages = {
-  여유: {
-    title: "주차가 여유로울 가능성이 높아요",
-    color: "#1DD871",
-    typography: {
-      fontFamily: "Pretendard",
-      fontSize: "24px",
-      fontStyle: "normal",
-      fontWeight: 600,
-      lineHeight: "34px", // 141.667%
-      letterSpacing: "-0.6px",
-    },
-    emoji: emoji_s, // ✅ 경로 자체를 값으로
-    sub: "좋은 소식이에요! <br/>가까운 주차 장소를 추천해드릴게요.",
-  },
-  혼잡: {
-    title: "주차가 혼잡할 확률이 높아요",
-    color: "#DE5E56",
-    typography: {
-      fontFamily: "Pretendard",
-      fontSize: "24px",
-      fontStyle: "normal",
-      fontWeight: 600,
-      lineHeight: "34px",
-      letterSpacing: "-0.6px",
-    },
-    emoji: emoji_t, // ✅
-    sub: "대신, 주변에 여유로운 구역의 <br/>주차 장소를 추천해드릴게요.",
-  },
-};
+  const handleAddressSearch = async () => {
+    if (!address.trim()) {
+      alert("주소를 입력해주세요.");
+      return;
+    }
 
-const AIResult = () => {
-  const { state } = useLocation();
-  const selectedTime = state?.selectedTime || ""; // "HH:MM"
-  const address = state?.address || "";
-  const locationData = state?.locationData || null; // ✅ 좌표 정보
-  
-  const [loading, setLoading] = useState(true);
-  const [predictionData, setPredictionData] = useState(null);
-  const [error, setError] = useState("");
+    setIsSearching(true);
+    try {
+      // 카카오 주소 검색 API 호출
+      const response = await fetch(
+        `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`,
+        {
+          headers: {
+            Authorization: `KakaoAK ${process.env.REACT_APP_KAKAO_REST_API_KEY || 'your-kakao-api-key'}`
+          }
+        }
+      );
 
-  const timeLabel = formatKoreanTime(selectedTime);
-
-  // AI 예측 API 호출
-  useEffect(() => {
-    const fetchPrediction = async () => {
-      if (!address || !selectedTime) {
-        setError("주소 또는 시간 정보가 없습니다.");
-        setLoading(false);
-        return;
-      }
-
-      if (!locationData || !locationData.lat || !locationData.lng) {
-        setError("위치 좌표 정보가 없습니다. 주소를 다시 선택해주세요.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        
-        console.log('[AIResult] 검색 위치 기준 예측:', {
-          address,
-          coordinates: locationData,
-          selectedTime
+      const data = await response.json();
+      
+      if (data.documents && data.documents.length > 0) {
+        const firstResult = data.documents[0];
+        setLocationData({
+          lat: parseFloat(firstResult.y),
+          lng: parseFloat(firstResult.x),
+          address: firstResult.address_name
         });
-        
-        // 검색한 위치의 좌표 사용
-        const payload = {
-          lat: locationData.lat, // ✅ 검색한 위치의 위도
-          lon: locationData.lng, // ✅ 검색한 위치의 경도
-          arrival: `2025-08-18T${selectedTime}:00`, // 도착 시간
-          radius: 1.0, // 1km 반경
-          top_k: 15,
-          exact_radius: true,
-          list_mode: true,
-          sort_by: "score",
-          fill_external: true,
-          use_places: true
-        };
-
-        const result = await fetchParkingPrediction(payload);
-        setPredictionData(result);
-        
-        console.log('[AIResult] 예측 결과 수신:', result);
-        
-      } catch (err) {
-        console.error('[AIResult] 예측 실패:', err);
-        setError(`AI 예측 요청에 실패했습니다: ${err.message || '알 수 없는 오류'}`);
-      } finally {
-        setLoading(false);
+        setAddress(firstResult.address_name);
+        console.log('주소 검색 결과:', firstResult);
+      } else {
+        alert("주소를 찾을 수 없습니다. 다시 입력해주세요.");
       }
-    };
+    } catch (error) {
+      console.error('주소 검색 실패:', error);
+      alert("주소 검색에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
-    fetchPrediction();
-  }, [address, selectedTime, locationData]);
+  const handleNext = () => {
+    if (!address.trim()) {
+      alert("주소를 입력해주세요.");
+      return;
+    }
 
-  // 로딩 중
-  if (loading) {
-    return (
-      <div className="airesult-wrap">
-        <PreviousBtn />
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <p>AI가 주차 혼잡도를 예측하고 있어요...</p>
-        </div>
-      </div>
-    );
-  }
+    if (!locationData) {
+      alert("주소를 검색해주세요.");
+      return;
+    }
 
-  // 오류 발생
-  if (error) {
-    return (
-      <div className="airesult-wrap">
-        <PreviousBtn />
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 예측 결과 사용
-  const first = predictionData?.items?.[0];
-  const msg = levelMessages[first?.pred_level] || levelMessages["여유"];
+    // AIResult로 이동
+    navigate("/airesult", {
+      state: {
+        selectedTime,
+        address,
+        locationData
+      }
+    });
+  };
 
   return (
-    <div className="airesult-wrap">
+    <div className="aipredict-wrap">
       <PreviousBtn />
-
-      <div className="ar-time-wrap">
-        <span className="ar-time">{timeLabel}</span>
-        <span className="ar-time-selected">
-          <img src={ai_time} className="ar-time-img" alt="" />
-          <span className="ar-picked">{selectedTime}</span>
-        </span>
+      
+      <div className="ap-header">
+        <h1 className="ap-title">AI 주차 혼잡도 예측</h1>
+        <p className="ap-subtitle">
+          도착할 장소와 시간을 알려주시면<br />
+          AI가 주차 혼잡도를 예측해드려요
+        </p>
       </div>
 
-      <div className="ar-address">{address}</div>
+      <div className="ap-content">
+        {/* 주소 입력 */}
+        <div className="ap-section">
+          <h2 className="ap-section-title">도착할 장소</h2>
+          <div className="ap-address-input">
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="주소를 입력해주세요"
+              className="ap-input"
+            />
+            <button
+              onClick={handleAddressSearch}
+              disabled={isSearching}
+              className="ap-search-btn"
+            >
+              {isSearching ? "검색 중..." : "검색"}
+            </button>
+          </div>
+          {locationData && (
+            <div className="ap-address-result">
+              <span className="ap-address-text">✓ {locationData.address}</span>
+            </div>
+          )}
+        </div>
 
-      {/* 혼잡도 문구: 가운데만 색상, 이모지는 이미지로 */}
-      <p className="ar-pred-title" style={msg.typography}>
-        주차가{" "}
-        <span className="ar-pred-title-text" style={{ color: msg.color }}>
-          {msg.title.replace("주차가 ", "")}
-        </span>{" "}
-        <img
-          src={msg.emoji}
-          alt=""
-          style={{ width: 32, height: 32, verticalAlign: "middle" }}
+        {/* 시간 선택 */}
+        <div className="ap-section">
+          <h2 className="ap-section-title">도착할 시간</h2>
+          <div className="ap-time-selector">
+            <TimeWheel
+              selectedTime={selectedTime}
+              onTimeChange={setSelectedTime}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="ap-footer">
+        <NextBtn
+          label="AI 예측 시작"
+          onClick={handleNext}
+          disabled={!locationData}
         />
-      </p>
-      <p className="ar-pred-sub">
-        {msg.sub //줄바꿈
-          .split(/<br\s*\/?>/i)
-          .map((chunk, i, arr) => (
-            <>
-              {chunk.trim()}
-              {i < arr.length - 1 && <br />}
-            </>
-          ))}
-      </p>
-
-      {/* 리스트 예시 */}
-      <ParkingCard />
-
-      <NextBtn className="ar-next" label="확인" />
+      </div>
     </div>
   );
 };
 
-export default AIResult;
+export default AIPredict;

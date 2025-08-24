@@ -48,6 +48,10 @@ export default function PayPage() {
   const parkName = state?.parkName || state?.parkingInfo?.name || "테스트 주차장";
   const total = state?.total || state?.estimatedCost || 5000; // 테스트용 기본값
   const usingMinutes = state?.usingMinutes || state?.durationMin || 120; // 테스트용 기본값
+  
+  // D) 주문/예약 ID 정보
+  const orderId = state?.orderId || null;
+  const reservationId = state?.reservationId || null;
 
   console.log('[PayPage] 추출된 정보:', {
     parkingId,
@@ -191,7 +195,9 @@ export default function PayPage() {
       lotName,
       minutes,
       finalTotal,
-      pricePer10Min
+      pricePer10Min,
+      orderId,
+      reservationId
     });
 
     setPosting(true);
@@ -220,8 +226,12 @@ export default function PayPage() {
       let isTestMode = false;
       
       try {
-        // 실제 API 호출 시도
-        res = await preparePayment(paymentPayload);
+        // 실제 API 호출 시도 - 쿼리 파라미터 추가
+        const queryParams = {};
+        if (orderId) queryParams.orderId = orderId;
+        if (reservationId) queryParams.reservationId = reservationId;
+        
+        res = await preparePayment(paymentPayload, queryParams);
         console.log('결제 준비 응답:', res);
         
         // API 응답이 성공적인지 확인

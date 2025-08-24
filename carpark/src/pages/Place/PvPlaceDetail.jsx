@@ -440,6 +440,9 @@ export default function PvPlaceDetail() {
       parkName: detail?.name || "주차 장소",
       total: detail?.pricePer10m * 12 || 5000, // 2시간 기준 (10분당 가격 * 12)
       usingMinutes: 120, // 2시간
+      // 주문/예약 ID 추가 (실제로는 백엔드에서 생성된 값 사용)
+      orderId: `order_${Date.now()}_${placeId}`, // 임시 주문 ID
+      reservationId: `reservation_${Date.now()}_${placeId}`, // 임시 예약 ID
       parkingInfo: {
         name: detail?.name || "주차 장소",
         charge: detail?.pricePer10m || 1000,

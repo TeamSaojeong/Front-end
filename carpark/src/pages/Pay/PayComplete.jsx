@@ -14,10 +14,20 @@ const fmt = new Intl.DateTimeFormat("ko-KR", {
 const PayComplete = () => {
   const navigate = useNavigate();
   const { state } = useLocation() || {};
-  const reservationId = state?.reservationId || null;
+ 
   const startAt = state?.startAt ? new Date(state.startAt) : null;
   const endAt = state?.endAt ? new Date(state.endAt) : null;
   const lotName = state?.lotName || "";
+  
+  const params = new URLSearchParams(window.location.search);
+  const orderId = params.get('orderId');
+  const reservationId = params.get('reservationId');
+
+  console.log('[PayComplete] URL 파라미터:', {
+    orderId,
+    reservationId,
+    fullUrl: window.location.href
+  });
 
   const totalMin =
     startAt && endAt
@@ -40,6 +50,12 @@ const PayComplete = () => {
           <p>
             정상적으로 결제가 완료되었습니다.
             <br />
+            {orderId && (
+              <>
+                주문번호: <b>{orderId}</b>
+                <br />
+              </>
+            )}
             {reservationId && (
               <>
                 예약번호: <b>{reservationId}</b>
