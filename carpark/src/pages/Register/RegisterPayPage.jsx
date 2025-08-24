@@ -161,7 +161,7 @@ const RegisterPayPage = () => {
         </button>
       </div>
 
-      {/* ✅ 평균 요금 표시 */}
+      {/* 평균 요금 표시 */}
       <div className="rg-bubble-wrap">
         <div className="rg-bubble">
           <span className="rg-desc">주변 주차장 10분당 평균 비용은</span>
