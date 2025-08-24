@@ -348,7 +348,7 @@ export default function PlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            <img src={close}/>
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">불러오는 중…</h1>
@@ -361,7 +361,7 @@ export default function PlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">오류</h1>
@@ -375,7 +375,7 @@ export default function PlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">데이터가 없습니다.</h1>
@@ -390,7 +390,7 @@ export default function PlaceDetail() {
     <div className="pub-wrap">
       <div className="pub-topbar">
         <button className="pub-close" onClick={goBack} aria-label="닫기">
-          ✕
+          <img src={close} />
         </button>
 
         <button

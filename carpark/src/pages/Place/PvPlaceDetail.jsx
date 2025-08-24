@@ -9,6 +9,8 @@ import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
 import alarmFilledIcon from "../../Assets/alarm1.svg";
+import upload_img from "../../Assets/upload_img.svg";
+import close from "../../Assets/close.svg";
 
 import {
   getPrivateDetail,
@@ -667,7 +669,7 @@ export default function PvPlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close}/>
           </button>
         </div>
         <h1 className="pub-title">불러오는 중…</h1>
@@ -680,7 +682,7 @@ export default function PvPlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">오류</h1>
@@ -694,7 +696,7 @@ export default function PvPlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">데이터가 없습니다.</h1>
@@ -716,7 +718,7 @@ export default function PvPlaceDetail() {
     <div className="pub-wrap">
       <div className="pub-topbar">
         <button className="pub-close" onClick={goBack} aria-label="닫기">
-          ✕
+          <img src={close} />
         </button>
 
         {!isLocal && (
@@ -827,23 +829,25 @@ export default function PvPlaceDetail() {
 
       <div className="pub-chips">
         <div className="pub-chip">
-          <div className="pub-chip-icon">
-            <img src={pinIcon} alt="위치" />
-          </div>
+          
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{distanceKm ?? "-"}km</strong>
+              <div className="pub-chip-icon">
+            <img src={pinIcon} alt="위치" className="pub-chip-locationicon"/>
+          </div>
+              <strong className="pub-chip-locationtext">{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
           </div>
         </div>
 
         <div className="pub-chip">
-          <div className="pub-chip-icon">
-            <img src={moneyIcon} alt="요금" />
-          </div>
+          
           <div className="pub-chip-text">
             <div className="pub-chip-value">
+              <div className="pub-chip-icon">
+            <img src={moneyIcon} alt="요금" className="pub-chip-moneyicon"/>
+          </div>
               <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
             </div>
             <div className="pub-chip-sub">10분당 주차 비용</div>
@@ -885,13 +889,10 @@ export default function PvPlaceDetail() {
               }}
             />
           ) : (
-            <div className="pub-photo-placeholder">🖼️</div>
+          <div className="pub-photo-placeholder"><img src={upload_img}/></div>
           )}
         </div>
-
-        <h2 className="pub-section-title" style={{ marginTop: 4 }}>
-          주차 장소 설명
-        </h2>
+        
         <pre className="pub-note">{note || "-"}</pre>
       </section>
 
