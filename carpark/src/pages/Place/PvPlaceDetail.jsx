@@ -78,12 +78,9 @@ export default function PvPlaceDetail() {
     }
   }, []);
 
-  const isLocal =
-    !!location.state?.place?.isLocal ||
-    !!fromSession?.isLocal ||
-    !!myParks.find(
-      (p) => String(p.id) === String(placeId) && p.origin === "local"
-    );
+  // ✅ 로컬 여부 판단: 내가 등록한 주차장인지 확인
+  const isLocal = !!myParks.find((p) => String(p.id) === String(placeId));
+  const isMyParking = isLocal; // 내가 등록한 주차장인지 여부
 
   const localItem = isLocal
     ? myParks.find((p) => String(p.id) === String(placeId))
@@ -175,6 +172,32 @@ export default function PvPlaceDetail() {
     };
   }, [imageUrl]);
 
+  // 🔧 디버깅 도구 - 개발자 콘솔에서 사용 가능
+  useEffect(() => {
+    window.debugPvPlace = {
+      checkMyParkings: () => {
+        console.log("[DEBUG] myParks:", myParks);
+        console.log("[DEBUG] placeId:", placeId);
+        console.log("[DEBUG] localItem:", localItem);
+        console.log("[DEBUG] fromSession:", fromSession);
+        console.log("[DEBUG] isLocal:", isLocal);
+      },
+      testImageLoad: async () => {
+        console.log("[DEBUG] 이미지 로드 테스트 시작...");
+        try {
+          const imgRes = await getPrivateImage(placeId);
+          console.log("[DEBUG] 이미지 로드 결과:", imgRes);
+        } catch (error) {
+          console.error("[DEBUG] 이미지 로드 실패:", error);
+        }
+      }
+    };
+    
+    return () => {
+      delete window.debugPvPlace;
+    };
+  }, [placeId, myParks, localItem, fromSession, isLocal]);
+
   const [primary, setPrimary] = useState({
     disabled: false,
     label: "주차장 이용하기",
@@ -242,6 +265,7 @@ export default function PvPlaceDetail() {
         setDetail(normalized);
 
         try {
+          console.log("[PvPlaceDetail] 원격 이미지 요청:", normalized.id);
           const imgRes = await getPrivateImage(normalized.id);
           if (imgRes?.data && mounted) {
             const url = URL.createObjectURL(imgRes.data);
@@ -253,8 +277,21 @@ export default function PvPlaceDetail() {
               }
               return url;
             });
+            console.log("[PvPlaceDetail] 원격에서 이미지 로드 성공");
+          } else {
+            console.log("[PvPlaceDetail] 원격 이미지 응답에 데이터 없음");
           }
-        } catch {}
+        } catch (error) {
+          if (error?.response?.status === 404) {
+            console.log("[PvPlaceDetail] 원격에 이미지 없음 (404) - 정상");
+          } else {
+            console.warn("[PvPlaceDetail] 원격 이미지 로드 실패:", {
+              status: error?.response?.status,
+              message: error?.message,
+              url: error?.config?.url
+            });
+          }
+        }
       } catch (e) {
         if (!mounted) return;
         setError(
@@ -313,8 +350,12 @@ export default function PvPlaceDetail() {
       // 이미지 로드 우선순위: 로컬 → 서버
       console.log("[PvPlaceDetail] 이미지 로드 시작:", {
         id: normalized.id,
+        placeId: placeId,
         hasLocalImage: !!src.imageUrl,
-        hasLocalFile: !!src.image
+        hasLocalFile: !!src.image,
+        srcKeys: Object.keys(src),
+        localItemKeys: localItem ? Object.keys(localItem) : null,
+        sessionKeys: fromSession ? Object.keys(fromSession) : null
       });
 
       // 1. 로컬 URL이 있는 경우
@@ -337,17 +378,26 @@ export default function PvPlaceDetail() {
             const url = URL.createObjectURL(imgRes.data);
             setImageUrl(url);
             console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
+          } else {
+            console.log("[PvPlaceDetail] 서버 응답에 이미지 데이터 없음");
           }
         } catch (error) {
           // 404는 정상 (이미지 없음), 다른 오류만 경고
           if (error?.response?.status === 404) {
             console.log("[PvPlaceDetail] 서버에 이미지 없음 (404) - 정상");
           } else {
-            console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", error?.message);
+            console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", {
+              status: error?.response?.status,
+              message: error?.message,
+              url: error?.config?.url
+            });
           }
         }
       } else {
-        console.log("[PvPlaceDetail] 이미지 로드 건너뜀 (임시 ID 또는 ID 없음)");
+        console.log("[PvPlaceDetail] 이미지 로드 건너뜀 (임시 ID 또는 ID 없음)", {
+          id: normalized.id,
+          isTemp: String(normalized.id).startsWith('temp_')
+        });
       }
 
       setLoading(false);

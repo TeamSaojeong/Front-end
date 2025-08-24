@@ -1,16 +1,40 @@
-// import axios from "axios";
+import { client } from "./client";
 
-// export const fetchParkingPrediction = async (payload) => {
-//   try {
-//     const res = await axios.post("/api/parking/predict", payload, {
-//       headers: { "Content-Type": "application/json" }
-//     });
-//     return res.data; // { pred_level: "혼잡", ... }
-//   } catch (err) {
-//     console.error("API 호출 오류:", err);
-//     return null;
-//   }
-// };
+export const fetchParkingPrediction = async (payload) => {
+  try {
+    console.log("[AI예측] POST /api/parking/predict 호출:", payload);
+    const res = await client.post("/api/parking/predict", payload, {
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    // 응답 상태 체크
+    if (res.data?.status === 500 || res.status >= 400) {
+      console.warn("[AI예측] 서버 오류 응답:", res.data);
+      throw new Error(`Server Error: ${res.data?.message || 'Unknown error'}`);
+    }
+    
+    console.log("[AI예측] API 응답:", res.data);
+    return res.data;
+  } catch (err) {
+    console.error("[AI예측] API 호출 오류:", err);
+    // 오류 시 모의 데이터 반환
+    console.log("[AI예측] 모의 데이터로 대체");
+    
+    // 검색 위치 정보를 반영한 모의 데이터 생성
+    const mockData = {
+      ...mockPredictResponse,
+      location: {
+        lat: payload.lat,
+        lon: payload.lon,
+        address: `위도 ${payload.lat.toFixed(4)}, 경도 ${payload.lon.toFixed(4)} 주변`
+      },
+      searchTime: payload.arrival,
+      message: `${payload.lat.toFixed(4)}, ${payload.lon.toFixed(4)} 좌표 기준 1km 반경 주차 예측 (모의 데이터)`
+    };
+    
+    return mockData;
+  }
+};
 
 // 모의 응답 데이터
 export const mockPredictResponse = {

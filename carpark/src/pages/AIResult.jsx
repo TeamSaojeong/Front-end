@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import React, {useEffect} from "react";
 import PreviousBtn from "../components/Register/PreviousBtn";
 import ai_time from "../Assets/ai_time.svg";
-import { mockApiResponse } from "../apis/mockApiResponse";
+import { fetchParkingPrediction } from "../apis/aipredict";
 import emoji_s from "../Assets/emoji_s.svg";
 import emoji_t from "../Assets/emoji_t.svg";
 import "../Styles/AIResult.css";

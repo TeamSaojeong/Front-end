@@ -1,19 +1,36 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import "../Styles/AISearch.css";
 import aisearch from "../Assets/aisearch.svg";
 
-const MOCK_ADDRESSES = [
-  "서울특별시 강남구 테헤란로 123",
-  "서울특별시 강남구 역삼동 123-4",
-  "서울특별시 강남구 선릉로 321",
-  "서울특별시 서초구 서초대로 77",
-  "서울특별시 마포구 양화로 45",
-  "서울특별시 종로구 종로 1",
-  "경기도 성남시 분당구 판교역로 10",
-  "경기도 성남시 분당구 수내동 88",
-  "부산광역시 해운대구 센텀서로 30",
-  "대구광역시 수성구 달구벌대로 100",
-];
+// 카카오 지도 API를 사용한 주소 검색
+const searchAddress = (query) => {
+  return new Promise((resolve, reject) => {
+    if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
+      console.error('[AISearch] 카카오 지도 API가 로드되지 않았습니다');
+      resolve([]);
+      return;
+    }
+
+    const geocoder = new window.kakao.maps.services.Geocoder();
+    
+    geocoder.addressSearch(query, (result, status) => {
+      if (status === window.kakao.maps.services.Status.OK) {
+        const results = result.slice(0, 6).map(item => ({
+          address: item.address_name,
+          roadAddress: item.road_address?.address_name,
+          placeName: item.place_name,
+          lat: parseFloat(item.y),
+          lng: parseFloat(item.x)
+        }));
+        console.log('[AISearch] 주소 검색 결과:', results);
+        resolve(results);
+      } else {
+        console.log('[AISearch] 주소 검색 실패:', status);
+        resolve([]);
+      }
+    });
+  });
+};
 
 export default function AISearch({
   value,
@@ -23,11 +40,31 @@ export default function AISearch({
 }) {
   const [query, setQuery] = useState(value ?? "");
   const [open, setOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
 
-  const list = useMemo(() => {
-    const q = (query || "").trim();
-    if (!q) return [];
-    return MOCK_ADDRESSES.filter((a) => a.includes(q)).slice(0, 6);
+  // 실시간 주소 검색
+  useEffect(() => {
+    const q = query.trim();
+    if (!q || q.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const results = await searchAddress(q);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('[AISearch] 검색 오류:', error);
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300); // 300ms 디바운싱
+
+    return () => clearTimeout(timeoutId);
   }, [query]);
 
   const handleChange = (e) => {
@@ -37,10 +74,18 @@ export default function AISearch({
     setOpen(!!v);
   };
 
-  const handleSelect = (text) => {
-    setQuery(text);
-    onChange?.(text);
-    onSelect?.(text);
+  const handleSelect = (result) => {
+    const displayText = result.roadAddress || result.address;
+    setQuery(displayText);
+    onChange?.(displayText);
+    
+    // 좌표 정보도 함께 전달
+    onSelect?.({
+      address: displayText,
+      lat: result.lat,
+      lng: result.lng,
+      placeName: result.placeName
+    });
     setOpen(false);
   };
 
@@ -59,17 +104,29 @@ export default function AISearch({
         />
       </div>
 
-      {open && list.length > 0 && (
+      {open && (searchResults.length > 0 || searching) && (
         <div className="ai-search-suggest" role="listbox">
-          {list.map((item) => (
+          {searching && (
+            <div className="ai-search-loading">
+              검색 중...
+            </div>
+          )}
+          {searchResults.map((result, index) => (
             <button
               type="button"
-              key={item}
+              key={`${result.lat}-${result.lng}-${index}`}
               className="ai-search-item"
-              onClick={() => handleSelect(item)}
+              onClick={() => handleSelect(result)}
               role="option"
             >
-              {item}
+              <div className="ai-search-item-main">
+                {result.roadAddress || result.address}
+              </div>
+              {result.placeName && (
+                <div className="ai-search-item-sub">
+                  {result.placeName}
+                </div>
+              )}
             </button>
           ))}
         </div>
