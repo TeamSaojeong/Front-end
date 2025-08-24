@@ -5,6 +5,8 @@ import "../../Styles/Nfc/MapRoute.css";
 import pinIcon from "../../Assets/emptypin.svg";
 import orangeLcIcon from "../../Assets/orangelc.svg";
 
+import right from "../../Assets/right.svg";
+
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false";
 
@@ -35,6 +37,7 @@ export default function MapRoute() {
   });
 
   const dest = useMemo(() => state?.dest ?? null, [state]);
+  const hasDest = (dest?.lat && dest?.lng); // 원래 코드
 
   // ===== Kakao Map init =====
   useEffect(() => {
@@ -203,7 +206,7 @@ export default function MapRoute() {
       routeMeta.durationMin != null
         ? `${Math.round(routeMeta.durationMin)}분 남음`
         : "—분";
-    return `${d} · ${t}`;
+    return `${d}`;
   };
 
   const goToDetail = () => {
@@ -230,38 +233,34 @@ export default function MapRoute() {
             <div className="route-title">{state?.name ?? "주차 장소 이름"}</div>
             <div className="route-sub">
               <img src={pinIcon} alt="" className="route-sub-icon" />
-              <span>{fmtMeta()}</span>
+              <span className="route-sub-text">{fmtMeta()}</span>
             </div>
           </div>
         </div>
         <div className="route-chevron" aria-hidden>
-          ›
+          <img src={right} />
         </div>
       </div>
 
-      {/* 뒤로가기 */}
-      <button
-        className="map-top-back"
-        onClick={() => navigate(-1)}
-        aria-label="뒤로가기"
-      >
-        ←
-      </button>
+      
 
       {/* 지도 */}
       <div ref={mapEl} className="map-fill" />
 
       {/* 하단 종료 버튼 */}
-      <div className="route-endbar">
+      {hasDest && !errorMsg && (
+        <div className="route-endbar">
         <button
           className="route-endbtn"
           onClick={() =>
             navigate("/home", { replace: true, state: { recenter: true } })
           }
         >
-          경로 안내 종료
+          <p className="route-endbtn-text">경로 안내 종료</p>
         </button>
       </div>
+      )}
+
 
       {isLoading && <div className="map-toast">경로 불러오는 중…</div>}
       {!!errorMsg && <div className="map-toast error">{errorMsg}</div>}
