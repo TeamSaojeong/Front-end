@@ -26,29 +26,102 @@ export default function PrivateOutSoon_cancel() {
 
   const placeName = state?.placeName ?? "콘하스 DDP 앞 주차장";
 
-  // 전달된 시간 정보 사용 (없으면 placeholder)
-  const startAt = useMemo(
-    () => (state?.startAt ? new Date(state.startAt) : null),
-    [state?.startAt]
-  );
-  const endAt = useMemo(
-    () => (state?.endAt ? new Date(state.endAt) : null),
-    [state?.endAt]
-  );
+  // 현재 시간 기준으로 시간 계산
+  const now = useMemo(() => new Date(), []);
+  
+  // 전달된 시간 정보 사용 (없으면 현재 시간 기준으로 계산)
+  const startAt = useMemo(() => {
+    if (state?.startAt) {
+      return new Date(state.startAt);
+    }
+    // PayComplete에서 전달받은 시간이 없으면 현재 시간을 시작 시간으로
+    return new Date(now);
+  }, [state?.startAt, now]);
+  
+  const endAt = useMemo(() => {
+    if (state?.endAt) {
+      return new Date(state.endAt);
+    }
+    // PayComplete에서 전달받은 시간이 없으면 usingMinutes로 계산
+    if (state?.usingMinutes) {
+      return new Date(now.getTime() + Number(state.usingMinutes) * 60 * 1000);
+    }
+    // 기본값: 현재 시간 + 10분
+    return new Date(now.getTime() + 10 * 60 * 1000);
+  }, [state?.endAt, state?.usingMinutes, now]);
 
   const [open, setOpen] = useState(state?.openModal ?? true);
 
-  // 남은 시간 체크 → 만료 시 /parkingend 로 이동
+  // 시간 정보 디버깅
   useEffect(() => {
-    if (!endAt) return;
-    const tick = setInterval(() => {
-      if (Date.now() >= endAt.getTime()) {
-        clearInterval(tick);
-        navigate("/parkingend", { replace: true });
+    console.log('[PrivateOutSoon_cancel] 시간 정보:', {
+      currentTime: new Date().toLocaleString(),
+      startAt: startAt.toLocaleString(),
+      endAt: endAt.toLocaleString(),
+      usingMinutes: state?.usingMinutes,
+      state: state
+    });
+  }, [startAt, endAt, state]);
+
+  // 남은 시간 계산 (실제 선택한 이용시간부터 계산)
+  const [remainingTime, setRemainingTime] = useState(0);
+  
+  useEffect(() => {
+    const calculateRemaining = () => {
+      const now = new Date();
+      // 실제 선택한 이용시간(endAt)부터 현재까지의 남은 시간 계산
+      const remaining = Math.max(0, endAt.getTime() - now.getTime());
+      setRemainingTime(remaining);
+      
+      // 시간이 다 되면 ParkingEnd로 이동
+      if (remaining <= 0) {
+        navigate("/parkingend", { 
+          replace: true,
+          state: {
+            placeName,
+            startAt: startAt.toISOString(),
+            endAt: endAt.toISOString(),
+            parkingId: state?.parkingId,
+            parkName: state?.parkName,
+            total: state?.total,
+            usingMinutes: state?.usingMinutes,
+            parkingInfo: state?.parkingInfo,
+            orderId: state?.orderId,
+            reservationId: state?.reservationId
+          }
+        });
       }
-    }, 1000);
-    return () => clearInterval(tick);
-  }, [endAt, navigate]);
+    };
+    
+    calculateRemaining();
+    const interval = setInterval(calculateRemaining, 1000);
+    return () => clearInterval(interval);
+  }, [endAt, navigate, placeName, startAt, state]);
+
+  // 남은 시간 포맷팅
+  const formatRemainingTime = (ms) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // 건너뛰기 버튼 클릭 핸들러
+  const handleSkip = () => {
+    navigate("/parkingend", {
+      state: {
+        placeName,
+        startAt: startAt.toISOString(),
+        endAt: endAt.toISOString(),
+        parkingId: state?.parkingId,
+        parkName: state?.parkName,
+        total: state?.total,
+        usingMinutes: state?.usingMinutes,
+        parkingInfo: state?.parkingInfo,
+        orderId: state?.orderId,
+        reservationId: state?.reservationId
+      }
+    });
+  };
 
   return (
     <div className="privatecancel-container">
@@ -79,13 +152,59 @@ export default function PrivateOutSoon_cancel() {
           <img src={infoyellow_icon} alt="안내 아이콘" className="info-icon" />
           <div className="privatecancel-notice-text">
             <p className="privatecancel-info-text1">
-              출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
+              이용 시간 꼭 확인하시고 잘 지켜주세요!
             </p>
             <p className="privatecancel-info-text2">
-              곧 나감 누르시고, 포인트 받아가세요!
+              무단으로 이용시간을 초과하면 신고를 받을 수 있습니다.
             </p>
           </div>
         </div>
+      </div>
+
+      {/* [시범용] 시간 건너뛰기 버튼 - notice box 바로 아래 */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        margin: '16px 24px 0',
+        width: 'calc(100% - 48px)'
+      }}>
+        <button
+          onClick={handleSkip}
+          style={{
+            width: '227px',
+            height: '33px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '8px 10px',
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            border: '1px solid #303030',
+            background: '#303030',
+            color: '#FFF',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = '#e8e8e8';
+            e.target.style.color = '#333';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = '#f8f8f8';
+            e.target.style.color = '#666';
+          }}
+          onMouseDown={(e) => {
+            e.target.style.background = '#d8d8d8';
+            e.target.style.transform = 'translateY(1px)';
+          }}
+          onMouseUp={(e) => {
+            e.target.style.background = '#e8e8e8';
+            e.target.style.transform = 'translateY(0)';
+          }}
+        >
+          [시범용] 시간 건너뛰기 버튼
+        </button>
       </div>
 
       <div className="privatecancel-car-section">
@@ -93,13 +212,13 @@ export default function PrivateOutSoon_cancel() {
       </div>
 
       <div className="privatecancel-button-section">
-        {/* ‘곧 나감’은 이미 눌렀으므로 항상 비활성화 */}
+        {/* '곧 나감'은 이미 눌렀으므로 항상 비활성화 */}
         <button
           className="privatecancel-outsoon is-disabled"
           disabled
           aria-disabled="true"
           tabIndex={-1}
-          title="이미 ‘곧 나감’을 눌렀습니다"
+          title="이미 '곧 나감'을 눌렀습니다"
         >
           곧 나감
         </button>

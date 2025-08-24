@@ -68,17 +68,9 @@ export async function register(accessToken) {
     // 이미지가 있는 경우에만 추가
     if (hasImg && f) {
       fd.append("image", f, f.name || "parking.jpg");
-      console.log("[REGISTER] 이미지 파일 추가:", {
-        fileName: f.name,
-        fileSize: f.size,
-        fileType: f.type
-      });
     }
 
-    console.log("[REGISTER] 서버로 요청 보냄:", {
-      hasImage: hasImg,
-      imageIncluded: hasImg && f ? "YES" : "NO"
-    });
+    console.log("[REGISTER] 서버로 요청 보냄…");
 
     const { data } = await client.post("/api/parking", fd, {
       headers: {
@@ -122,21 +114,6 @@ export async function register(accessToken) {
       });
     }
 
-    // ✅ JWT 토큰에서 현재 사용자 정보 추출
-    const token = localStorage.getItem("accessToken");
-    let currentUser = "anonymous";
-    
-    if (token) {
-      try {
-        const payload = token.split('.')[1];
-        const decoded = JSON.parse(atob(payload));
-        currentUser = decoded.loginId || decoded.email || decoded.sub || "anonymous";
-        console.log("[REGISTER] 현재 사용자:", currentUser);
-      } catch (e) {
-        console.warn("[REGISTER] JWT 디코딩 실패:", e);
-      }
-    }
-
     const detail = {
       id: parkingId,
       name: created?.parkingName || created?.name || request.name,
@@ -149,15 +126,10 @@ export async function register(accessToken) {
       lng: created?.lng ?? request.lng,
       ...imageInfo, // 이미지 정보 추가
       origin: "server",
-      enabled: created?.operate ?? true, // ✅ enabled로 통일
-      owner: currentUser, // ✅ JWT에서 추출한 소유자 정보
+      operate: created?.operate ?? true,
     };
 
-    console.log("[REGISTER] 스토어에 저장할 detail:", detail);
-    
     useMyParkings.getState().upsert(detail);
-    
-    console.log("[REGISTER] 스토어 저장 완료. 현재 아이템:", useMyParkings.getState().items.length);
 
     return { parkingId, detail };
   } catch (e) {
@@ -176,20 +148,6 @@ export async function register(accessToken) {
       );
       console.log("[REGISTER] 재시도 후 주차장 ID:", parkingId);
 
-      // ✅ JWT 토큰에서 현재 사용자 정보 추출 (재시도 시에도)
-      const token = localStorage.getItem("accessToken");
-      let currentUser = "anonymous";
-      
-      if (token) {
-        try {
-          const payload = token.split('.')[1];
-          const decoded = JSON.parse(atob(payload));
-          currentUser = decoded.loginId || decoded.email || decoded.sub || "anonymous";
-        } catch (e) {
-          console.warn("[REGISTER] JWT 디코딩 실패 (재시도):", e);
-        }
-      }
-
       const detail = {
         id: parkingId,
         name: created?.name ?? request.name,
@@ -202,11 +160,8 @@ export async function register(accessToken) {
         lng: created?.lng ?? request.lng,
         imageUrl: created?.imageUrl ?? null,
         origin: "server",
-        enabled: created?.operate ?? true, // ✅ enabled로 통일
-        owner: currentUser, // ✅ JWT에서 추출한 소유자 정보
       };
 
-      console.log("[REGISTER] 재시도 후 스토어 저장:", detail);
       useMyParkings.getState().upsert(detail);
 
       return { parkingId, detail };

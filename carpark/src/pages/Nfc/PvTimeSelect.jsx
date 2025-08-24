@@ -13,18 +13,6 @@ export default function PvTimeSelect() {
   const { state, search } = useLocation() || {};
   const qs = new URLSearchParams(search || "");
   
-  // 로그인 정보 확인
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem('accessToken');
-    const userEmail = localStorage.getItem('userEmail');
-    console.log('[PvTimeSelect] 로그인 상태 확인:', {
-      hasToken: !!token,
-      userEmail: userEmail,
-      tokenPreview: token ? token.substring(0, 20) + '...' : null
-    });
-    return { token, userEmail };
-  };
-  
   // NFC 태그로 진입 시 저장된 주차장 정보 불러오기
   const getNfcParkingInfo = () => {
     try {
@@ -36,35 +24,24 @@ export default function PvTimeSelect() {
     }
   };
 
-  // 로그인 상태 확인
-  const loginInfo = checkLoginStatus();
   const nfcInfo = getNfcParkingInfo();
   
   // NFC URL 진입 시 ?placeId=xxx 지원
   const placeId = state?.placeId ?? qs.get("placeId") ?? nfcInfo?.placeId ?? 999;
 
-  // 요청 값(기본값) - nfc 정보가 있으면 우선  사용
+  // ✅ 요청 값(기본값) - NFC 정보가 있으면 우선 사용
   const DEFAULTS = {
-    placeName: nfcInfo?.name || nfcInfo?.placeName || "양재근린공원주차장",
-    openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || "00:00 ~ 24:00",
-    pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || 800,
+    placeName: nfcInfo?.name || nfcInfo?.placeName || state?.placeName || "양재근린공원주차장",
+    openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || state?.openRangesText || "00:00 ~ 24:00",
+    pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || state?.pricePer10Min || 800,
   };
   
-  console.log('[PvTimeSelect] 초기화 정보:', {
+  console.log('PvTimeSelect NFC 정보:', {
     nfcInfo,
     defaults: DEFAULTS,
-    loginInfo
+    placeName: DEFAULTS.placeName,
+    pricePer10Min: DEFAULTS.pricePer10Min
   });
-
-  // 로그인 체크 (NFC 태그로 직접 진입한 경우)
-  useEffect(() => {
-    if (!loginInfo.token) {
-      console.warn('[PvTimeSelect] 로그인 토큰 없음 - 로그인 페이지로 리다이렉트');
-      alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
-      navigate('/login');
-      return;
-    }
-  }, [loginInfo.token, navigate]);
 
   // ------- 백엔드에서 받아올 값들 -------
   const [loading, setLoading] = useState(!state?.prefetched);
@@ -189,7 +166,7 @@ export default function PvTimeSelect() {
     const now = new Date();
     const end = new Date(now.getTime() + totalMinutes * 60000);
 
-    // 결제 정보 준비
+    // 결제 정보 준비 - 교장 앞 주차장 데이터 우선 사용
     const paymentData = {
       demo: true, // 데모 플래그 (PayPage에서 API 생략)
       lotId: placeId || 999,
@@ -201,18 +178,26 @@ export default function PvTimeSelect() {
       usingMinutes: totalMinutes,
       estimatedCost,
       total: estimatedCost,
-      pricePer10Min: pricePer10Min, // 10분당 요금 명시적 전달
-      // 주차장 정보
+      // 주차장 정보 - nfcInfo 우선, state 백업
       parkingInfo: {
         id: nfcInfo?.id || placeId,
         name: placeName,
-        address: nfcInfo?.address || "",
+        address: nfcInfo?.address || state?.address || "",
         isPrivate: nfcInfo?.isPrivate !== false,
-        charge: pricePer10Min
+        charge: pricePer10Min,
+        availableTimes: nfcInfo?.availableTimes || openRangesText,
+        note: nfcInfo?.note || state?.note || "",
+        lat: nfcInfo?.lat || state?.lat || null,
+        lng: nfcInfo?.lng || state?.lng || null,
       },
     };
 
     console.log('PvTimeSelect에서 PayPage로 전달:', paymentData);
+    console.log('교장 앞 주차장 데이터 확인:', {
+      name: paymentData.parkingInfo.name,
+      charge: paymentData.parkingInfo.charge,
+      address: paymentData.parkingInfo.address
+    });
 
     // NFC 정보와 함께 결제 페이지로 이동
     navigate("/PayPage", { state: paymentData });

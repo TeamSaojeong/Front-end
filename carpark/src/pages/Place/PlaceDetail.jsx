@@ -22,30 +22,8 @@ import { mapStatusToUI } from "../../utils/parkingStatus";
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
 const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
 
-/** 사용자별 로컬 키 (이메일 기반으로 완전 분리) */
-const getUserEmail = () => {
-  try {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return "guest";
-    const payload = token.split('.')[1];
-    const decoded = JSON.parse(atob(payload));
-    return decoded.email || decoded.sub || "guest";
-  } catch {
-    return "guest";
-  }
-};
-
-const getUserKey = () => {
-  const email = getUserEmail();
-  const browserKey = localStorage.getItem("browserInstanceKey") || 
-    (() => {
-      const key = `browser_${Date.now()}_${Math.random().toString(36).substr(2)}`;
-      localStorage.setItem("browserInstanceKey", key);
-      return key;
-    })();
-  return `${email}__${browserKey}`;
-};
-
+/** 사용자별 로컬 키 (동일 브라우저 내 다른 계정 분리용) */
+const getUserKey = () => localStorage.getItem("userKey") || "guest";
 const lsk = (key) => `watchedPlaceIds__${key}`;
 const readWatched = (userKey = getUserKey()) => {
   try {
@@ -56,13 +34,11 @@ const readWatched = (userKey = getUserKey()) => {
     return [];
   }
 };
-
 const saveWatched = (ids, userKey = getUserKey()) => {
   try {
     localStorage.setItem(lsk(userKey), JSON.stringify(ids));
   } catch {}
 };
-
 const addWatched = (id, userKey = getUserKey()) => {
   const set = new Set(readWatched(userKey));
   set.add(normalizeId(id));
@@ -95,15 +71,14 @@ export default function PlaceDetail() {
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
   const [parkingId, setParkingId] = useState(null);
+  const [isLeavingSoon, setIsLeavingSoon] = useState(false);
 
   const [primary, setPrimary] = useState({ label: "주차장 이용하기" });
 
-  /** 처음 진입 시: 현재 로그인한 사용자의 구독 여부로 아이콘 상태 결정 */
-  const [isSubscribed, setIsSubscribed] = useState(() => {
-    const email = getUserEmail();
-    const watchedIds = JSON.parse(localStorage.getItem(`watchedPlaceIds__${email}`) || "[]");
-    return watchedIds.includes(externalId);
-  });
+  /** 처음 진입 시: 로컬 기억값을 우선으로 아이콘 상태 결정 */
+  const [isSubscribed, setIsSubscribed] = useState(() =>
+    readWatched(userKey).includes(externalId)
+  );
 
   const goBack = () => navigate(-1);
 
@@ -119,6 +94,13 @@ export default function PlaceDetail() {
   };
 
   const startUse = () => {
+    // leavingSoon 상태일 때는 대기 알림 설정
+    if (isLeavingSoon) {
+      alert("곧 나가는 차량이 있습니다. 대기 알림을 설정했습니다.");
+      // 여기에 대기 알림 로직을 추가할 수 있습니다
+      return;
+    }
+    
     const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
     const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
     if (
@@ -130,16 +112,61 @@ export default function PlaceDetail() {
       alert("목적지 좌표가 없어 진행할 수 없습니다.");
       return;
     }
-    navigate("/pub/time-select", {
-      state: {
-        prefetched: true,
-        placeId: parkingId ?? kakaoId,
-        placeName: detail?.name,
-        address: detail?.address,
-        openRangesText: detail?.availableTimes,
-        isPrivate: false,
-      },
-    });
+    
+    // 교장 앞 주차장의 경우 NFC 페이지로 이동
+    if (kakaoId === "pub-dummy-gn-4") {
+      console.log('[PlaceDetail] 교장 앞 주차장 - NFC 페이지로 이동');
+      
+      // NFC 페이지로 전달할 주차장 정보 준비
+      const parkingInfo = {
+        id: parkingId ?? kakaoId,
+        name: detail?.name || "교장 앞 주차장(구간 182)",
+        address: detail?.address || "",
+        availableTimes: detail?.availableTimes || "",
+        isPrivate: true,
+        lat: targetLat,
+        lng: targetLng,
+        charge: detail?.pricePer10m || 1800,
+        note: detail?.note || "",
+      };
+
+      console.log('PlaceDetail에서 NFC로 전달하는 정보:', parkingInfo);
+      
+      // 세션 스토리지에 저장
+      try {
+        sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
+        console.log('[PlaceDetail] sessionStorage 저장 완료');
+      } catch (error) {
+        console.error('[PlaceDetail] 스토리지 저장 실패:', error);
+      }
+      
+      // NFC 페이지로 이동
+      navigate("/nfc", {
+        state: {
+          prefetched: true,
+          placeId: parkingId ?? kakaoId,
+          placeName: detail?.name,
+          address: detail?.address,
+          openRangesText: detail?.availableTimes,
+          isPrivate: true,
+          lat: targetLat,
+          lng: targetLng,
+          pricePer10Min: detail?.pricePer10m || 1800,
+        },
+      });
+    } else {
+      // 일반 공용 주차장 플로우
+      navigate("/pub/time-select", {
+        state: {
+          prefetched: true,
+          placeId: parkingId ?? kakaoId,
+          placeName: detail?.name,
+          address: detail?.address,
+          openRangesText: detail?.availableTimes,
+          isPrivate: false,
+        },
+      });
+    }
   };
 
   // 상세
@@ -153,6 +180,55 @@ export default function PlaceDetail() {
       }
       setLoading(true);
       setError("");
+      
+      // 더미 데이터 ID인지 확인
+      const isDummyData = kakaoId.startsWith('pub-dummy-') || kakaoId.startsWith('pv-dummy-') || kakaoId.startsWith('prv-dummy-');
+      
+      if (isDummyData) {
+        console.log('[PlaceDetail] 더미 데이터 감지, API 호출 건너뛰기:', kakaoId);
+        
+        try {
+          // 더미 데이터에서 해당 주차장 정보 찾기
+          const { getYangjaeDummies, getSeochoGangnamDummies } = await import('../../utils/dummyData');
+          const allDummies = [...getYangjaeDummies(), ...getSeochoGangnamDummies()];
+          const dummyPlace = allDummies.find(p => p.id === kakaoId);
+          
+          if (dummyPlace) {
+            const d = dummyPlace;
+            const pid = d.id ?? d.parkingId ?? null;
+            setParkingId(pid);
+
+            const lat = toNum(d?.lat) ?? sessionLat ?? null;
+            const lng = toNum(d?.lng) ?? sessionLng ?? null;
+            
+            // leavingSoon 상태 확인
+            const leavingSoon = !!d.leavingSoon;
+            setIsLeavingSoon(leavingSoon);
+            console.log('[PlaceDetail] 더미 데이터 leavingSoon 상태:', leavingSoon, d.name);
+
+            const normalized = {
+              id: pid ?? kakaoId,
+              name: d.name ?? placeFromSession?.name ?? "주차 장소",
+              distanceKm: d.distanceKm ?? placeFromSession?.distanceKm ?? null,
+              pricePer10m: d.charge != null ? Number(d.charge) : (placeFromSession?.price ?? 0),
+              address: d.address ?? placeFromSession?.address ?? "",
+              availableTimes: Array.isArray(d.operateTimes)
+                ? d.operateTimes.map((t) => `${t.start} ~ ${t.end}`).join("  |  ")
+                : (placeFromSession?.available ?? "00:00 ~ 00:00"),
+              note: d.note ?? placeFromSession?.note ?? "",
+              lat,
+              lng,
+            };
+            setDetail(normalized);
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('[PlaceDetail] 더미 데이터 처리 중 오류:', error);
+        }
+      }
+      
+      // 실제 API 호출 (더미 데이터가 아닌 경우)
       try {
         const { data } = await getPublicDetail(
           kakaoId,
@@ -261,35 +337,32 @@ export default function PlaceDetail() {
 
     try {
       if (isSubscribed) {
-                            // 알림 해지 - alertId 필요
-                    const email = getUserEmail();
-                    const alertIdsKey = `alertIds__${email}`;
-                    const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
-                    const alertId = alertIds[externalId];
-                    
-                    if (alertId) {
-                      await unsubscribeAlert({ alertId });
-                      
-                      // 로컬에서 제거
-                      const watchedIdsKey = `watchedPlaceIds__${email}`;
-                      const watchedIds = JSON.parse(localStorage.getItem(watchedIdsKey) || "[]");
-                      const newWatchedIds = watchedIds.filter(id => id !== externalId);
-                      localStorage.setItem(watchedIdsKey, JSON.stringify(newWatchedIds));
-                      
-                      const nameKey = `watchedPlaceNames__${email}`;
-                      const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
-                      delete names[externalId];
-                      localStorage.setItem(nameKey, JSON.stringify(names));
-                      
-                      // alertId도 제거
-                      delete alertIds[externalId];
-                      localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
-                      
-                      setIsSubscribed(false);
-                      alert("알림이 해지되었습니다.");
-                    } else {
-                      alert("알림 ID를 찾을 수 없어 해지할 수 없습니다.");
-                    }
+        // 알림 해지 - alertId 필요
+        const alertIdsKey = `alertIds__${userKey}`;
+        const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
+        const alertId = alertIds[externalId];
+        
+        if (alertId) {
+          await unsubscribeAlert({ alertId });
+          
+          // 로컬에서 제거
+          const watchedIds = readWatched(userKey).filter(id => id !== externalId);
+          saveWatched(watchedIds, userKey);
+          
+          const nameKey = "watchedPlaceNames__" + userKey;
+          const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+          delete names[externalId];
+          localStorage.setItem(nameKey, JSON.stringify(names));
+          
+          // alertId도 제거
+          delete alertIds[externalId];
+          localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
+          
+          setIsSubscribed(false);
+          alert("알림이 해지되었습니다.");
+        } else {
+          alert("알림 ID를 찾을 수 없어 해지할 수 없습니다.");
+        }
       } else {
         // 알림 등록
         console.log('알림 등록 파라미터:', { provider: "kakao", externalId, parkingId: parkingId ?? externalId });
@@ -303,29 +376,20 @@ export default function PlaceDetail() {
         console.log('POST /api/alerts response:', alertResponse);
         console.log('extracted alertId:', alertId);
         
-                            const email = getUserEmail();
-                    
-                    // 구독 목록에 추가
-                    const watchedIdsKey = `watchedPlaceIds__${email}`;
-                    const watchedIds = JSON.parse(localStorage.getItem(watchedIdsKey) || "[]");
-                    if (!watchedIds.includes(externalId)) {
-                      watchedIds.push(externalId);
-                      localStorage.setItem(watchedIdsKey, JSON.stringify(watchedIds));
-                    }
+        addWatched(externalId, userKey);
 
-                    // 주차장 이름 저장
-                    const nameKey = `watchedPlaceNames__${email}`;
-                    const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
-                    names[externalId] = detail?.name || "주차장";
-                    localStorage.setItem(nameKey, JSON.stringify(names));
+        const nameKey = "watchedPlaceNames__" + userKey;
+        const names = JSON.parse(localStorage.getItem(nameKey) || "{}");
+        names[externalId] = detail?.name || "주차장";
+        localStorage.setItem(nameKey, JSON.stringify(names));
 
-                    // alertId 저장
-                    if (alertId) {
-                      const alertIdsKey = `alertIds__${email}`;
-                      const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
-                      alertIds[externalId] = alertId;
-                      localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
-                    }
+        // alertId 저장
+        if (alertId) {
+          const alertIdsKey = `alertIds__${userKey}`;
+          const alertIds = JSON.parse(localStorage.getItem(alertIdsKey) || "{}");
+          alertIds[externalId] = alertId;
+          localStorage.setItem(alertIdsKey, JSON.stringify(alertIds));
+        }
 
         setIsSubscribed(true);
         alert("알림이 설정되었습니다.");
@@ -503,8 +567,15 @@ export default function PlaceDetail() {
           경로 안내 보기
         </button>
 
-        <button className="pub-btn pub-btn-primary" onClick={startUse}>
-          {primary.label}
+        <button 
+          className="pub-btn pub-btn-primary"
+          onClick={startUse}
+          style={isLeavingSoon ? {
+            background: '#434343',
+            color: '#FFFFFF'
+          } : {}}
+        >
+          {isLeavingSoon ? "대기하기" : primary.label}
         </button>
       </div>
     </div>

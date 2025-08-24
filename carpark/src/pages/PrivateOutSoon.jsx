@@ -93,18 +93,26 @@ export default function PrivateOutSoon() {
   const placeId = state?.placeId ?? selectedPlace?.id ?? placeName;
   const address = state?.address ?? selectedPlace?.address ?? "";
 
-  // 데모 기본값: 시작=30분 전, 종료=현재+11분(10분 테스트 용)
+  // 현재 시간 기준으로 예약 시간 설정
   const now0 = useMemo(() => new Date(), []);
-  const [startAt] = useState(() =>
-    state?.startAt
-      ? new Date(state.startAt)
-      : new Date(now0.getTime() - 30 * 60 * 1000)
-  );
-  const [endAt] = useState(() =>
-    state?.endAt
-      ? new Date(state.endAt)
-      : new Date(now0.getTime() + 11 * 60 * 1000)
-  );
+  const [startAt] = useState(() => {
+    if (state?.startAt) {
+      return new Date(state.startAt);
+    }
+    // PayComplete에서 전달받은 시간이 없으면 현재 시간을 시작 시간으로
+    return new Date(now0);
+  });
+  const [endAt] = useState(() => {
+    if (state?.endAt) {
+      return new Date(state.endAt);
+    }
+    // PayComplete에서 전달받은 시간이 없으면 usingMinutes로 계산
+    if (state?.usingMinutes) {
+      return new Date(now0.getTime() + Number(state.usingMinutes) * 60 * 1000);
+    }
+    // 기본값: 현재 시간 + 10분
+    return new Date(now0.getTime() + 10 * 60 * 1000);
+  });
 
   // 남은시간 1초 갱신
   const [now, setNow] = useState(Date.now());
@@ -112,6 +120,17 @@ export default function PrivateOutSoon() {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // 시간 정보 디버깅
+  useEffect(() => {
+    console.log('[PrivateOutSoon] 시간 정보:', {
+      currentTime: new Date(now).toLocaleString(),
+      startAt: startAt.toLocaleString(),
+      endAt: endAt.toLocaleString(),
+      usingMinutes: state?.usingMinutes,
+      state: state
+    });
+  }, [now, startAt, endAt, state]);
 
   // 10/5분 근처 판별
   const endMs = endAt.getTime();
@@ -137,6 +156,8 @@ export default function PrivateOutSoon() {
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pressedKey]);
+
+
 
   // 곧나감 전송(개인 주차장: provider=private, parkingId 사용)
   const onPressOutSoon = async () => {
@@ -166,17 +187,25 @@ export default function PrivateOutSoon() {
       };
 
       await postSoonOut(payload);
+      
+      // 곧 나감 버튼 클릭 후 PrivateOutSoon_cancel로 이동
       navigate("/privateoutsoon_cancel", {
         state: {
-          openModal: true,
           placeName,
           startAt: startAt.toISOString(),
           endAt: endAt.toISOString(),
-        },
+          parkingId: state?.parkingId,
+          parkName: state?.parkName,
+          total: state?.total,
+          usingMinutes: state?.usingMinutes,
+          parkingInfo: state?.parkingInfo,
+          orderId: state?.orderId,
+          reservationId: state?.reservationId
+        }
       });
     } catch (e) {
       console.error("[private soonout] failed", e);
-      alert("‘곧 나감’ 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      alert("'곧 나감' 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
       setPressed(false);
       try {
         sessionStorage.removeItem(pressedKey);
@@ -213,12 +242,12 @@ export default function PrivateOutSoon() {
           />
           <div className="private-notice-text">
             <p className="private-info-text1">
-              출차하시기 전에 ‘곧 나감’도 잊지 말아주세요!
+              출차하시기 전에 '곧 나감'도 잊지 말아주세요!
             </p>
             <p className="private-info-text2">
               {canPressOutSoon
-                ? "지금 ‘곧 나감’을 누르시면 포인트를 받을 수 있어요!"
-                : "‘곧 나감’은 10분/5분 전에만 활성화됩니다."}
+                ? "지금 '곧 나감'을 누르시면 포인트를 받을 수 있어요!"
+                : "'곧 나감'은 10분/5분 전에만 활성화됩니다."}
             </p>
           </div>
         </div>

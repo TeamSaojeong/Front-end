@@ -80,7 +80,7 @@ export default function PvPlaceDetail() {
     }
   }, []);
 
-  // ✅ 로컬 여부 판단: 내가 등록한 주차장인지 확인
+  // 로컬 여부 판단: 내가 등록한 주차장인지 확인
   const isLocal = !!myParks.find((p) => String(p.id) === String(placeId));
   const isMyParking = isLocal; // 내가 등록한 주차장인지 여부
 
@@ -670,6 +670,7 @@ export default function PvPlaceDetail() {
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
             <img src={close}/>
+            <img src={close}/>
           </button>
         </div>
         <h1 className="pub-title">불러오는 중…</h1>
@@ -830,6 +831,7 @@ export default function PvPlaceDetail() {
       <div className="pub-chips">
         <div className="pub-chip">
           
+          
           <div className="pub-chip-text">
             <div className="pub-chip-value">
             <img src={pinIcon} alt="위치" className="pub-chip-locationicon"/>
@@ -840,6 +842,7 @@ export default function PvPlaceDetail() {
         </div>
 
         <div className="pub-chip">
+          
           
           <div className="pub-chip-text">
             <div className="pub-chip-value">
