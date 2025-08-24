@@ -7,7 +7,14 @@
   box-sizing: border-box;
   padding: 0 1.5rem;
 }
-
+.prev-btn{
+  /* 예: PreviousBtn의 루트 엘리먼트 */
+.prev-btn {
+  position: sticky;  /* 또는 fixed */
+  top: 0;            /* fixed면 top:16px 등 */
+  z-index: 2000;     /* TimePicker보다 높게 */
+}
+}
 .time-title{
   color: #303030;
 font-family: Pretendard;

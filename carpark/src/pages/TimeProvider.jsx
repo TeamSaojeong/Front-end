@@ -138,6 +138,7 @@ export default function TimeProvider() {
 
   return (
     <div className="time-container">
+      <div className="time-top">
       <img
         src={backIcon}
         alt="뒤로가기"
@@ -152,6 +153,7 @@ export default function TimeProvider() {
           <br />
           (주차 가능 최소 10분 이상이어야 합니다)
         </div>
+      </div>
       </div>
 
       <div className="time-scroll">

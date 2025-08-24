@@ -30,7 +30,7 @@ export default function BottomSheet({
 
   const handleRefresh = () => {
     onRefreshHere?.();
-    close(); // ✅ 현 위치에서 다시 검색 시 자동으로 닫힘
+    close(); // 현 위치에서 다시 검색 시 자동으로 닫힘
   };
 
   //헤더 바로 밑 센티넬 보임 여부로 타이틀 토글

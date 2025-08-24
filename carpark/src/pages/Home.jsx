@@ -282,7 +282,7 @@ export default function Home() {
       );
 
       detectAndLoad();
-      ensurePolling(); // ✅ 초기화 후 폴링 시작
+      ensurePolling(); // 초기화 후 폴링 시작
     };
 
     if (window.kakao?.maps) {

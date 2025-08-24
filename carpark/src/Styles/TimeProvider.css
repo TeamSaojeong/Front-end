@@ -11,6 +11,11 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow: hidden; /* 바깥은 숨기고 */
 }
+.time-top{
+  position:sticky;
+  top: 0;
+  z-index: 1000;
+}
 
 .time-back {
   position: absolute;

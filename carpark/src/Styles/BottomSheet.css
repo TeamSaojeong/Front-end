@@ -17,7 +17,7 @@
       z-index: 20;
     }
 
-    /* ⬇️ 헤더만 드래그 타깃 */
+    /*  헤더만 드래그 타깃 */
     .bs-header {
       height: 0.75rem; /* 12px */
       padding: 0.625rem 0 0.375rem; /* 10px 0 6px */

@@ -7,6 +7,8 @@ import emoji_t from "../Assets/emoji_t.svg";
 import "../Styles/AIResult.css";
 import NextBtn from "../components/Register/NextBtn";
 import ParkingCard from "../components/ParkingCard";
+import ai_location2 from "../Assets/ai_location2.svg";
+import "../Styles/BottomSheet.css";
 
 export function formatKoreanTime (hhmm){
   if (!hhmm || !/^\d{2}:\d{2}$/.test(hhmm)) return "시간 정보 없음";
@@ -31,7 +33,7 @@ const levelMessages = {
       lineHeight: "34px",      // 141.667%
       letterSpacing: "-0.6px",
     },
-    emoji: emoji_s, // ✅ 경로 자체를 값으로
+    emoji: emoji_s, // 경로 자체를 값으로
     sub: "좋은 소식이에요! <br/>가까운 주차 장소를 추천해드릴게요.",
   },
   혼잡: {
@@ -45,7 +47,7 @@ const levelMessages = {
       lineHeight: "34px",
       letterSpacing: "-0.6px",
     },
-    emoji: emoji_t, // ✅
+    emoji: emoji_t, 
     sub: "대신, 주변에 여유로운 구역의 <br/>주차 장소를 추천해드릴게요.",
   },
 };
@@ -53,15 +55,15 @@ const levelMessages = {
 const AIResult = () => {
   const { state } = useLocation();
   const selectedTime = state?.selectedTime || ""; // "HH:MM"
-  const address = state?.address || "";
+  const address = state?.address || "주소 없음";
 
   const timeLabel = formatKoreanTime(selectedTime);
 
   // 모의 응답에서 첫 번째 결과 사용
   const first = mockApiResponse.items?.[0];
   const msg =
-    levelMessages[first?.pred_level] || levelMessages["여유"]; // ✅ 안전한 fallback
-
+    levelMessages[first?.pred_level] || levelMessages["여유"]; // 안전한 fallback
+  
   return (
     <div className="airesult-wrap">
       <PreviousBtn />
@@ -74,7 +76,13 @@ const AIResult = () => {
         </span>
       </div>
 
-      <div className="ar-address">{address}</div>
+    <div className="ar-address-wrap">
+      <span className="ar-address">{address}</span>
+      <span className="ar-address-selected">
+          <img src={ai_location2} className="ar-address-img" alt="" />
+          <span className="ar-picked">{address}</span>
+        </span>
+    </div>
 
       {/* 혼잡도 문구: 가운데만 색상, 이모지는 이미지로 */}
       <p className="ar-pred-title" style={msg.typography}>

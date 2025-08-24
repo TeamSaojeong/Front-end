@@ -38,7 +38,8 @@ line-height: 28px; /* 140% */
 letter-spacing: -0.5px;
 }
 
-.ar-address{
+.ar-address,
+.ar-time{
   margin-top: 20px;
   color: #303030;
   
@@ -51,13 +52,19 @@ line-height: 28px; /* 155.556% */
 letter-spacing: -0.45px;
 }
 
+.ar-address-wrap{
+  display: flex;
+  align-items:center;
+
+}
 .ar-time-wrap{
   margin-top : 24px;
   display: flex;
   align-items:center;
 
 }
-.ar-time-img{
+.ar-time-img,
+.ar-address-img{
     width: 20px;
     height: 20px;
 }
@@ -75,7 +82,8 @@ line-height: 18px; /* 150% */
 letter-spacing: -0.3px;
 }
 
-.ar-time-selected{
+.ar-time-selected,
+.ar-address-selected{
   margin-left : 10px;
    display: inline-flex;
 padding: 6px 12px;
