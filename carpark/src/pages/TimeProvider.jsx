@@ -101,8 +101,9 @@ export default function TimeProvider() {
     return dur >= 10;
   };
 
-  const allValid = useMemo(
-    () => slots.length > 0 && slots.every(isSlotValid) && !loading && !error,
+  //하나라도 유효하면 true
+  const anyValid = useMemo(
+    () => slots.some(isSlotValid) && !loading && !error,
     [slots, loading, error]
   );
 
@@ -123,11 +124,13 @@ export default function TimeProvider() {
   };
 
   const handleNext = () => {
-    if (!allValid) return;
-    const payload = slots.map((s) => ({
-      start: fmt24(s.start),
-      end: fmt24(s.end),
-    }));
+    if (!anyValid) return;
+    // 유효한 항목만 저장/전달
+    const validSlots = slots.filter(isSlotValid);
+    const payload = validSlots.map((s) => ({
+     start: fmt24(s.start),
+      end: fmt24(s.end)
+        }));
     setField("operateTimes", payload);
     navigate("/registerpay", {
       state: { lotId: placeId ?? 0, lotName: placeName, timeRanges: payload },
@@ -135,6 +138,7 @@ export default function TimeProvider() {
   };
 
   return (
+    //div로 묶기만 변경
     <div className="time-container">
       {/* back icon (고정) */}
       <img
@@ -303,7 +307,7 @@ export default function TimeProvider() {
 
       {/* 하단 버튼 (고정) */}
       <div className="time-bottom-fixed">
-        <button className="time-next" onClick={handleNext} disabled={!allValid}>
+      <button className="time-next" onClick={handleNext} disabled={!anyValid}>
           다음
         </button>
         {error && <div className="time-error">{error}</div>}
