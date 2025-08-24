@@ -36,7 +36,7 @@ const RegisterPayPage = () => {
 
   const { upsert } = useMyParkings();
 
-  // ✅ 평균 요금 상태
+  // 평균 요금 상태
   const [avgFee, setAvgFee] = useState(null);
 
   // 숫자 키패드 입력
@@ -52,7 +52,7 @@ const RegisterPayPage = () => {
     setDigits(next);
   };
 
-  // ✅ 등록/수정 분기
+  // 등록/수정 분기
   const handleSubmit = async () => {
     if (!isActive || submitting) return;
     setSubmitting(true);
@@ -85,7 +85,7 @@ const RegisterPayPage = () => {
         alert("주차장이 등록되었습니다.");
       }
 
-      // ✅ store 반영 (수정 시에도 같은 id 덮어쓰기)
+      // store 반영 (수정 시에도 같은 id 덮어쓰기)
       upsert({
         ...patched,
         enabled: true,
@@ -103,7 +103,7 @@ const RegisterPayPage = () => {
     }
   };
 
-  // ✅ 평균 요금 불러오기
+  // 평균 요금 불러오기
   useEffect(() => {
     const fetchAvg = async () => {
       if (!lat || !lng) return;

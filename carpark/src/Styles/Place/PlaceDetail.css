@@ -27,33 +27,11 @@
     margin-top: 60px;
 
   }
-  .pub-bell {
-    position: absolute;
-    top: 40px;
-    right: 0;
-    width: 28px;
-    height: 28px;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-  }
-  .pub-alarm {
-    position: absolute;
-    top: 40px;
-    right: 36px;
-    width: 28px;
-    height: 28px;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-  }
-  .pub-bell img,
-  .pub-alarm img,
   .pub-chip-icon img,
-  .pub-copy-btn img {
-    width: 20px;
-    height: 20px;
-    display: block;
+  .pub-copy-btn{
+    width: 20px !important;
+    height: 20px !important;
+    display: flex;
   }
 
   /* Title */
@@ -76,8 +54,38 @@
   }
   .pub-chip-moneyicon,
   .pub-chip-locationicon{
-    margin-right: 6px;
+    margin-right: 6px !important;
   }
+  .pub-bell,
+  .pub-alarm{
+    background: transparent;
+    border: 0;
+  }
+
+  .pub-alarm-img,
+  .pub-report-img{
+    position: absolute;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .pub-alarm-img{
+    width: 24px;
+    height: 24px;
+    margin-left: 274px;
+    margin-top: 40px;
+    
+  }
+
+  .pub-report-img{
+    width: 24px;
+    height: 24px;
+    margin-left: 300px;
+    margin-top: 40px;
+    
+  }
+
 
   .pub-chip-moneytext,
   .pub-chip-locationtext{
@@ -129,7 +137,7 @@
     margin-top: 16px;
   }
   .pub-section-title {
-    color: var(--Font-04_Gray, #767676);
+    color: #767676;
     font-family: Pretendard;
     font-size: 14px;
     font-style: normal;
@@ -141,10 +149,8 @@
 
   /* Address */
   .pub-address-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    align-items: center;
+    display: flex;
+    align-items: flex-start !important;
   }
   .pub-address {
     color: #303030;
@@ -154,17 +160,7 @@
   font-weight: 400;
   line-height: 20px; /* 142.857% */
   letter-spacing: -0.35px;
-  }
-  .pub-copy-btn {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    margin-right: 80px;
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    outline: none;
-    cursor: pointer;
+  margin-right: 8px;
   }
 
   /* Time */

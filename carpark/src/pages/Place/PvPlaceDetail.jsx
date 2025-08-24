@@ -805,7 +805,7 @@ export default function PvPlaceDetail() {
               aria-label={isSubscribed ? "알림 해지" : "알림 설정"}
               title={isSubscribed ? "알림 해지" : "알림 설정"}
             >
-              <img src={isSubscribed ? alarmFilledIcon : alarmIcon} alt="알림" />
+              <img src={isSubscribed ? alarmFilledIcon : alarmIcon} alt="알림" className="pub-alarm-img"/>
             </button>
             <button
               className="pub-bell"
@@ -819,7 +819,7 @@ export default function PvPlaceDetail() {
               })}
               aria-label="신고하기"
             >
-              <img src={reportIcon} alt="신고" />
+              <img src={reportIcon} alt="신고" className="pub-report-img"/>
             </button>
           </>
         )}
@@ -832,9 +832,7 @@ export default function PvPlaceDetail() {
           
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <div className="pub-chip-icon">
             <img src={pinIcon} alt="위치" className="pub-chip-locationicon"/>
-          </div>
               <strong className="pub-chip-locationtext">{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
@@ -845,9 +843,7 @@ export default function PvPlaceDetail() {
           
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <div className="pub-chip-icon">
             <img src={moneyIcon} alt="요금" className="pub-chip-moneyicon"/>
-          </div>
               <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
             </div>
             <div className="pub-chip-sub">10분당 주차 비용</div>
@@ -858,14 +854,14 @@ export default function PvPlaceDetail() {
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소와 가장 근접한 위치</h2>
         <div className="pub-address-row">
-          <div className="pub-address">{address || "-"}</div>
-          <button
+          <span className="pub-address">{address || "-"}</span>
+          <img
             className="pub-copy-btn"
             onClick={copyAddress}
-            title="주소 복사"
-          >
-            <img src={copyIcon} alt="복사" />
-          </button>
+            src={copyIcon} 
+            alt="복사"
+            title="주소복사"
+          />
         </div>
       </section>
 
@@ -892,7 +888,7 @@ export default function PvPlaceDetail() {
           <div className="pub-photo-placeholder"><img src={upload_img}/></div>
           )}
         </div>
-        
+
         <pre className="pub-note">{note || "-"}</pre>
       </section>
 

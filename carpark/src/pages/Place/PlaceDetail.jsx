@@ -390,7 +390,7 @@ export default function PlaceDetail() {
     <div className="pub-wrap">
       <div className="pub-topbar">
         <button className="pub-close" onClick={goBack} aria-label="닫기">
-          <img src={close} />
+          <img src={close}/>
         </button>
 
         <button
@@ -402,6 +402,7 @@ export default function PlaceDetail() {
           <img
             src={isSubscribed ? alarmFilledIcon : alarmIcon}
             alt={isSubscribed ? "알림 설정됨" : "알림"}
+            className="pub-alarm-img"
           />
         </button>
 
@@ -417,7 +418,7 @@ export default function PlaceDetail() {
           })}
           aria-label="신고하기"
         >
-          <img src={reportIcon} alt="신고" />
+          <img src={reportIcon} alt="신고" className="pub-report-img"/>
         </button>
       </div>
 
@@ -448,15 +449,15 @@ export default function PlaceDetail() {
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소와 가장 근접한 위치</h2>
         <div className="pub-address-row">
-          <div className="pub-address">{address || "-"}</div>
-          <button
+          <span className="pub-address">{address || "-"}</span>
+          <img
+            src={copyIcon} 
             className="pub-copy-btn"
             onClick={copyAddress}
             aria-label="주소 복사"
             title="주소 복사"
-          >
-            <img src={copyIcon} alt="복사" />
-          </button>
+            alt="복사"
+             />
         </div>
       </section>
 
