@@ -28,6 +28,7 @@ export default function PayPage() {
   const { state } = useLocation() || {};
 
   console.log('[PayPage] 받은 state 정보:', state);
+  console.log('[PayPage] parkingInfo:', state?.parkingInfo);
 
   // 상세에서 넘어올 수 있는 값들
   // A) 바로 리디렉트 모드: paymentUrl 또는 reservationId 만 넘어온 경우
@@ -37,7 +38,7 @@ export default function PayPage() {
     state?.reservationId || state?.data?.reservationId || null;
 
   // B) 계산/예약 모드: parkingId/시작/종료 등
-  const parkingId = state?.parkingId ?? state?.lotId ?? 28; // 실제 주차장 ID 사용
+  const parkingId = state?.parkingId ?? state?.lotId ?? 99; // 실제 주차장 ID 사용
   const startAt = state?.startAt ? new Date(state.startAt) : new Date();
   const endAt = state?.endAt
     ? new Date(state.endAt)
@@ -45,9 +46,18 @@ export default function PayPage() {
   const startInMinutes = state?.startInMinutes; // RESERVABLE에서 넘겨줄 수 있음(곧 나감 n분 뒤)
 
   // C) NFC/PvTimeSelect에서 넘어온 정보들
-  const parkName = state?.parkName || state?.parkingInfo?.name || "테스트 주차장";
+  const parkName = state?.parkingInfo?.name || state?.parkName || "테스트 주차장";
   const total = state?.total || state?.estimatedCost || 5000; // 테스트용 기본값
   const usingMinutes = state?.usingMinutes || state?.durationMin || 120; // 테스트용 기본값
+  
+  // 교장 앞 주차장 데이터 디버깅
+  console.log('[PayPage] 교장 앞 주차장 데이터 확인:', {
+    parkingInfo: state?.parkingInfo,
+    parkName: state?.parkName,
+    finalParkName: parkName,
+    charge: state?.parkingInfo?.charge,
+    pricePer10Min: state?.parkingInfo?.charge || 1000
+  });
   
   // D) 주문/예약 ID 정보
   const orderId = state?.orderId || null;
@@ -66,7 +76,7 @@ export default function PayPage() {
   const [loading, setLoading] = useState(!parkName); // 이름이 있으면 로딩 스킵
   const [lotName, setLotName] = useState(parkName); // NFC에서 넘어온 이름 우선
   const [pricePer10Min, setPricePer10Min] = useState(
-    state?.parkingInfo?.charge || 1000 // 테스트용 기본값 (10분당 1000원)
+    state?.parkingInfo?.charge || state?.pricePer10Min || 1000 // 교장 앞 주차장 요금 우선
   );
   const [nearbyAvg10Min, setNearbyAvg10Min] = useState(null); // 선택: 표시만
   const [posting, setPosting] = useState(false);
@@ -135,15 +145,18 @@ export default function PayPage() {
       };
     }
 
-    // 테스트 모드인지 확인 (test_로 시작하는 경우)
-    // const isTestMode = parkingId.startsWith('test_');
-  const isTestMode=true
+    // 테스트 모드인지 확인 (더미 데이터 또는 test_로 시작하는 경우)
+    const isTestMode = parkingId.startsWith('pub-dummy-') || parkingId.startsWith('pv-dummy-') || parkingId.startsWith('prv-dummy-') || parkingId.startsWith('test_') || true;
     
     if (isTestMode) {
       // 테스트 모드: API 호출 없이 기본값 사용
       console.log('테스트 모드: API 호출 건너뛰기');
-      setLotName(state?.lotName ?? "테스트 주차장");
-      setPricePer10Min(state?.pricePer10m ?? 1000);
+      console.log('테스트 모드에서 사용할 데이터:', {
+        lotName: state?.parkingInfo?.name || state?.lotName || parkName,
+        pricePer10Min: state?.parkingInfo?.charge || state?.pricePer10m || 1000
+      });
+      setLotName(state?.parkingInfo?.name || state?.lotName || parkName);
+      setPricePer10Min(state?.parkingInfo?.charge || state?.pricePer10m || 1000);
       setLoading(false);
       return () => {
         mounted = false;
@@ -203,14 +216,18 @@ export default function PayPage() {
     setPosting(true);
     try {
       // 카카오페이 결제 준비 - API 명세에 맞춰 데이터 타입 정확히 설정
+      // 더미 데이터인 경우 실제 주차장 ID(28)로 변경
+      const actualParkingId = parkingId.startsWith('pub-dummy-') || parkingId.startsWith('pv-dummy-') || parkingId.startsWith('prv-dummy-') ? 28 : parkingId;
+      
       const paymentPayload = {
         parkName: String(lotName || "주차장"),
-        parkingId: (parkingId),
-        total: (finalTotal), // 문자열로 변경
-        usingMinutes:(minutes) // 문자열로 변경
+        parkingId: actualParkingId,
+        total: String(finalTotal), // 문자열로 변경
+        usingMinutes: String(minutes) // 문자열로 변경
       };
 
       console.log('결제 준비 요청:', paymentPayload);
+      console.log('parkingId 변환:', { original: parkingId, actual: actualParkingId });
       
       // API 요청 전 데이터 유효성 검사
       if (!paymentPayload.parkName || !paymentPayload.parkingId || 
@@ -223,31 +240,43 @@ export default function PayPage() {
       }
       
       let res;
-      let isTestMode = false;
+      let isTestMode = parkingId.startsWith('test_'); // test_로 시작하는 경우만 테스트 모드
       
-      try {
-        // 실제 API 호출 시도 - 쿼리 파라미터 추가
-        const queryParams = {};
-        if (orderId) queryParams.orderId = orderId;
-        if (reservationId) queryParams.reservationId = reservationId;
-        
-        res = await preparePayment(paymentPayload, queryParams);
-        console.log('결제 준비 응답:', res);
-        
-        // API 응답이 성공적인지 확인
-        if (res?.data?.data?.next_redirect_mobile_url || res?.data?.next_redirect_mobile_url) {
-          console.log('API 호출 성공 - 실제 카카오페이 URL 획득');
-        } else {
-          console.log('API 응답 구조:', res);
-          throw new Error('API 응답에 결제 URL이 없습니다.');
+      if (isTestMode) {
+        // test_로 시작하는 경우만 API 호출 건너뛰고 모의 카카오페이 URL 생성
+        console.log('테스트 모드 감지 - API 호출 건너뛰기');
+        res = {
+          data: {
+            data: {
+              next_redirect_mobile_url: `https://online-payment.kakaopay.com/mockup/bridge/mobile-web/pg/one-time/payment/test_${Date.now()}`
+            }
+          }
+        };
+      } else {
+        try {
+          // 실제 API 호출 시도 - 쿼리 파라미터 추가
+          const queryParams = {};
+          if (orderId) queryParams.orderId = orderId;
+          if (reservationId) queryParams.reservationId = reservationId;
+          
+          res = await preparePayment(paymentPayload, queryParams);
+          console.log('결제 준비 응답:', res);
+          
+          // API 응답이 성공적인지 확인
+          if (res?.data?.data?.next_redirect_mobile_url || res?.data?.next_redirect_mobile_url) {
+            console.log('API 호출 성공 - 실제 카카오페이 URL 획득');
+          } else {
+            console.log('API 응답 구조:', res);
+            throw new Error('API 응답에 결제 URL이 없습니다.');
+          }
+        } catch (apiError) {
+          console.log('API 호출 실패:', apiError);
+          // API 호출 실패 시 에러 메시지 표시
+          alert(`API 호출 실패: ${apiError?.response?.data?.message || apiError.message}`);
+          setPosting(false);
+          return;
         }
-             } catch (apiError) {
-         console.log('API 호출 실패:', apiError);
-         // API 호출 실패 시 에러 메시지 표시
-         alert(`API 호출 실패: ${apiError?.response?.data?.message || apiError.message}`);
-         setPosting(false);
-         return;
-       }
+      }
 
       // 카카오페이 리다이렉트 URL 추출 - 백엔드 응답 구조에 맞춤
       const paymentRedirectUrl = res?.data?.data?.next_redirect_mobile_url || res?.data?.next_redirect_mobile_url;

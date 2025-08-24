@@ -28,16 +28,18 @@ export default function PvTimeSelect() {
   // NFC URL 진입 시 ?placeId=xxx 지원
   const placeId = state?.placeId ?? qs.get("placeId") ?? nfcInfo?.placeId ?? 999;
 
-  // ✅ 요청 값(기본값) - NFC 정보가 있으면 우선 사용
+  // ✅ 요청 값(기본값) - nfcInfo > state > 기본값 순서로 우선순위 적용 (교장 앞 주차장 우선)
   const DEFAULTS = {
-    placeName: nfcInfo?.name || nfcInfo?.placeName || "양재근린공원주차장",
-    openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || "00:00 ~ 24:00",
-    pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || 800,
+    placeName: nfcInfo?.name || nfcInfo?.placeName || state?.placeName || "양재근린공원주차장",
+    openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || state?.openRangesText || "00:00 ~ 24:00",
+    pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || state?.pricePer10Min || 800,
   };
   
   console.log('PvTimeSelect NFC 정보:', {
     nfcInfo,
-    defaults: DEFAULTS
+    defaults: DEFAULTS,
+    placeName: DEFAULTS.placeName,
+    pricePer10Min: DEFAULTS.pricePer10Min
   });
 
   // ------- 백엔드에서 받아올 값들 -------
@@ -163,7 +165,7 @@ export default function PvTimeSelect() {
     const now = new Date();
     const end = new Date(now.getTime() + totalMinutes * 60000);
 
-    // 결제 정보 준비
+    // 결제 정보 준비 - 교장 앞 주차장 데이터 우선 사용
     const paymentData = {
       demo: true, // 데모 플래그 (PayPage에서 API 생략)
       lotId: placeId || 999,
@@ -175,17 +177,26 @@ export default function PvTimeSelect() {
       usingMinutes: totalMinutes,
       estimatedCost,
       total: estimatedCost,
-      // 주차장 정보
+      // 주차장 정보 - nfcInfo 우선, state 백업
       parkingInfo: {
         id: nfcInfo?.id || placeId,
         name: placeName,
-        address: nfcInfo?.address || "",
+        address: nfcInfo?.address || state?.address || "",
         isPrivate: nfcInfo?.isPrivate !== false,
-        charge: pricePer10Min
+        charge: pricePer10Min,
+        availableTimes: nfcInfo?.availableTimes || openRangesText,
+        note: nfcInfo?.note || state?.note || "",
+        lat: nfcInfo?.lat || state?.lat || null,
+        lng: nfcInfo?.lng || state?.lng || null,
       },
     };
 
     console.log('PvTimeSelect에서 PayPage로 전달:', paymentData);
+    console.log('교장 앞 주차장 데이터 확인:', {
+      name: paymentData.parkingInfo.name,
+      charge: paymentData.parkingInfo.charge,
+      address: paymentData.parkingInfo.address
+    });
 
     // NFC 정보와 함께 결제 페이지로 이동
     navigate("/PayPage", { state: paymentData });

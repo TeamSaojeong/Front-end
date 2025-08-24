@@ -78,7 +78,9 @@ export const useKakaoMap = (mapEl, myParks) => {
         return;
       }
       
-      const path = isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`;
+      // 더미 데이터인 경우 공용 주차장 상세 페이지로 이동
+      const isDummyData = p.id.startsWith('pub-dummy-') || p.id.startsWith('pv-dummy-') || p.id.startsWith('prv-dummy-');
+      const path = isDummyData ? `/place/${p.id}` : (isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`);
       console.log('이동할 경로:', path);
       
       navigate(path, {
@@ -189,34 +191,9 @@ export const useKakaoMap = (mapEl, myParks) => {
       }
       renderedCount++;
 
-      const chip = document.createElement("div");
-      chip.className = "poi-chip";
-      if (p.id === selectedId) chip.classList.add("poi-chip--selected");
-
-      const label =
-        p.price == null || Number.isNaN(Number(p.price)) || Number(p.price) === 0
-          ? "P"
-          : `₩ ${Number(p.price).toLocaleString()}원`;
-      chip.textContent = label;
-
-      attachTouchClick(chip, () => onSelectPlace(p));
-
-      const chipOv = new kakao.maps.CustomOverlay({
-        position: new kakao.maps.LatLng(p.lat, p.lng),
-        content: chip,
-        yAnchor: 1.1,
-        zIndex: 5,
-        clickable: true,
-      });
-      chipOv.setMap(mapRef.current);
-      overlaysRef.current.push({
-        id: p.id,
-        el: chip,
-        overlay: chipOv,
-        place: p,
-      });
-
       if (p.leavingSoon) {
+        // leavingSoon이 true인 경우 가격 말풍선 대신 불꽃 말풍선만 표시
+        console.log('[디버그] 초록색 말풍선 생성:', p.name, p.id);
         const badge = document.createElement("div");
         badge.className = "poi-leaving-badge";
         badge.innerHTML = `<img src="${greenFire}" alt="" /><span>곧 나감</span>`;
@@ -225,15 +202,44 @@ export const useKakaoMap = (mapEl, myParks) => {
         const badgeOv = new kakao.maps.CustomOverlay({
           position: new kakao.maps.LatLng(p.lat, p.lng),
           content: badge,
-          yAnchor: 1.55,
+          yAnchor: 1.1,
           zIndex: 6,
           clickable: true,
         });
         badgeOv.setMap(mapRef.current);
         overlaysRef.current.push({
-          id: `${p.id}-badge`,
+          id: p.id,
           el: badge,
           overlay: badgeOv,
+          place: p,
+        });
+      } else {
+        // leavingSoon이 false인 경우 기존 가격 말풍선 표시
+        const chip = document.createElement("div");
+        chip.className = "poi-chip";
+        if (p.id === selectedId) chip.classList.add("poi-chip--selected");
+
+        const label =
+          p.price == null || Number.isNaN(Number(p.price)) || Number(p.price) === 0
+            ? "P"
+            : `₩ ${Number(p.price).toLocaleString()}원`;
+        chip.textContent = label;
+
+        attachTouchClick(chip, () => onSelectPlace(p));
+
+        const chipOv = new kakao.maps.CustomOverlay({
+          position: new kakao.maps.LatLng(p.lat, p.lng),
+          content: chip,
+          yAnchor: 1.1,
+          zIndex: 5,
+          clickable: true,
+        });
+        chipOv.setMap(mapRef.current);
+        overlaysRef.current.push({
+          id: p.id,
+          el: chip,
+          overlay: chipOv,
+          place: p,
         });
       }
     });
@@ -337,6 +343,7 @@ export const useKakaoMap = (mapEl, myParks) => {
       
       console.log('[디버그] 병합 후 총 주차장 개수:', merged.length);
       console.log('[디버그] 병합된 주차장 이름들:', merged.map(p => p.name));
+      console.log('[디버그] leavingSoon이 true인 주차장들:', merged.filter(p => p.leavingSoon).map(p => ({ name: p.name, id: p.id })));
 
       setPlaces(merged);
       renderBubbles(merged);

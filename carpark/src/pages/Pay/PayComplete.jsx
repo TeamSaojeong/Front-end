@@ -59,6 +59,8 @@ const PayComplete = () => {
 
   // 예약 시간 계산 (PvTimeSelect에서 전달받은 시간 사용)
   const getReservationTimeText = () => {
+    console.log('[PayComplete] 시간 계산 시작:', { startAtParam, endAtParam, usingMinutes });
+    
     // URL 파라미터에서 예약 시간이 있으면 사용
     if (startAtParam && endAtParam) {
       const startTime = new Date(startAtParam);
@@ -76,7 +78,9 @@ const PayComplete = () => {
         durationText = `(${minutes}분)`;
       }
       
-      return `${fmt.format(startTime)} ~ ${fmt.format(endTime)} ${durationText}`;
+      const result = `${fmt.format(startTime)} ~ ${fmt.format(endTime)} ${durationText}`;
+      console.log('[PayComplete] URL 파라미터로 계산된 시간:', result);
+      return result;
     }
     
     // URL 파라미터에 없으면 usingMinutes로 계산 (fallback)
@@ -95,13 +99,23 @@ const PayComplete = () => {
         durationText = `(${minutes}분)`;
       }
       
-      return `${fmt.format(startTime)} ~ ${fmt.format(endTime)} ${durationText}`;
+      const result = `${fmt.format(startTime)} ~ ${fmt.format(endTime)} ${durationText}`;
+      console.log('[PayComplete] usingMinutes로 계산된 시간:', result);
+      return result;
     }
     
+    console.log('[PayComplete] 시간 정보 없음');
     return "시간 정보 없음";
   };
 
   const timeText = getReservationTimeText();
+  
+  console.log('[PayComplete] 표시할 시간 정보:', {
+    timeText,
+    startAtParam,
+    endAtParam,
+    usingMinutes
+  });
 
   return (
     <div className="paycomplete-container">
@@ -112,54 +126,6 @@ const PayComplete = () => {
           <p>
             정상적으로 결제가 완료되었습니다.
             <br />
-            {orderId && (
-              <>
-                주문번호: <b>{orderId}</b>
-                <br />
-              </>
-            )}
-            {reservationId && (
-              <>
-                예약번호: <b>{reservationId}</b>
-                <br />
-              </>
-            )}
-            {(parkName || lotName) && (
-              <>
-                주차장: <b>{parkName || lotName}</b>
-                <br />
-              </>
-            )}
-            {parkingId && (
-              <>
-                주차장 ID: <b>{parkingId}</b>
-                <br />
-              </>
-            )}
-            {total && (
-              <>
-                결제 금액: <b>{Number(total).toLocaleString()}원</b>
-                <br />
-              </>
-            )}
-            {usingMinutes && (
-              <>
-                이용 시간: <b>{Math.floor(Number(usingMinutes) / 60)}시간 {Number(usingMinutes) % 60}분</b>
-                <br />
-              </>
-            )}
-            {parkingInfo?.address && (
-              <>
-                주소: <b>{parkingInfo.address}</b>
-                <br />
-              </>
-            )}
-            {parkingInfo?.charge && (
-              <>
-                10분당 요금: <b>{Number(parkingInfo.charge).toLocaleString()}원</b>
-                <br />
-              </>
-            )}
             자동으로 화면이 넘어갈 예정입니다.
           </p>
         </div>
@@ -179,7 +145,19 @@ const PayComplete = () => {
       <div className="paycomplete-button-section">
         <button
           className="paycomplete-outsoon"
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/privateoutsoon", { 
+            state: {
+              parkingId,
+              parkName,
+              total,
+              usingMinutes,
+              parkingInfo,
+              startAt: startAtParam,
+              endAt: endAtParam,
+              orderId,
+              reservationId
+            }
+          })}
         >
           주차를 해주세요!
         </button>

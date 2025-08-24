@@ -352,6 +352,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
+    parkingId: 99,
     id: "pub-dummy-gn-4",
     kakaoId: "pub-dummy-gn-4",
     name: "교장 앞 주차장(구간 182)",
@@ -367,7 +368,7 @@ export const getSeochoGangnamDummies = () => {
     _localOnly: true,
     distanceKm: null,
     etaMin: null,
-    leavingSoon: false,
+    leavingSoon: true,
   },
   {
     id: "pub-dummy-gn-5",

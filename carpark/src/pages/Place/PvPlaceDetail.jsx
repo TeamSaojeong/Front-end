@@ -9,6 +9,8 @@ import moneyIcon from "../../Assets/money.svg";
 import copyIcon from "../../Assets/copy.svg";
 import alarmIcon from "../../Assets/alarm.svg";
 import alarmFilledIcon from "../../Assets/alarm1.svg";
+import upload_img from "../../Assets/upload_img.svg";
+import close from "../../Assets/close.svg";
 
 import {
   getPrivateDetail,
@@ -78,12 +80,9 @@ export default function PvPlaceDetail() {
     }
   }, []);
 
-  const isLocal =
-    !!location.state?.place?.isLocal ||
-    !!fromSession?.isLocal ||
-    !!myParks.find(
-      (p) => String(p.id) === String(placeId) && p.origin === "local"
-    );
+  // ✅ 로컬 여부 판단: 내가 등록한 주차장인지 확인
+  const isLocal = !!myParks.find((p) => String(p.id) === String(placeId));
+  const isMyParking = isLocal; // 내가 등록한 주차장인지 여부
 
   const localItem = isLocal
     ? myParks.find((p) => String(p.id) === String(placeId))
@@ -175,6 +174,32 @@ export default function PvPlaceDetail() {
     };
   }, [imageUrl]);
 
+  // 🔧 디버깅 도구 - 개발자 콘솔에서 사용 가능
+  useEffect(() => {
+    window.debugPvPlace = {
+      checkMyParkings: () => {
+        console.log("[DEBUG] myParks:", myParks);
+        console.log("[DEBUG] placeId:", placeId);
+        console.log("[DEBUG] localItem:", localItem);
+        console.log("[DEBUG] fromSession:", fromSession);
+        console.log("[DEBUG] isLocal:", isLocal);
+      },
+      testImageLoad: async () => {
+        console.log("[DEBUG] 이미지 로드 테스트 시작...");
+        try {
+          const imgRes = await getPrivateImage(placeId);
+          console.log("[DEBUG] 이미지 로드 결과:", imgRes);
+        } catch (error) {
+          console.error("[DEBUG] 이미지 로드 실패:", error);
+        }
+      }
+    };
+    
+    return () => {
+      delete window.debugPvPlace;
+    };
+  }, [placeId, myParks, localItem, fromSession, isLocal]);
+
   const [primary, setPrimary] = useState({
     disabled: false,
     label: "주차장 이용하기",
@@ -242,6 +267,7 @@ export default function PvPlaceDetail() {
         setDetail(normalized);
 
         try {
+          console.log("[PvPlaceDetail] 원격 이미지 요청:", normalized.id);
           const imgRes = await getPrivateImage(normalized.id);
           if (imgRes?.data && mounted) {
             const url = URL.createObjectURL(imgRes.data);
@@ -253,8 +279,21 @@ export default function PvPlaceDetail() {
               }
               return url;
             });
+            console.log("[PvPlaceDetail] 원격에서 이미지 로드 성공");
+          } else {
+            console.log("[PvPlaceDetail] 원격 이미지 응답에 데이터 없음");
           }
-        } catch {}
+        } catch (error) {
+          if (error?.response?.status === 404) {
+            console.log("[PvPlaceDetail] 원격에 이미지 없음 (404) - 정상");
+          } else {
+            console.warn("[PvPlaceDetail] 원격 이미지 로드 실패:", {
+              status: error?.response?.status,
+              message: error?.message,
+              url: error?.config?.url
+            });
+          }
+        }
       } catch (e) {
         if (!mounted) return;
         setError(
@@ -313,8 +352,12 @@ export default function PvPlaceDetail() {
       // 이미지 로드 우선순위: 로컬 → 서버
       console.log("[PvPlaceDetail] 이미지 로드 시작:", {
         id: normalized.id,
+        placeId: placeId,
         hasLocalImage: !!src.imageUrl,
-        hasLocalFile: !!src.image
+        hasLocalFile: !!src.image,
+        srcKeys: Object.keys(src),
+        localItemKeys: localItem ? Object.keys(localItem) : null,
+        sessionKeys: fromSession ? Object.keys(fromSession) : null
       });
 
       // 1. 로컬 URL이 있는 경우
@@ -337,17 +380,26 @@ export default function PvPlaceDetail() {
             const url = URL.createObjectURL(imgRes.data);
             setImageUrl(url);
             console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
+          } else {
+            console.log("[PvPlaceDetail] 서버 응답에 이미지 데이터 없음");
           }
         } catch (error) {
           // 404는 정상 (이미지 없음), 다른 오류만 경고
           if (error?.response?.status === 404) {
             console.log("[PvPlaceDetail] 서버에 이미지 없음 (404) - 정상");
           } else {
-            console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", error?.message);
+            console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", {
+              status: error?.response?.status,
+              message: error?.message,
+              url: error?.config?.url
+            });
           }
         }
       } else {
-        console.log("[PvPlaceDetail] 이미지 로드 건너뜀 (임시 ID 또는 ID 없음)");
+        console.log("[PvPlaceDetail] 이미지 로드 건너뜀 (임시 ID 또는 ID 없음)", {
+          id: normalized.id,
+          isTemp: String(normalized.id).startsWith('temp_')
+        });
       }
 
       setLoading(false);
@@ -420,6 +472,62 @@ export default function PvPlaceDetail() {
     }
   };
 
+  // 운영 시간 체크 함수
+  const checkOperatingHours = (operateTimes) => {
+    if (!operateTimes || !Array.isArray(operateTimes) || operateTimes.length === 0) {
+      // 운영 시간 정보가 없으면 항상 이용 가능으로 간주
+      return { isAvailable: true, message: "" };
+    }
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // 현재 시간을 분으로 변환
+    const currentDay = now.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+
+    console.log('[PvPlaceDetail] 운영 시간 체크:', {
+      operateTimes,
+      currentTime,
+      currentDay,
+      currentTimeString: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    });
+
+    for (const timeSlot of operateTimes) {
+      const { start, end } = timeSlot;
+      
+      // 시간 문자열을 분으로 변환 (예: "09:00" -> 540)
+      const parseTime = (timeStr) => {
+        if (!timeStr || typeof timeStr !== 'string') return null;
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) return null;
+        return hours * 60 + minutes;
+      };
+
+      const startMinutes = parseTime(start);
+      const endMinutes = parseTime(end);
+
+      if (startMinutes === null || endMinutes === null) continue;
+
+      // 운영 시간 체크
+      let isInRange = false;
+      
+      if (startMinutes <= endMinutes) {
+        // 일반적인 경우 (예: 09:00 ~ 18:00)
+        isInRange = currentTime >= startMinutes && currentTime <= endMinutes;
+      } else {
+        // 자정을 넘나드는 경우 (예: 22:00 ~ 06:00)
+        isInRange = currentTime >= startMinutes || currentTime <= endMinutes;
+      }
+
+      if (isInRange) {
+        return { isAvailable: true, message: "" };
+      }
+    }
+
+    return { 
+      isAvailable: false, 
+      message: "지금은 이용 시간이 아닙니다." 
+    };
+  };
+
   const startUse = () => {
     const targetLat = toNum(detail?.lat) ?? sessionLat ?? null;
     const targetLng = toNum(detail?.lng) ?? sessionLng ?? null;
@@ -434,38 +542,126 @@ export default function PvPlaceDetail() {
       return;
     }
 
-    // PayPage로 직접 이동하기 위한 정보 준비
+    // 운영 시간 체크 - 디버깅 강화
+    console.log('[PvPlaceDetail] 운영 시간 체크 시작:', {
+      operateTimes: detail?.operateTimes,
+      availableTimes: detail?.availableTimes,
+      detail: detail
+    });
+
+    // 1차: 배열 형태 운영 시간 체크
+    let timeCheck = checkOperatingHours(detail?.operateTimes);
+    
+    // 2차: 문자열 형태 운영 시간 체크 (개인 주차장용)
+    if (timeCheck.isAvailable && detail?.availableTimes) {
+      const checkStringOperatingHours = (availableTimes) => {
+        if (!availableTimes || typeof availableTimes !== 'string') {
+          return { isAvailable: true };
+        }
+        
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
+        console.log('[PvPlaceDetail] 문자열 운영 시간 체크:', {
+          availableTimes,
+          currentTime,
+          currentTimeString: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+        });
+        
+        // "09:00 ~ 18:00" 또는 "09:00~18:00" 형태 파싱
+        const timeMatch = availableTimes.match(/(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/);
+        if (!timeMatch) {
+          console.log('[PvPlaceDetail] 시간 형식을 파싱할 수 없음:', availableTimes);
+          return { isAvailable: true }; // 파싱 실패 시 이용 가능으로 간주
+        }
+        
+        const [, startH, startM, endH, endM] = timeMatch.map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+        
+        console.log('[PvPlaceDetail] 파싱된 시간:', {
+          start: `${startH}:${startM}`,
+          end: `${endH}:${endM}`,
+          startMinutes,
+          endMinutes
+        });
+        
+        let isInRange = false;
+        if (startMinutes <= endMinutes) {
+          // 일반적인 경우 (예: 09:00 ~ 18:00)
+          isInRange = currentTime >= startMinutes && currentTime <= endMinutes;
+        } else {
+          // 자정을 넘나드는 경우 (예: 22:00 ~ 06:00)
+          isInRange = currentTime >= startMinutes || currentTime <= endMinutes;
+        }
+        
+        console.log('[PvPlaceDetail] 시간 범위 체크:', {
+          isInRange,
+          currentTime,
+          startMinutes,
+          endMinutes
+        });
+        
+        return { 
+          isAvailable: isInRange,
+          message: isInRange ? "" : "지금은 이용 시간이 아닙니다."
+        };
+      };
+      
+      timeCheck = checkStringOperatingHours(detail.availableTimes);
+    }
+    
+    console.log('[PvPlaceDetail] 최종 운영 시간 체크 결과:', timeCheck);
+    
+    if (!timeCheck.isAvailable) {
+      alert(timeCheck.message);
+      return;
+    }
+
+    // NFC로 전달할 정보 준비
     const parkingInfo = {
-      parkingId: placeId,
-      parkName: detail?.name || "주차 장소",
-      total: detail?.pricePer10m * 12 || 5000, // 2시간 기준 (10분당 가격 * 12)
-      usingMinutes: 120, // 2시간
-      // 주문/예약 ID 추가 (실제로는 백엔드에서 생성된 값 사용)
-      orderId: `order_${Date.now()}_${placeId}`, // 임시 주문 ID
-      reservationId: `reservation_${Date.now()}_${placeId}`, // 임시 예약 ID
-      // 주차장 상세 정보
-      parkingInfo: {
-        id: placeId,
-        name: detail?.name || "주차 장소",
-        charge: detail?.pricePer10m || 1000,
-        address: detail?.address || "",
-        availableTimes: detail?.availableTimes || "",
-        isPrivate: true,
-        lat: targetLat,
-        lng: targetLng,
-        pricePer10m: detail?.pricePer10m || 1000,
-        note: detail?.note || "",
-        distanceKm: detail?.distanceKm || null,
-        etaMin: detail?.etaMin || null,
-      }
+      id: placeId,
+      name: detail?.name || "주차 장소",
+      address: detail?.address || "",
+      availableTimes: detail?.availableTimes || "",
+      isPrivate: true,
+      lat: targetLat,
+      lng: targetLng,
+      charge: detail?.pricePer10m || 0,
     };
 
-    console.log('PvPlaceDetail에서 PayPage로 전달하는 정보:', parkingInfo);
+    console.log('PvPlaceDetail에서 NFC로 전달하는 정보:', parkingInfo);
     
-    // PayPage로 직접 이동
-    navigate("/PayPage", {
-      state: parkingInfo
-    });
+    // 세션 스토리지에도 저장 (모바일에서 중요)
+    try {
+      sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
+      console.log('[PvPlaceDetail] sessionStorage 저장 완료');
+      
+      // 모바일에서 localStorage에도 백업 저장
+      localStorage.setItem('lastNfcParkingInfo', JSON.stringify(parkingInfo));
+    } catch (error) {
+      console.error('[PvPlaceDetail] 스토리지 저장 실패:', error);
+    }
+    
+    navigate(
+      {
+        pathname: "/nfc",
+        search: `?placeId=${encodeURIComponent(placeId ?? "")}`,
+      },
+      {
+        state: {
+          prefetched: true,
+          placeId,
+          placeName: detail?.name,
+          address: detail?.address,
+          openRangesText: detail?.availableTimes,
+          isLocal: !!detail?._flags?.isLocal,
+          lat: targetLat,
+          lng: targetLng,
+          pricePer10Min: Math.round((detail?.pricePer10m || 0) / 10) * 10, // 10분당 가격으로 변환
+        },
+      }
+    );
   };
 
   if (loading) {
@@ -473,7 +669,7 @@ export default function PvPlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close}/>
           </button>
         </div>
         <h1 className="pub-title">불러오는 중…</h1>
@@ -486,7 +682,7 @@ export default function PvPlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">오류</h1>
@@ -500,7 +696,7 @@ export default function PvPlaceDetail() {
       <div className="pub-wrap">
         <div className="pub-topbar">
           <button className="pub-close" onClick={goBack} aria-label="닫기">
-            ✕
+            <img src={close} />
           </button>
         </div>
         <h1 className="pub-title">데이터가 없습니다.</h1>
@@ -522,7 +718,7 @@ export default function PvPlaceDetail() {
     <div className="pub-wrap">
       <div className="pub-topbar">
         <button className="pub-close" onClick={goBack} aria-label="닫기">
-          ✕
+          <img src={close} />
         </button>
 
         {!isLocal && (
@@ -633,23 +829,25 @@ export default function PvPlaceDetail() {
 
       <div className="pub-chips">
         <div className="pub-chip">
-          <div className="pub-chip-icon">
-            <img src={pinIcon} alt="위치" />
-          </div>
+          
           <div className="pub-chip-text">
             <div className="pub-chip-value">
-              <strong>{distanceKm ?? "-"}km</strong>
+              <div className="pub-chip-icon">
+            <img src={pinIcon} alt="위치" className="pub-chip-locationicon"/>
+          </div>
+              <strong className="pub-chip-locationtext">{distanceKm ?? "-"}km</strong>
             </div>
             <div className="pub-chip-sub">주차 장소까지</div>
           </div>
         </div>
 
         <div className="pub-chip">
-          <div className="pub-chip-icon">
-            <img src={moneyIcon} alt="요금" />
-          </div>
+          
           <div className="pub-chip-text">
             <div className="pub-chip-value">
+              <div className="pub-chip-icon">
+            <img src={moneyIcon} alt="요금" className="pub-chip-moneyicon"/>
+          </div>
               <strong>{Number(pricePer10m || 0).toLocaleString()}원</strong>
             </div>
             <div className="pub-chip-sub">10분당 주차 비용</div>
@@ -691,13 +889,10 @@ export default function PvPlaceDetail() {
               }}
             />
           ) : (
-            <div className="pub-photo-placeholder">🖼️</div>
+          <div className="pub-photo-placeholder"><img src={upload_img}/></div>
           )}
         </div>
-
-        <h2 className="pub-section-title" style={{ marginTop: 4 }}>
-          주차 장소 설명
-        </h2>
+        
         <pre className="pub-note">{note || "-"}</pre>
       </section>
 
