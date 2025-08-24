@@ -434,50 +434,29 @@ export default function PvPlaceDetail() {
       return;
     }
 
-    // NFC로 전달할 정보 준비
+    // PayPage로 직접 이동하기 위한 정보 준비
     const parkingInfo = {
-      id: placeId,
-      name: detail?.name || "주차 장소",
-      address: detail?.address || "",
-      availableTimes: detail?.availableTimes || "",
-      isPrivate: true,
-      lat: targetLat,
-      lng: targetLng,
-      charge: detail?.pricePer10m || 0,
+      parkingId: placeId,
+      parkName: detail?.name || "주차 장소",
+      total: detail?.pricePer10m * 12 || 5000, // 2시간 기준 (10분당 가격 * 12)
+      usingMinutes: 120, // 2시간
+      parkingInfo: {
+        name: detail?.name || "주차 장소",
+        charge: detail?.pricePer10m || 1000,
+        address: detail?.address || "",
+        availableTimes: detail?.availableTimes || "",
+        isPrivate: true,
+        lat: targetLat,
+        lng: targetLng,
+      }
     };
 
-    console.log('PvPlaceDetail에서 NFC로 전달하는 정보:', parkingInfo);
+    console.log('PvPlaceDetail에서 PayPage로 전달하는 정보:', parkingInfo);
     
-    // 세션 스토리지에도 저장 (모바일에서 중요)
-    try {
-      sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
-      console.log('[PvPlaceDetail] sessionStorage 저장 완료');
-      
-      // 모바일에서 localStorage에도 백업 저장
-      localStorage.setItem('lastNfcParkingInfo', JSON.stringify(parkingInfo));
-    } catch (error) {
-      console.error('[PvPlaceDetail] 스토리지 저장 실패:', error);
-    }
-    
-    navigate(
-      {
-        pathname: "/nfc",
-        search: `?placeId=${encodeURIComponent(placeId ?? "")}`,
-      },
-      {
-        state: {
-          prefetched: true,
-          placeId,
-          placeName: detail?.name,
-          address: detail?.address,
-          openRangesText: detail?.availableTimes,
-          isLocal: !!detail?._flags?.isLocal,
-          lat: targetLat,
-          lng: targetLng,
-          pricePer10Min: Math.round((detail?.pricePer10m || 0) / 10) * 10, // 10분당 가격으로 변환
-        },
-      }
-    );
+    // PayPage로 직접 이동
+    navigate("/PayPage", {
+      state: parkingInfo
+    });
   };
 
   if (loading) {

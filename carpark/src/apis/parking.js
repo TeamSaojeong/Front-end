@@ -120,6 +120,7 @@ export const createReservation = (parkingId, usingMinutes) => {
 
 /** 카카오페이 결제 준비 */
 export const preparePayment = (payload) => {
+  console.log('preparePayment API 호출 파라미터:', payload);
   return client.post('/api/pay/ready', payload, {
     headers: authHeader()
   });
