@@ -116,8 +116,27 @@ export default function PvPlaceDetail() {
       
       if (imageUrl && imageUrl.startsWith('http')) {
         // 백엔드에서 완전한 이미지 URL을 제공하는 경우
-        setImageUrl(imageUrl);
-        console.log("[PvPlaceDetail] 백엔드 이미지 URL 사용:", imageUrl);
+        // URL을 fetch해서 blob으로 변환 후 크기 조절
+        try {
+          console.log("[PvPlaceDetail] 백엔드 이미지 URL을 blob으로 변환:", imageUrl);
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          
+          // 이미지 크기 조절
+          const resizedBlob = await shrinkImageFile(blob, {
+            maxW: 342,  // pub-photo-box 너비에 맞게 조절
+            maxH: 192,  // pub-photo-box 높이에 맞게 조절
+            quality: 0.85,
+            targetBytes: 300 * 1024, // 300KB 목표
+          });
+          
+          const url = URL.createObjectURL(resizedBlob);
+          setImageUrl(url);
+          console.log("[PvPlaceDetail] 백엔드 이미지 URL 크기 조절 완료");
+        } catch (error) {
+          console.warn("[PvPlaceDetail] 백엔드 이미지 크기 조절 실패, 원본 사용:", error);
+          setImageUrl(imageUrl);
+        }
         return;
       }
       
@@ -125,11 +144,11 @@ export default function PvPlaceDetail() {
       console.log("[PvPlaceDetail] 별도 이미지 API 시도:", parkingId);
       const imgRes = await getPrivateImage(parkingId);
       if (imgRes?.data) {
-        // 이미지 크기 조절 (박스에 맞게)
+        // 이미지 크기 조절 (박스에 딱 맞게)
         try {
           const resizedBlob = await shrinkImageFile(imgRes.data, {
-            maxW: 300,  // 박스 너비에 맞게 조절
-            maxH: 200,  // 박스 높이에 맞게 조절
+            maxW: 342,  // pub-photo-box 너비에 맞게 조절
+            maxH: 192,  // pub-photo-box 높이에 맞게 조절
             quality: 0.85,
             targetBytes: 300 * 1024, // 300KB 목표
           });
@@ -929,18 +948,17 @@ export default function PvPlaceDetail() {
 
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소 사진</h2>
-        <div className="pub-photo-box" role="img" aria-label="주차 장소 사진" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="pub-photo-box" role="img" aria-label="주차 장소 사진" style={{ overflow: 'hidden' }}>
           {imageUrl ? (
             <img
               src={imageUrl}
               alt="주차 장소"
               style={{
-                maxWidth: "100%",
-                maxHeight: "100%",
-                width: "auto",
-                height: "auto",
-                objectFit: "contain",
-                borderRadius: 12,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: 6,
+                display: "block"
               }}
             />
           ) : (
@@ -949,11 +967,10 @@ export default function PvPlaceDetail() {
               src={detail?.name?.includes("규장") ? gyuImg : upload_img} 
               alt="주차장 이미지"
               style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                width: 'auto',
-                height: 'auto',
-                objectFit: 'contain'
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '6px'
               }}
             />
           </div>

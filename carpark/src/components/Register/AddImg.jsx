@@ -37,12 +37,12 @@ const AddImg = ({ onChange, value }) => {
     }
     
     try {
-      // 이미지 크기 조절 (박스에 맞게)
+      // 이미지 크기 조절 (박스에 딱 맞게)
       const resizedFile = await shrinkImageFile(file, {
-        maxW: 400,  // 박스 너비에 맞게 조절
-        maxH: 300,  // 박스 높이에 맞게 조절
+        maxW: 342,  // pub-photo-box 너비에 맞게 조절
+        maxH: 192,  // pub-photo-box 높이에 맞게 조절
         quality: 0.85,
-        targetBytes: 500 * 1024, // 500KB 목표
+        targetBytes: 300 * 1024, // 300KB 목표
       });
       
       const reader = new FileReader();

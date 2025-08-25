@@ -62,13 +62,13 @@ export async function register(accessToken) {
   let file = s.image;
   let hasImage = file instanceof File;
   
-  // 이미지가 있는 경우에만 압축 처리 (박스에 맞게 더 작게)
+  // 이미지가 있는 경우에만 압축 처리 (박스에 딱 맞게)
   if (hasImage && shrinkImageFile) {
     file = await shrinkImageFile(file, {
-      maxW: 600,  // 박스 크기에 맞게 조절
-      maxH: 400,  // 박스 크기에 맞게 조절
+      maxW: 342,  // pub-photo-box 너비에 맞게 조절
+      maxH: 192,  // pub-photo-box 높이에 맞게 조절
       quality: 0.8,
-      targetBytes: 600 * 1024, // 600KB 목표
+      targetBytes: 400 * 1024, // 400KB 목표
     });
   }
 
