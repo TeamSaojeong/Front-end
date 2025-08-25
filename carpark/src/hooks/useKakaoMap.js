@@ -344,8 +344,6 @@ export const useKakaoMap = (mapEl, myParks) => {
         myParks: mine.length,
         apiRows: rows.length
       });
-      
-      console.log('[디버그] 교창 앞 주차장 확인:', sg.find(p => p.id === 'pub-dummy-gn-4'));
 
       const merged = uniqueById([...yg, ...sg, ...mine, ...rows]);
       

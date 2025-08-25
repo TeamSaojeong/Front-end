@@ -35,11 +35,11 @@ export const useOutModal = (places) => {
     // 모달이 이미 열려있으면 건너뛰기
     if (modalOpen) return;
     
-    // "규장 앞 주차장 (구간 182)"에 "곧 나감" 상태 적용
-    const targetParkingId = "pub-dummy-gn-4"; // 규장 앞 주차장 ID
+    // "교창 앞 주차장 (구간 182)"에 "곧 나감" 상태 적용
+    const targetParkingId = "pub-dummy-gn-4"; // 교창 앞 주차장 ID
     window.dummyLeavingSoonIds = [targetParkingId];
     
-    console.log('[테스트] "규장 앞 주차장 (구간 182)"에 "곧 나감" 상태 적용');
+    console.log('[테스트] "교창 앞 주차장 (구간 182)"에 "곧 나감" 상태 적용');
     
     // 해당 주차장을 찾아서 모달 표시
     const targetPlace = places.find(p => p.id === targetParkingId);
@@ -55,12 +55,12 @@ export const useOutModal = (places) => {
       setModalMinutes(10);
       setModalOpen(true);
     } else {
-      // 규장 앞 주차장이 없으면 기본 정보로 표시
-      console.log('[테스트] OutModal 표시: 규장 앞 주차장 (기본)');
+      // 교창 앞 주차장이 없으면 기본 정보로 표시
+      console.log('[테스트] OutModal 표시: 교창 앞 주차장 (기본)');
       
       setModalPlace({ 
         id: targetParkingId, 
-        name: "규장 앞 주차장 (구간 182)", 
+        name: "교창 앞 주차장 (구간 182)", 
         type: "PUBLIC" 
       });
       setModalMinutes(10);

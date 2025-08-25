@@ -1,16 +1,11 @@
 /* 어두운 오버레이 */
 .om-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(17, 24, 39, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  -webkit-overflow-scrolling: touch;
+  display: grid;
+  place-items: center;
+  z-index: 1000;
 }
 
 /* 중앙 모달 박스 */
