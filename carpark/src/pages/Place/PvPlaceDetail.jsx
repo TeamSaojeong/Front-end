@@ -686,9 +686,11 @@ export default function PvPlaceDetail() {
     
     console.log('[PvPlaceDetail] 최종 운영 시간 체크 결과:', timeCheck);
     
+    // 운영 시간이 아니어도 결제 진행 허용
     if (!timeCheck.isAvailable) {
-      alert(timeCheck.message);
-      return;
+      console.log('[PvPlaceDetail] 운영 시간이 아니지만 결제 진행 허용');
+      // alert(timeCheck.message);
+      // return;
     }
 
     // NFC로 전달할 정보 준비

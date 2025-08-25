@@ -128,9 +128,11 @@ const NFCTagPage = () => {
               };
 
               const timeCheck = checkSimpleOperatingHours(parkingInfo.availableTimes);
+              // 운영 시간이 아니어도 결제 진행 허용
               if (!timeCheck.isAvailable) {
-                alert("지금은 이용 시간이 아닙니다.");
-                return;
+                console.log('[NFCTagPage] 운영 시간이 아니지만 결제 진행 허용');
+                // alert("지금은 이용 시간이 아닙니다.");
+                // return;
               }
 
               // PvTimeSelect로 이동 (NFC 태그된 것처럼)
