@@ -38,7 +38,7 @@ export default function PayPage() {
     state?.reservationId || state?.data?.reservationId || null;
 
   // B) 계산/예약 모드: parkingId/시작/종료 등
-  const parkingId = state?.parkingId ?? state?.lotId ?? 99; // 실제 주차장 ID 사용
+  const parkingId = state?.parkingId ?? state?.lotId ?? 28; // 실제 주차장 ID 사용
   const startAt = state?.startAt ? new Date(state.startAt) : new Date();
   const endAt = state?.endAt
     ? new Date(state.endAt)
