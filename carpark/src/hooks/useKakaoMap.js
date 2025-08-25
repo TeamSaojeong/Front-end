@@ -331,10 +331,12 @@ export const useKakaoMap = (mapEl, myParks) => {
       // 더미 데이터 항상 표시 (디버깅용)
       const yg = getYangjaeDummies().map(dummy => ({
         ...dummy,
+        id: dummy.kakaoId, // kakaoId를 id로 사용
         distanceKm: Math.round(distKm({ lat, lng }, { lat: dummy.lat, lng: dummy.lng }) * 10) / 10
       }));
       const sg = getSeochoGangnamDummies().map(dummy => ({
         ...dummy,
+        id: dummy.kakaoId, // kakaoId를 id로 사용
         distanceKm: Math.round(distKm({ lat, lng }, { lat: dummy.lat, lng: dummy.lng }) * 10) / 10
       }));
       

@@ -93,6 +93,14 @@ export default function Home() {
     }
   }, [places, watchedIds, modalHandlers]);
 
+  // 바텀 시트에서 주차장 선택 시 처리
+  const handleSelectPlace = (place) => {
+    // 바텀 시트 닫기
+    setIsSheetOpen(false);
+    // 기존 onSelectPlace 호출
+    onSelectPlace(place);
+  };
+
   // 모달에서 상세 페이지로 이동
   const goDetailFromModal = () => {
     modalHandlers.setModalOpen(false);
@@ -122,7 +130,7 @@ export default function Home() {
         isLoading={isLoading}
         errorMsg={errorMsg}
         onRefreshHere={refreshFromCurrentPosition}
-        onSelectPlace={onSelectPlace}
+        onSelectPlace={handleSelectPlace}
         onOpenChange={setIsSheetOpen}
       />
 

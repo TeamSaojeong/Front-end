@@ -361,7 +361,7 @@ export const getSeochoGangnamDummies = () => {
     lng: 127.035575,
     price: 1800,
     charge: 1800,
-    operateTimes: [{ start: "00:00", end: "08:30" }],
+    operateTimes: [{ start: "00:00", end: "23:59" }],
     note: "",
     type: "PRIVATE",
     isLocal: false,
