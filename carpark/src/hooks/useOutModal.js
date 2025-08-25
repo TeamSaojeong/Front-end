@@ -32,8 +32,15 @@ export const useOutModal = (places) => {
 
   // === 테스트용 OutModal 표시 ===
   const showTestOutModal = () => {
+    console.log('[테스트] showTestOutModal 호출됨');
+    console.log('[테스트] 현재 modalOpen 상태:', modalOpen);
+    console.log('[테스트] places 개수:', places.length);
+    
     // 모달이 이미 열려있으면 건너뛰기
-    if (modalOpen) return;
+    if (modalOpen) {
+      console.log('[테스트] 모달이 이미 열려있어서 건너뜀');
+      return;
+    }
     
     // "교창 앞 주차장 (구간 182)"에 "곧 나감" 상태 적용
     const targetParkingId = "pub-dummy-gn-4"; // 교창 앞 주차장 ID
@@ -43,6 +50,7 @@ export const useOutModal = (places) => {
     
     // 해당 주차장을 찾아서 모달 표시
     const targetPlace = places.find(p => p.id === targetParkingId);
+    console.log('[테스트] 찾은 targetPlace:', targetPlace);
     
     if (targetPlace) {
       console.log(`[테스트] OutModal 표시: ${targetPlace.name} (10분 전)`);
@@ -54,6 +62,7 @@ export const useOutModal = (places) => {
       });
       setModalMinutes(10);
       setModalOpen(true);
+      console.log('[테스트] 모달 상태 설정 완료');
     } else {
       // 교창 앞 주차장이 없으면 기본 정보로 표시
       console.log('[테스트] OutModal 표시: 교창 앞 주차장 (기본)');
@@ -65,6 +74,7 @@ export const useOutModal = (places) => {
       });
       setModalMinutes(10);
       setModalOpen(true);
+      console.log('[테스트] 기본 모달 상태 설정 완료');
     }
   };
 

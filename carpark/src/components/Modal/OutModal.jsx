@@ -44,6 +44,7 @@ export default function OutModal({
   vibrate = true,
   sound = false,
 }) {
+  console.log('[OutModal] 렌더링:', { isOpen, placeName, placeId });
   const sheetRef = useRef(null);
   const closeBtnRef = useRef(null);
   const primaryBtnRef = useRef(null);

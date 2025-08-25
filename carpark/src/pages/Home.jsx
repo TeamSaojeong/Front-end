@@ -44,13 +44,17 @@ export default function Home() {
   // 10초마다 테스트 모달 표시 (단순화된 버전)
   React.useEffect(() => {
     console.log('[디버그] 10초 모달 타이머 시작');
+    console.log('[디버그] 현재 환경:', window.location.hostname);
+    console.log('[디버그] HTTPS 여부:', window.location.protocol === 'https:');
     
     const showModal = () => {
       console.log('[디버그] 10초 타이머 실행 - 모달 표시 시도');
       console.log('[디버그] modalHandlers:', modalHandlers);
       console.log('[디버그] places 개수:', places.length);
+      console.log('[디버그] 현재 시간:', new Date().toISOString());
       
       if (modalHandlers && modalHandlers.showTestOutModal) {
+        console.log('[디버그] showTestOutModal 호출');
         modalHandlers.showTestOutModal();
       } else {
         console.warn('[디버그] modalHandlers.showTestOutModal이 없습니다');
@@ -69,11 +73,11 @@ export default function Home() {
       }, 100);
     };
 
-    // 첫 번째 모달은 10초 후에 표시 (빠른 테스트용)
-    const firstTimeout = setTimeout(showModal, 12_000);
+    // 첫 번째 모달은 10초 후에 표시
+    const firstTimeout = setTimeout(showModal, 10_000);
     
     // 이후 10초마다 반복
-    const interval = setInterval(showModal, 15_000);
+    const interval = setInterval(showModal, 10_000);
 
     return () => {
       console.log('[디버그] 10초 모달 타이머 정리');
