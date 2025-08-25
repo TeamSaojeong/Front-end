@@ -5,7 +5,7 @@ import "../../Styles/Nfc/PvTimeSelect.css";
 import backIcon from "../../Assets/arrow.png";
 import clockIcon from "../../Assets/clock.svg";
 
-const ITEM_H = 44; // CSS의 tp-item 높이와 동일하게 유지
+const ITEM_H = 44; // CSS의 pt-item 높이와 동일하게 유지
 
 export default function PvTimeSelect() {
   const navigate = useNavigate();
@@ -203,33 +203,33 @@ export default function PvTimeSelect() {
   };
 
   return (
-    <div className="tp-container">
+    <div className="pt-container">
       <img
         src={backIcon}
         alt="뒤로가기"
-        className="tp-back"
+        className="pt-back"
         onClick={() => navigate(-1)}
       />
 
-      <div className="tp-header">
-        <div className="tp-title">주차 이용 시간을{"\n"}선택해 주세요</div>
+      <div className="pt-header">
+        <div className="pt-title">주차 이용 시간을{"\n"}선택해 주세요</div>
 
-        <div className="tp-meta">
-          <div className="tp-row">
-            <span className="tp-label">주차 장소 이름</span>
-            <span className="tp-value">
+        <div className="pt-meta">
+          <div className="pt-row">
+            <span className="pt-label">주차 장소 이름</span>
+            <span className="pt-value">
               {loading ? "불러오는 중..." : error ? "—" : placeName}
             </span>
           </div>
-          <div className="tp-row">
-            <span className="tp-label">주차 가능 시간</span>
-            <span className="tp-value">
+          <div className="pt-row">
+            <span className="pt-label">주차 가능 시간</span>
+            <span className="pt-value">
               {loading ? "불러오는 중..." : error ? "—" : openRangesText}
             </span>
           </div>
-          <div className="tp-row">
-            <span className="tp-label">10분당 주차 비용</span>
-            <span className="tp-value">
+          <div className="pt-row">
+            <span className="pt-label">10분당 주차 비용</span>
+            <span className="pt-value">
               {loading
                 ? "…"
                 : error
@@ -240,54 +240,54 @@ export default function PvTimeSelect() {
         </div>
 
         {/* 아이콘 + 선택 시간 */}
-        <div className="tp-chip">
-          <img src={clockIcon} alt="" className="tp-chip-icon" />
+        <div className="pt-chip">
+          <img src={clockIcon} alt="" className="pt-chip-icon" />
           <span>{durationText}</span>
         </div>
       </div>
 
       {/* Wheel Picker (박스 없이 두 줄 가이드만) */}
-      <div className="tp-wheel-wrap">
+      <div className="pt-wheel-wrap">
         <div
-          className="tp-wheel"
+          className="pt-wheel"
           ref={wheelHRef}
           onScroll={handleScroll("h")}
           aria-label="시간 선택 휠"
         >
-          <div className="tp-spacer" />
+          <div className="pt-spacer" />
           {hours.map((hh) => (
-            <div className={`tp-item ${h === hh ? "active" : ""}`} key={hh}>
+            <div className={`pt-item ${h === hh ? "active" : ""}`} key={hh}>
               {hh}
             </div>
           ))}
-          <div className="tp-spacer" />
+          <div className="pt-spacer" />
         </div>
 
-        <div className="tp-col-suffix">:</div>
+        <div className="pt-col-suffix">:</div>
 
         <div
-          className="tp-wheel"
+          className="pt-wheel"
           ref={wheelMRef}
           onScroll={handleScroll("m")}
           aria-label="분 선택 휠"
         >
-          <div className="tp-spacer" />
+          <div className="pt-spacer" />
           {minutes.map((mm) => (
-            <div className={`tp-item ${m === mm ? "active" : ""}`} key={mm}>
+            <div className={`pt-item ${m === mm ? "active" : ""}`} key={mm}>
               {fmt2(mm)}
             </div>
           ))}
-          <div className="tp-spacer" />
+          <div className="pt-spacer" />
         </div>
 
         {/* 가운데 가이드 라인 */}
-        <div className="tp-guide-line tp-guide-top" />
-        <div className="tp-guide-line tp-guide-bot" />
+        <div className="pt-guide-line pt-guide-top" />
+        <div className="pt-guide-line pt-guide-bot" />
       </div>
 
-      <div className="tp-bottom">
+      <div className="pt-bottom">
         <button
-          className={`tp-pay ${
+          className={`pt-pay ${
             isDisabled || loading || error ? "disabled" : ""
           }`}
           onClick={handlePay}
@@ -295,7 +295,7 @@ export default function PvTimeSelect() {
         >
           결제하기
         </button>
-        {error && <div className="tp-error">{error}</div>}
+        {error && <div className="pt-error">{error}</div>}
       </div>
     </div>
   );
