@@ -10,6 +10,7 @@ import alarmIcon from "../../Assets/alarm.svg";
 import alarmFilledIcon from "../../Assets/alarm1.svg";
 import close from "../../Assets/close.svg";
 import upload_img from "../../Assets/upload_img.svg";
+import gyuImg from "../../Assets/gyu.png";
 
 import {
   getPublicDetail,
@@ -562,7 +563,9 @@ export default function PlaceDetail() {
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소 설명</h2>
         <div className="pub-photo-box" role="img" aria-label="주차 장소 사진">
-          <div className="pub-photo-placeholder"><img src={upload_img}/></div>
+          <div className="pub-photo-placeholder">
+          <img src={name?.includes("규장") ? gyuImg : upload_img} alt="주차장 이미지"/>
+        </div>
         </div>
         <pre className="pub-note">{note}</pre>
       </section>

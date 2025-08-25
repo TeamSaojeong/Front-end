@@ -55,6 +55,24 @@
 
 .ds-input {
   margin-top: 8px;
+  width: 310px;
+  height: 57px;
+
+  display: flex;
+  border-radius: 6px;
+  border: 1px solid #EAEAEA;
+  padding: 14px 16px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--Font-02_black, #111);
+
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.35px;
+  resize: none; 
 }
 
 .ds-input-wrapper .input {
@@ -87,5 +105,5 @@
 }
 
 .ds-nextBtn {
-  margin-top: 80px !important;
+  margin-top: 39px !important;
 }

@@ -15,7 +15,7 @@ export const useOutModal = (places) => {
   const lastSoonMapRef = useRef({}); // { [placeId]: lastShownTs }
 
   // === 모달 오픈 & 폴링 유틸 ===
-  const openSoonModalFor = (placeId, placeName, minute = 5) => {
+  const openSoonModalFor = (placeId, placeName, minute = 10) => {
     const nowTs = Date.now();
     const lastTs = lastSoonMapRef.current[String(placeId)] || 0;
     if (nowTs - lastTs < 90 * 1000) return; // 90초 이내 중복 방지
@@ -26,7 +26,7 @@ export const useOutModal = (places) => {
     const type = p?.type || "PUBLIC";
 
     setModalPlace({ id: String(placeId), name, type });
-    setModalMinutes(minute || 5);
+    setModalMinutes(10); // 10분으로 고정
     setModalOpen(true);
   };
 
@@ -45,16 +45,14 @@ export const useOutModal = (places) => {
     const targetPlace = places.find(p => p.id === targetParkingId);
     
     if (targetPlace) {
-      const randomMinutes = Math.floor(Math.random() * 15) + 5; // 5-20분 사이 랜덤
-      
-      console.log(`[테스트] OutModal 표시: ${targetPlace.name} (${randomMinutes}분 전)`);
+      console.log(`[테스트] OutModal 표시: ${targetPlace.name} (10분 전)`);
       
       setModalPlace({ 
         id: String(targetPlace.id), 
         name: targetPlace.name, 
         type: targetPlace.type || "PUBLIC" 
       });
-      setModalMinutes(randomMinutes);
+      setModalMinutes(10);
       setModalOpen(true);
     } else {
       // 교창 앞 주차장이 없으면 기본 정보로 표시
@@ -110,7 +108,7 @@ export const useOutModal = (places) => {
           openSoonModalFor(
             notification.parkingId, 
             notification.placeName, 
-            notification.minutesAgo || 5
+            10
           );
         }
       });
@@ -125,7 +123,7 @@ export const useOutModal = (places) => {
     const hit = rows.find(
       (p) => watchedIds.includes(normalizeId(p.id)) && p.leavingSoon
     );
-    if (hit) openSoonModalFor(normalizeId(hit.id), hit.name, 5);
+    if (hit) openSoonModalFor(normalizeId(hit.id), hit.name, 10);
   };
 
   return {

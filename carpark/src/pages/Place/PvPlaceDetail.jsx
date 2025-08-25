@@ -11,6 +11,7 @@ import alarmIcon from "../../Assets/alarm.svg";
 import alarmFilledIcon from "../../Assets/alarm1.svg";
 import upload_img from "../../Assets/upload_img.svg";
 import close from "../../Assets/close.svg";
+import gyuImg from "../../Assets/gyu.png";
 
 import {
   getPrivateDetail,
@@ -892,7 +893,9 @@ export default function PvPlaceDetail() {
               }}
             />
           ) : (
-          <div className="pub-photo-placeholder"><img src={upload_img}/></div>
+          <div className="pub-photo-placeholder">
+            <img src={detail?.name?.includes("규장") ? gyuImg : upload_img} alt="주차장 이미지"/>
+          </div>
           )}
         </div>
 

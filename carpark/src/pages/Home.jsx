@@ -69,11 +69,11 @@ export default function Home() {
       }, 100);
     };
 
-    // 첫 번째 모달은 5초 후에 표시 (빠른 테스트용)
-    const firstTimeout = setTimeout(showModal, 10_000);
+    // 첫 번째 모달은 10초 후에 표시 (빠른 테스트용)
+    const firstTimeout = setTimeout(showModal, 12_000);
     
     // 이후 10초마다 반복
-    const interval = setInterval(showModal, 10_000);
+    const interval = setInterval(showModal, 15_000);
 
     return () => {
       console.log('[디버그] 10초 모달 타이머 정리');
