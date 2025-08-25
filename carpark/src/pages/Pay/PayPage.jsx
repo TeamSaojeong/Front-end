@@ -46,17 +46,18 @@ export default function PayPage() {
   const startInMinutes = state?.startInMinutes; // RESERVABLE에서 넘겨줄 수 있음(곧 나감 n분 뒤)
 
   // C) NFC/PvTimeSelect에서 넘어온 정보들
-  const parkName = state?.parkingInfo?.name || state?.parkName || "교장 앞 주차장(구간 182)";
+  const parkName = state?.parkingInfo?.name || state?.parkName || "규장 앞 주차장(구간 182)";
   const total = state?.total || state?.estimatedCost || 1800; // 테스트용 기본값
   const usingMinutes = state?.usingMinutes || state?.durationMin || 10; // 테스트용 기본값
   
-  // 교장 앞 주차장 데이터 디버깅
-  console.log('[PayPage] 교장 앞 주차장 데이터 확인:', {
+  // 규장 앞 주차장 데이터 디버깅
+  console.log('[PayPage] 규장 앞 주차장 데이터 확인:', {
     parkingInfo: state?.parkingInfo,
     parkName: state?.parkName,
     finalParkName: parkName,
     charge: state?.parkingInfo?.charge,
-    pricePer10Min: state?.parkingInfo?.charge || 1800
+    pricePer10Min: state?.parkingInfo?.charge || 1800,
+    availableTimes: state?.parkingInfo?.availableTimes || state?.openRangesText
   });
   
   // D) 주문/예약 ID 정보
@@ -76,7 +77,10 @@ export default function PayPage() {
   const [loading, setLoading] = useState(!parkName); // 이름이 있으면 로딩 스킵
   const [lotName, setLotName] = useState(parkName); // NFC에서 넘어온 이름 우선
   const [pricePer10Min, setPricePer10Min] = useState(
-    state?.parkingInfo?.charge || state?.pricePer10Min || 1000 // 교장 앞 주차장 요금 우선
+    state?.parkingInfo?.charge || state?.pricePer10Min || 1800 // 규장 앞 주차장 요금 우선
+  );
+  const [availableTimes, setAvailableTimes] = useState(
+    state?.parkingInfo?.availableTimes || state?.openRangesText || "00:00 ~ 08:30"
   );
   const [nearbyAvg10Min, setNearbyAvg10Min] = useState(null); // 선택: 표시만
   const [posting, setPosting] = useState(false);
@@ -160,10 +164,12 @@ export default function PayPage() {
       console.log('테스트 모드: API 호출 건너뛰기');
       console.log('테스트 모드에서 사용할 데이터:', {
         lotName: state?.parkingInfo?.name || state?.lotName || parkName,
-        pricePer10Min: state?.parkingInfo?.charge || state?.pricePer10m || 1800
+        pricePer10Min: state?.parkingInfo?.charge || state?.pricePer10m || 1800,
+        availableTimes: state?.parkingInfo?.availableTimes || state?.openRangesText || "00:00 ~ 08:30"
       });
       setLotName(state?.parkingInfo?.name || state?.lotName || parkName);
       setPricePer10Min(state?.parkingInfo?.charge || state?.pricePer10m || 1800);
+      setAvailableTimes(state?.parkingInfo?.availableTimes || state?.openRangesText || "00:00 ~ 08:30");
       setLoading(false);
       return () => {
         mounted = false;
@@ -371,6 +377,11 @@ export default function PayPage() {
               <span className="sub"> (주변 평균 {KRW(nearbyAvg10Min)})</span>
             )}
           </div>
+        </div>
+
+        <div className="paypage__row">
+          <div className="label">주차 가능 시간</div>
+          <div className="value">{loading ? "-" : availableTimes}</div>
         </div>
 
         <div className="paypage__row">

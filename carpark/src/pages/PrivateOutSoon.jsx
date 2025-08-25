@@ -91,7 +91,7 @@ export default function PrivateOutSoon() {
 
   const selectedPlace = useMemo(readSelectedPlace, []);
   const placeName =
-    state?.parkName ?? state?.placeName ?? selectedPlace?.name ?? "교장 앞 주차장(구간 182)";
+    state?.parkName ?? state?.placeName ?? selectedPlace?.name ?? "규장 앞 주차장(구간 182)";
   const placeId = state?.placeId ?? selectedPlace?.id ?? placeName;
   const address = state?.address ?? selectedPlace?.address ?? "";
 

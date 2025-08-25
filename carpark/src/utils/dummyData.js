@@ -355,7 +355,7 @@ export const getSeochoGangnamDummies = () => {
     parkingId: 99,
     id: "pub-dummy-gn-4",
     kakaoId: "pub-dummy-gn-4",
-    name: "교장 앞 주차장(구간 182)",
+    name: "규장 앞 주차장(구간 182)",
     address: "서울 서초구 매헌로16길 20",
     lat: 37.46801,
     lng: 127.035575,
