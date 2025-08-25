@@ -112,3 +112,12 @@
   display: flex;
   justify-content: center;
 }
+
+.cf-description{
+  margin-top: 320px;
+  font-size: 20px;
+  margin-left: 5px;
+  color: #DE5E56;
+  font-weight: 800;
+  text-align: center;
+}

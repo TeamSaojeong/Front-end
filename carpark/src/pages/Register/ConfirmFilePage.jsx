@@ -19,12 +19,12 @@ const ConfirmFilePage = ({ onNext }) => {
 
   const navigate = useNavigate();
 
+  const isActive = true;
+
+
   const handleNext = async () => {
-    if (files.length > 0) {
-      onNext?.(files);
-      navigate("/name");
-    }
-  };
+        navigate("/name");
+    };    
 
   return (
     <div className="cf-wrap">
@@ -76,10 +76,12 @@ const ConfirmFilePage = ({ onNext }) => {
         </div>
       </div>
 
-      <div className="cf-next-wrap">
+      <p className="cf-description">시연을 위해 파일 업로드 없이 바로 다음으로 넘어갈 수 있습니다.</p>
+
+<div className="cf-next-wrap">
         <NextBtn
           className="rg-nextBtn"
-          isActive={files.length > 0}
+          isActive={isActive}
           onClick={handleNext}
         />
       </div>

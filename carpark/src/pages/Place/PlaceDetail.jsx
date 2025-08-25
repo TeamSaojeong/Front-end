@@ -204,7 +204,7 @@ export default function PlaceDetail() {
       setError("");
       
       // 더미 데이터 ID인지 확인
-      const isDummyData = kakaoId.startsWith('pub-dummy-') || kakaoId.startsWith('pv-dummy-') || kakaoId.startsWith('prv-dummy-');
+      const isDummyData = String(kakaoId).startsWith('pub-dummy-') || String(kakaoId).startsWith('pv-dummy-') || String(kakaoId).startsWith('prv-dummy-');
       
       if (isDummyData) {
         console.log('[PlaceDetail] 더미 데이터 감지, API 호출 건너뛰기:', kakaoId);

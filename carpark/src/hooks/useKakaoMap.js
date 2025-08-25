@@ -79,7 +79,7 @@ export const useKakaoMap = (mapEl, myParks) => {
       }
       
       // 더미 데이터인 경우 공용 주차장 상세 페이지로 이동
-      const isDummyData = p.id.startsWith('pub-dummy-') || p.id.startsWith('pv-dummy-') || p.id.startsWith('prv-dummy-');
+      const isDummyData = String(p.id).startsWith('pub-dummy-') || String(p.id).startsWith('pv-dummy-') || String(p.id).startsWith('prv-dummy-');
       const path = isDummyData ? `/place/${p.id}` : (isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`);
       console.log('이동할 경로:', path);
       
@@ -329,8 +329,14 @@ export const useKakaoMap = (mapEl, myParks) => {
         });
 
       // 더미 데이터 항상 표시 (디버깅용)
-      const yg = getYangjaeDummies();
-      const sg = getSeochoGangnamDummies();
+      const yg = getYangjaeDummies().map(dummy => ({
+        ...dummy,
+        distanceKm: Math.round(distKm({ lat, lng }, { lat: dummy.lat, lng: dummy.lng }) * 10) / 10
+      }));
+      const sg = getSeochoGangnamDummies().map(dummy => ({
+        ...dummy,
+        distanceKm: Math.round(distKm({ lat, lng }, { lat: dummy.lat, lng: dummy.lng }) * 10) / 10
+      }));
       
       console.log('[디버그] 더미 데이터 개수:', {
         yangjaeDummies: yg.length,

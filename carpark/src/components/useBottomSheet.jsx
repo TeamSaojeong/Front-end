@@ -17,8 +17,8 @@ export default function useBottomSheet({
     touchMove: { prevTouchY: 0, moving: "none" },
     isContentTouched: false,
     startedOnHeader: false,
-    bounds: { MIN_Y: 0, MAX_Y: 0 },
-    isOpen: false,
+          bounds: { MIN_Y: 0, MAX_Y: 0 },
+      isOpen: true,
   });
 
   useEffect(() => {
@@ -60,12 +60,20 @@ export default function useBottomSheet({
         m.current.isOpen = open;
       }
       sheet.dataset.open = open ? "1" : "0";
+      
+      // 바텀 시트가 열리면 show-title 클래스 추가
+      if (open) {
+        sheet.classList.add('show-title');
+      } else {
+        sheet.classList.remove('show-title');
+      }
+      
       onOpenChange?.(open);
     };
 
-    // 초기 상태: 접힘
+    // 초기 상태: 열림
     recalcBounds();
-    setOpenState(false);
+    setOpenState(true);
 
     const ro = new ResizeObserver(recalcBounds);
     ro.observe(sheet);

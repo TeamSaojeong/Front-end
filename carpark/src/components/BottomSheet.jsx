@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef,useState,useEffect } from "react";
 import useBottomSheet from "./useBottomSheet";
 import "../Styles/BottomSheet.css";
 import Content from "./Content";
@@ -16,6 +16,10 @@ export default function BottomSheet({
   const contentRef = useRef(null);
   const headerRef = useRef(null);
 
+  //타이틀 표시 여부
+  const [showTitle, setShowTitle] = useState(false);
+  const sentinelRef = useRef(null);
+
   const { open, close } = useBottomSheet({
     hostRef,
     sheetRef,
@@ -28,6 +32,21 @@ export default function BottomSheet({
     onRefreshHere?.();
     close(); // ✅ 현 위치에서 다시 검색 시 자동으로 닫힘
   };
+
+  useEffect(()=>{
+    const rootEl = hostRef?.current ?? null;
+    const io = new IntersectionObserver(
+      ([entry]) => setShowTitle(entry.isIntersecting),
+      {
+        root: rootEl,        // host 기준(없으면 뷰포트)
+        threshold: 0.3,
+        rootMargin: "0px 0px -20% 0px",
+      }
+    );
+    const s = sentinelRef.current;
+    if (s) io.observe(s);
+    return () => io.disconnect();
+  }, [hostRef]);
 
   return (
     <div className="bs-wrapper" ref={sheetRef}>

@@ -17,7 +17,7 @@ const getUserKey = () => localStorage.getItem("userKey") || "guest";
 export default function Home() {
   const wrapRef = useRef(null);
   const mapEl = useRef(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(true);
 
   const navigate = useNavigate();
   const myParks = useMyParkings((s) => s.items);
