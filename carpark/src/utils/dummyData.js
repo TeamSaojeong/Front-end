@@ -37,7 +37,7 @@ export const forceSeochoGangnam =
 // 양재 더미 데이터
 export const getYangjaeDummies = () => [
   {
-    id: "pv-dummy-yg-1",
+    id: 1,
     kakaoId: "pv-dummy-yg-1",
     name: "양재동 화훼공판장 주차장",
     address: "서울 서초구 양재동 232-4",
@@ -55,7 +55,7 @@ export const getYangjaeDummies = () => [
     leavingSoon: false,
   },
   {
-    id: "pv-dummy-yg-2",
+    id: 2,
     kakaoId: "pv-dummy-yg-2",
     name: "양재근린공원주차장",
     address: "서울 서초구 양재동 244-2",
@@ -73,7 +73,7 @@ export const getYangjaeDummies = () => [
     leavingSoon: false,
   },
   {
-    id: "pv-dummy-yg-3",
+    id: 3,
     kakaoId: "pv-dummy-yg-3",
     name: "양재동부동산중개 앞 주차장(구간162)",
     address: "서울 서초구 강남대로8길 69",
@@ -91,7 +91,7 @@ export const getYangjaeDummies = () => [
     leavingSoon: false,
   },
   {
-    id: "pv-dummy-yg-4",
+    id: 4,
     kakaoId: "pv-dummy-yg-4",
     name: "양재빌리지 앞 주차장 (구획 23-6)",
     address: "서울 서초구 마방로2길 15-15",
@@ -117,7 +117,7 @@ export const getSeochoGangnamDummies = () => {
   return [
   // 서초구 주차장들
   {
-    id: "pub-dummy-sc-1",
+    id: 5,
     kakaoId: "pub-dummy-sc-1", 
     name: "양재 공영 주차장",
     address: "서울특별시 양재동 90-2",
@@ -135,7 +135,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-2",
+    id: 6,
     kakaoId: "prv-dummy-sc-2",
     name: "제이프라자빌딩 민영 주차장", 
     address: "서울특별시 서초구 방우리로37길 18",
@@ -153,7 +153,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-3",
+    id: 7,
     kakaoId: "prv-dummy-sc-3",
     name: "드림 민영 주차장",
     address: "서울 강남구 개포동 1238-5",
@@ -171,7 +171,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-4", 
+    id: 8, 
     kakaoId: "prv-dummy-sc-4",
     name: "카카오T 양재근린공원 주차장",
     address: "서울 서초구 양재동 244-2",
@@ -189,7 +189,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-5",
+    id: 9,
     kakaoId: "pub-dummy-sc-5",
     name: "트르파티 구룡고원 공영 주차장",
     address: "서울 서초구 능헌로5길 29",
@@ -207,7 +207,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-6",
+    id: 10,
     kakaoId: "prv-dummy-sc-6",
     name: "하이파킹 동산마을 주차장",
     address: "강남대로8길 77",
@@ -225,7 +225,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-7",
+    id: 11,
     kakaoId: "prv-dummy-sc-7",
     name: "양재 민영 주차장",
     address: "서울 서초구 양재동 353-3",
@@ -243,7 +243,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-8",
+    id: 13,
     kakaoId: "prv-dummy-sc-8",
     name: "코수육 주차장",
     address: "서울 서초구 강남대로2길 12",
@@ -261,7 +261,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-9",
+    id: 14,
     kakaoId: "prv-dummy-sc-9",
     name: "아이파킹 이마트 양재점 주차장",
     address: "서울특별시 서초구 매헌로 16",
@@ -279,7 +279,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-10",
+    id: 15,
     kakaoId: "prv-dummy-sc-10",
     name: "아이파킹 하이마레 등 주차장",
     address: "서울특별시 서초구 매헌로 16",
@@ -298,7 +298,7 @@ export const getSeochoGangnamDummies = () => {
   },
   // 강남구 주차장들  
   {
-    id: "pub-dummy-gn-1",
+    id: 16,
     kakaoId: "pub-dummy-gn-1",
     name: "나우빌 건너편 주차장(구획16-22-11)",
     address: "서울 서초구 바우뫼로39길 88-11",
@@ -316,7 +316,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-gn-2",
+    id: 18,
     kakaoId: "pub-dummy-gn-2",
     name: "삼익양재빌라1 앞 주차장(구간 92)",
     address: "서울 서초구 바우뫼로23길 34",
@@ -334,7 +334,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-gn-3",
+    id: 12,
     kakaoId: "pub-dummy-gn-3",
     name: "롯데빌라 a동 앞 주차장(구획 127-1)",
     address: "서울 서초구 양재천로15길 13",
@@ -352,7 +352,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    parkingId: 99,
+    parkingId: 28,
     id: "pub-dummy-gn-4",
     kakaoId: "pub-dummy-gn-4",
     name: "규장 앞 주차장(구간 182)",
@@ -371,7 +371,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: true,
   },
   {
-    id: "pub-dummy-gn-5",
+    id: 19,
     kakaoId: "pub-dummy-gn-5",
     name: "장원빌라 앞(구획 174-2)",
     address: "서울 서초구 동산로10길 64",
@@ -389,7 +389,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-gn-6",
+    id: 20,
     kakaoId: "pub-dummy-gn-6",
     name: "충원성버빌 옆 주차장(구획 42-4)",
     address: "서울 서초구 마방로6길 7-19",
@@ -408,7 +408,7 @@ export const getSeochoGangnamDummies = () => {
   },
   // 추가 주차장들 (두 번째 이미지)
   {
-    id: "prv-dummy-sc-11",
+    id: 21,
     kakaoId: "prv-dummy-sc-11",
     name: "해인빌딩 주차장",
     address: "서울특별시 서초구 강남대로 163",
@@ -426,7 +426,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-12",
+    id: 22,
     kakaoId: "prv-dummy-sc-12",
     name: "시민 민영 주차장",
     address: "서울 서초구 양재동 80-9",
@@ -444,7 +444,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-13",
+    id: 23,
     kakaoId: "prv-dummy-sc-13",
     name: "양재 민영 주차장",
     address: "서울특별시 서초구 남부순환로354길 23",
@@ -462,7 +462,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-14",
+    id: 24,
     kakaoId: "prv-dummy-sc-14",
     name: "숯불 민영 주차장",
     address: "서울 강남구 개포동 1229-2",
@@ -480,7 +480,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-15",
+    id: 25,
     kakaoId: "prv-dummy-sc-15",
     name: "덕수 민영 주차장",
     address: "서울특별시 강남구 논현로 84",
@@ -498,7 +498,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-16",
+    id: 26,
     kakaoId: "prv-dummy-sc-16",
     name: "원드스토오피스텔 민영 주차장",
     address: "서울특별시 서초구 논현로 79",
@@ -516,7 +516,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-17",
+    id: 27,
     kakaoId: "prv-dummy-sc-17",
     name: "유덕 민영 주차장",
     address: "서울특별시 강남구 논현로16길 15",
@@ -534,7 +534,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-18",
+    id: 28,
     kakaoId: "prv-dummy-sc-18",
     name: "상호 민영 주차장",
     address: "서울 서초구 양재동 269-2",
@@ -552,7 +552,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-19",
+    id: 29,
     kakaoId: "pub-dummy-sc-19",
     name: "양재시민의숲 동측 공영 주차장",
     address: "서울특별시 양재동 237 매헌시민의숲",
@@ -570,7 +570,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-20",
+    id: 30,
     kakaoId: "pub-dummy-sc-20",
     name: "언남문화체육센터 공영 주차장",
     address: "동산로13길 35",
@@ -588,7 +588,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-21",
+    id: 31,
     kakaoId: "pub-dummy-sc-21",
     name: "범제교육센터 주차장",
     address: "서울특별시 서초구 동산로15길 23",
@@ -606,7 +606,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-22",
+    id: 32,
     kakaoId: "pub-dummy-sc-22",
     name: "양재근린공원 공영 주차장",
     address: "서초구 서울특별시 서초구 언남길 15-6",
@@ -624,7 +624,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-23",
+    id: 33,
     kakaoId: "pub-dummy-sc-23",
     name: "양재2동주민센터 공영 주차장",
     address: "강남대로12길 44",
@@ -642,7 +642,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-24",
+    id: 34,
     kakaoId: "pub-dummy-sc-24",
     name: "매헌윤봉길의사기념관 공영 주차장",
     address: "서울특별시 서초구 매헌로 99",
@@ -660,7 +660,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-25",
+    id: 35,
     kakaoId: "pub-dummy-sc-25",
     name: "양재시민의숲매헌역 주차장",
     address: "서울특별시 서초구 매헌로 99",
@@ -678,7 +678,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-26",
+    id: 36,
     kakaoId: "pub-dummy-sc-26",
     name: "양재시민의숲 매헌역 공영 주차장",
     address: "서초구 서울특별시 서초구 양재동 237-2",
@@ -696,7 +696,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-27",
+    id: 37,
     kakaoId: "prv-dummy-sc-27",
     name: "테팩스빌딩 주차장",
     address: "서울특별시 서초구 동산로 7",
@@ -714,7 +714,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-28",
+    id: 38,
     kakaoId: "prv-dummy-sc-28",
     name: "그린도트 더프라자곡물 프레인지 양재점 주차장",
     address: "서울특별시 서초구 동산로2길 16",
@@ -732,7 +732,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-29",
+    id: 39,
     kakaoId: "prv-dummy-sc-29",
     name: "원 민영 주차장",
     address: "서울 서초구 양재동 331-4",
@@ -750,7 +750,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-30",
+    id: 40,
     kakaoId: "prv-dummy-sc-30",
     name: "AT센터 주차장",
     address: "서울특별시 서초구 강남대로 27",
@@ -768,7 +768,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-31",
+    id: 41,
     kakaoId: "prv-dummy-sc-31",
     name: "상보 민영 주차장",
     address: "서울 서초구 양재동 328-7",
@@ -786,7 +786,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-32",
+    id: 42,
     kakaoId: "prv-dummy-sc-32",
     name: "양재동351 민영 주차장",
     address: "서울특별시 서초구 강남대로6길 4",
@@ -804,7 +804,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "prv-dummy-sc-33",
+    id: 43,
     kakaoId: "prv-dummy-sc-33",
     name: "현대유로 민영 주차장",
     address: "서울특별시 서초구 강남대로6길 36-11",
@@ -822,7 +822,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: "pub-dummy-sc-34",
+    id: 44,
     kakaoId: "pub-dummy-sc-34",
     name: "나태지私 공영 주차장",
     address: "경기 과천시 주암동 70-6",
