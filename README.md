@@ -1,6 +1,6 @@
 # 🚗🚗주차의 시작, AI로 . [ParkHere!] - saojeong(FE)
-> 도심 '단기 주차'를 가장 쉽고 빠르게: 예약 없이 현장 결제(NFC), 현위치 기반 추천 리스트, '곧 나감' 회전율 선호, AI 수요도(혼잡/여유)
-> 베지를 제공합니다.
+> 도심 '단기 주차'를 가장 쉽고 빠르게: 예약 없이 현장 결제(NFC), 현위치 기반 추천 리스트, 
+> '곧 나감' 회전율 선호, AI 수요도(혼잡/여유) 배지를 제공합니다.
 
 <img width="1080" height="1350" alt="PARK HERE_01" src="https://github.com/user-attachments/assets/53bfb30c-481c-4586-b811-61e14b8591a3" />
 
