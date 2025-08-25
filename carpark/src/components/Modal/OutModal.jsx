@@ -132,8 +132,9 @@ export default function OutModal({
 
   if (!isOpen) return null;
 
-  return ReactDOM.createPortal(
-    <div className="om-overlay" onClick={onClose} role="presentation">
+  // 모바일에서도 확실히 작동하도록 portal 대신 직접 렌더링
+  const modalContent = (
+    <div className="om-overlay" onClick={onClose} role="presentation" style={{ zIndex: 9999 }}>
       <div
         className="om-sheet"
         ref={sheetRef}
@@ -181,7 +182,14 @@ export default function OutModal({
           상세 보기
         </button>
       </div>
-    </div>,
-    document.body
+    </div>
   );
+
+  // 모바일에서도 확실히 작동하도록 portal 사용
+  try {
+    return ReactDOM.createPortal(modalContent, document.body);
+  } catch (error) {
+    console.warn('Portal 렌더링 실패, 직접 렌더링:', error);
+    return modalContent;
+  }
 }
