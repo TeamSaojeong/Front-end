@@ -31,7 +31,7 @@ export default function PvTimeSelect() {
   // ✅ 요청 값(기본값) - nfcInfo > state > 기본값 순서로 우선순위 적용 (교장 앞 주차장 우선)
   const DEFAULTS = {
     placeName: nfcInfo?.name || nfcInfo?.placeName || state?.placeName || "교장 앞 주차장(구간 182)",
-    openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || state?.openRangesText || "00:00 ~ 24:00",
+    openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || state?.openRangesText || "00:00 ~ 08:30",
     pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || state?.pricePer10Min || 1800,
   };
   
