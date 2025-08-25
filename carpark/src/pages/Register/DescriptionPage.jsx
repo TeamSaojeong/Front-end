@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PreviousBtn from "../../components/Register/PreviousBtn";
 import NextBtn from "../../components/Register/NextBtn";
 import Address from "../../components/Register/Address";
@@ -51,6 +51,16 @@ export default function DescriptionPage() {
   const navigate = useNavigate();
   const { address, content, image, setField } = useParkingForm();
   const [errors] = useState({});
+
+  // 디버깅: 이미지 상태 확인
+  useEffect(() => {
+    console.log("[DescriptionPage] 이미지 상태:", {
+      hasImage: !!image,
+      imageType: image ? typeof image : 'null',
+      isFile: image instanceof File,
+      imageName: image?.name
+    });
+  }, [image]);
 
   const hasAddress =
     typeof address === "string"
@@ -122,7 +132,10 @@ export default function DescriptionPage() {
           <p className="ds-img-title">주차 장소 사진&설명</p>
         </div>
         <div className="ds-img_upload">
-          <AddImg onChange={(file) => setField("image", file)} />
+          <AddImg 
+            onChange={(file) => setField("image", file)} 
+            value={image}
+          />
         </div>
       </div>
 

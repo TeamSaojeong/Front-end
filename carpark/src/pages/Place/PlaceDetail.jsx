@@ -19,6 +19,7 @@ import {
   unsubscribeAlert,
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
+import { shrinkImageFile } from "../../utils/imageShrink";
 
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
 const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
@@ -562,9 +563,19 @@ export default function PlaceDetail() {
 
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소 설명</h2>
-        <div className="pub-photo-box" role="img" aria-label="주차 장소 사진">
+        <div className="pub-photo-box" role="img" aria-label="주차 장소 사진" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="pub-photo-placeholder">
-          <img src={name?.includes("규장") ? gyuImg : upload_img} alt="주차장 이미지"/>
+          <img 
+            src={name?.includes("규장") ? gyuImg : upload_img} 
+            alt="주차장 이미지"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              width: 'auto',
+              height: 'auto',
+              objectFit: 'contain'
+            }}
+          />
         </div>
         </div>
         <pre className="pub-note">{note}</pre>

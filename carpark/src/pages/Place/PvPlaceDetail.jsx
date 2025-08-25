@@ -22,6 +22,7 @@ import {
 } from "../../apis/parking";
 import { mapStatusToUI } from "../../utils/parkingStatus";
 import { useMyParkings } from "../../store/MyParkings";
+import { shrinkImageFile } from "../../utils/imageShrink";
 
 const toNum = (v) => (v == null || v === "" ? null : Number(v));
 const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
@@ -103,6 +104,60 @@ export default function PvPlaceDetail() {
   const [error, setError] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [currentLocation, setCurrentLocation] = useState(null);
+
+  // 서버에서 이미지 로드하는 함수
+  const loadImageFromServer = async (parkingId) => {
+    try {
+      console.log("[PvPlaceDetail] 서버 상세 정보 요청:", parkingId);
+      
+      // 먼저 상세 정보에서 이미지 URL 확인
+      const detailRes = await getPrivateDetail(parkingId);
+      const imageUrl = detailRes?.data?.data?.image;
+      
+      if (imageUrl && imageUrl.startsWith('http')) {
+        // 백엔드에서 완전한 이미지 URL을 제공하는 경우
+        setImageUrl(imageUrl);
+        console.log("[PvPlaceDetail] 백엔드 이미지 URL 사용:", imageUrl);
+        return;
+      }
+      
+      // 이미지 URL이 없는 경우, 별도 이미지 API 시도 (기존 방식)
+      console.log("[PvPlaceDetail] 별도 이미지 API 시도:", parkingId);
+      const imgRes = await getPrivateImage(parkingId);
+      if (imgRes?.data) {
+        // 이미지 크기 조절 (박스에 맞게)
+        try {
+          const resizedBlob = await shrinkImageFile(imgRes.data, {
+            maxW: 300,  // 박스 너비에 맞게 조절
+            maxH: 200,  // 박스 높이에 맞게 조절
+            quality: 0.85,
+            targetBytes: 300 * 1024, // 300KB 목표
+          });
+          
+          const url = URL.createObjectURL(resizedBlob);
+          setImageUrl(url);
+          console.log("[PvPlaceDetail] 서버에서 이미지 blob 로드 및 크기 조절 성공");
+        } catch (error) {
+          console.warn("[PvPlaceDetail] 이미지 크기 조절 실패, 원본 사용:", error);
+          const url = URL.createObjectURL(imgRes.data);
+          setImageUrl(url);
+        }
+      } else {
+        console.log("[PvPlaceDetail] 서버 응답에 이미지 데이터 없음");
+      }
+    } catch (error) {
+      // 404는 정상 (이미지 없음), 다른 오류만 경고
+      if (error?.response?.status === 404) {
+        console.log("[PvPlaceDetail] 서버에 이미지 없음 (404) - 정상");
+      } else {
+        console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", {
+          status: error?.response?.status,
+          message: error?.message,
+          url: error?.config?.url
+        });
+      }
+    }
+  };
   
   /** 처음 진입 시: 로컬 기억값을 우선으로 아이콘 상태 결정 */
   const [isSubscribed, setIsSubscribed] = useState(() =>
@@ -365,10 +420,25 @@ export default function PvPlaceDetail() {
         sessionKeys: fromSession ? Object.keys(fromSession) : null
       });
 
-      // 1. 로컬 URL이 있는 경우
-      if (src.imageUrl) {
+      // 1. 로컬 URL이 있는 경우 (blob URL이 아닌 경우만)
+      if (src.imageUrl && !src.imageUrl.startsWith('blob:')) {
         setImageUrl(src.imageUrl);
         console.log("[PvPlaceDetail] 로컬 URL 사용:", src.imageUrl);
+      }
+      // 1-1. blob URL이 있는 경우 (만료될 수 있음)
+      else if (src.imageUrl && src.imageUrl.startsWith('blob:')) {
+        // blob URL을 시도해보고, 실패하면 서버에서 가져오기
+        const testImg = new Image();
+        testImg.onload = () => {
+          setImageUrl(src.imageUrl);
+          console.log("[PvPlaceDetail] blob URL 사용 성공:", src.imageUrl);
+        };
+        testImg.onerror = () => {
+          console.log("[PvPlaceDetail] blob URL 만료됨, 서버에서 가져오기 시도");
+          // blob URL이 만료된 경우 서버에서 가져오기
+          loadImageFromServer(normalized.id);
+        };
+        testImg.src = src.imageUrl;
       }
       // 2. 로컬 File 객체가 있는 경우 
       else if (src.image instanceof File) {
@@ -378,28 +448,7 @@ export default function PvPlaceDetail() {
       }
       // 3. 서버에서 이미지 가져오기 (실제 등록된 주차장만)
       else if (String(normalized.id) && !String(normalized.id).startsWith('temp_')) {
-        try {
-          console.log("[PvPlaceDetail] 서버 이미지 요청:", normalized.id);
-          const imgRes = await getPrivateImage(normalized.id);
-          if (imgRes?.data) {
-            const url = URL.createObjectURL(imgRes.data);
-            setImageUrl(url);
-            console.log("[PvPlaceDetail] 서버에서 이미지 로드 성공");
-          } else {
-            console.log("[PvPlaceDetail] 서버 응답에 이미지 데이터 없음");
-          }
-        } catch (error) {
-          // 404는 정상 (이미지 없음), 다른 오류만 경고
-          if (error?.response?.status === 404) {
-            console.log("[PvPlaceDetail] 서버에 이미지 없음 (404) - 정상");
-          } else {
-            console.warn("[PvPlaceDetail] 서버 이미지 로드 실패:", {
-              status: error?.response?.status,
-              message: error?.message,
-              url: error?.config?.url
-            });
-          }
-        }
+        await loadImageFromServer(normalized.id);
       } else {
         console.log("[PvPlaceDetail] 이미지 로드 건너뜀 (임시 ID 또는 ID 없음)", {
           id: normalized.id,
@@ -880,21 +929,33 @@ export default function PvPlaceDetail() {
 
       <section className="pub-section">
         <h2 className="pub-section-title">주차 장소 사진</h2>
-        <div className="pub-photo-box" role="img" aria-label="주차 장소 사진">
+        <div className="pub-photo-box" role="img" aria-label="주차 장소 사진" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {imageUrl ? (
             <img
               src={imageUrl}
               alt="주차 장소"
               style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
+                maxWidth: "100%",
+                maxHeight: "100%",
+                width: "auto",
+                height: "auto",
+                objectFit: "contain",
                 borderRadius: 12,
               }}
             />
           ) : (
           <div className="pub-photo-placeholder">
-            <img src={detail?.name?.includes("규장") ? gyuImg : upload_img} alt="주차장 이미지"/>
+            <img 
+              src={detail?.name?.includes("규장") ? gyuImg : upload_img} 
+              alt="주차장 이미지"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain'
+              }}
+            />
           </div>
           )}
         </div>

@@ -62,13 +62,13 @@ export async function register(accessToken) {
   let file = s.image;
   let hasImage = file instanceof File;
   
-  // 이미지가 있는 경우에만 압축 처리
+  // 이미지가 있는 경우에만 압축 처리 (박스에 맞게 더 작게)
   if (hasImage && shrinkImageFile) {
     file = await shrinkImageFile(file, {
-      maxW: 1600,
-      maxH: 1600,
-      quality: 0.82,
-      targetBytes: 900 * 1024,
+      maxW: 600,  // 박스 크기에 맞게 조절
+      maxH: 400,  // 박스 크기에 맞게 조절
+      quality: 0.8,
+      targetBytes: 600 * 1024, // 600KB 목표
     });
   }
 
@@ -116,15 +116,28 @@ export async function register(accessToken) {
       final: parkingId
     });
 
-    // 이미지 정보 보존
+    // 이미지 정보 보존 - 백엔드에서 image 필드를 반환하는지 확인
     const imageInfo = {};
     if (s.image instanceof File) {
       imageInfo.image = s.image;
-      imageInfo.imageUrl = URL.createObjectURL(s.image);
+      // 백엔드에서 image 필드를 반환하는 경우 우선 사용
+      if (created?.image && created.image.startsWith('http')) {
+        imageInfo.imageUrl = created.image;
+        console.log("[REGISTER] 백엔드에서 이미지 URL 받음:", created.image);
+      } else if (created?.imageUrl && created.imageUrl.startsWith('http')) {
+        // imageUrl 필드도 확인 (호환성)
+        imageInfo.imageUrl = created.imageUrl;
+        console.log("[REGISTER] 백엔드에서 imageUrl 받음:", created.imageUrl);
+      } else {
+        // 백엔드에서 URL을 반환하지 않는 경우 임시 blob URL 생성
+        imageInfo.imageUrl = URL.createObjectURL(s.image);
+        console.log("[REGISTER] 임시 blob URL 생성:", imageInfo.imageUrl);
+      }
       console.log("[REGISTER] 이미지 정보 저장:", {
         fileName: s.image.name,
         fileSize: s.image.size,
-        hasImageUrl: !!imageInfo.imageUrl
+        hasImageUrl: !!imageInfo.imageUrl,
+        isBackendUrl: !!(created?.image || created?.imageUrl)
       });
     }
 
@@ -241,6 +254,20 @@ export async function modify(parkingId, accessToken) {
   // 기존 저장된 주차장 정보에서 좌표 가져오기
   const existingParking = useMyParkings.getState().items.find(p => String(p.id) === String(parkingId));
   
+  // 이미지 URL 처리
+  let imageUrl = null;
+  if (responseData?.image && responseData.image.startsWith('http')) {
+    imageUrl = responseData.image;
+    console.log("[MODIFY] 백엔드에서 이미지 URL 받음:", responseData.image);
+  } else if (responseData?.imageUrl && responseData.imageUrl.startsWith('http')) {
+    imageUrl = responseData.imageUrl;
+    console.log("[MODIFY] 백엔드에서 imageUrl 받음:", responseData.imageUrl);
+  } else if (s.image instanceof File) {
+    // 새로 업로드한 이미지가 있는 경우 임시 blob URL 생성
+    imageUrl = URL.createObjectURL(s.image);
+    console.log("[MODIFY] 새 이미지 blob URL 생성:", imageUrl);
+  }
+
   const detail = {
     ...responseData,
     id: parkingId,
@@ -252,6 +279,8 @@ export async function modify(parkingId, accessToken) {
     // 좌표는 기존 데이터 → 폼 데이터 → 서버 응답 순으로 우선순위
     lat: existingParking?.lat ?? s.lat ?? responseData?.lat ?? null,
     lng: existingParking?.lng ?? s.lng ?? responseData?.lng ?? null,
+    // 이미지 URL 추가
+    imageUrl: imageUrl,
     origin: "server",
   };
 

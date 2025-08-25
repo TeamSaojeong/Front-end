@@ -95,6 +95,7 @@ const ReportPage = () => {
             <AddImg
               className="rg-carnum-addimg"
               onChange={handleAddImgChange}
+              value={imageFile}
             />
           </div>
         )}

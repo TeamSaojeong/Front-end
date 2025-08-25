@@ -46,6 +46,9 @@ export const useParkingForm = create(
           lng: null,
         }),
 
+      // 이미지만 초기화 (다른 데이터는 유지)
+      resetImage: () => set((s) => ({ ...s, image: null })),
+
       // 관리 → 수정하기에서 기존 데이터 주입
       loadFromPlace: (p) => {
         set({

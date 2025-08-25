@@ -27,6 +27,7 @@ const RegisterPayPage = () => {
     content,
     operateTimes,
     image,
+    resetImage,
   } = useParkingForm();
 
   const amount = useMemo(() => Number(digits || "0"), [digits]);
@@ -38,6 +39,18 @@ const RegisterPayPage = () => {
 
   // ✅ 평균 요금 상태
   const [avgFee, setAvgFee] = useState(null);
+
+  // 디버깅: 이미지 상태 확인
+  useEffect(() => {
+    console.log("[RegisterPayPage] 이미지 상태:", {
+      hasImage: !!image,
+      imageType: image ? typeof image : 'null',
+      isFile: image instanceof File,
+      imageName: image?.name
+    });
+  }, [image]);
+
+
 
   // 숫자 키패드 입력
   const push = (d) => {
@@ -70,6 +83,9 @@ const RegisterPayPage = () => {
       }
       if (amount <= 0) {
         throw new Error("주차 요금을 입력해주세요.");
+      }
+      if (!image || !(image instanceof File)) {
+        throw new Error("주차장 이미지를 업로드해주세요.");
       }
 
       setField("charge", amount);
@@ -119,6 +135,9 @@ const RegisterPayPage = () => {
         origin: "local",
       });
 
+      // 성공적으로 등록된 후 이미지 초기화
+      resetImage();
+      
       navigate("/complete", {
         state: { parkingId: patched.id, detail: patched },
       });
