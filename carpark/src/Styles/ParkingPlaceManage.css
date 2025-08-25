@@ -4,6 +4,10 @@
   background: #fff;
   min-height: 100vh;
 }
+.ppm-previous-img{
+  width: 24px ;
+  height: 24px;
+}
 
 /* 상단 바 */
 .ppm-top {
@@ -11,24 +15,16 @@
   height: 56px;
   display: flex;
   align-items: center;
-  padding: 0 16px 0 44px;
+  padding: 44px 16px 0 44px;
 }
 .ppm-back {
   position: absolute;
   left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
   display: grid;
   place-items: center;
   background: transparent;
   border: 0;
   cursor: pointer;
-}
-.ppm-back img {
-  width: 20px;
-  height: 20px;
 }
 .ppm-title {
   font-size: 20px;

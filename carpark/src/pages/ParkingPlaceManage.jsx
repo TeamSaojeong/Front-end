@@ -11,7 +11,7 @@ import { client } from "../apis/client";
 export default function ParkingPlaceManage() {
   const navigate = useNavigate();
 
-  // ✅ 내가 소유한 주차장만 가져오기
+  // 내가 소유한 주차장만 가져오기
   const allItems = useMyParkings((s) => s.items);
   const getMyItems = useMyParkings((s) => s.getMyItems);
   const getCurrentUser = useMyParkings((s) => s.getCurrentUser);
@@ -21,15 +21,15 @@ export default function ParkingPlaceManage() {
   const upsert = useMyParkings((s) => s.upsert);
   const loadFromPlace = useParkingForm((s) => s.loadFromPlace);
   
-  // ✅ 서버 기반 데이터로 전환
+  // 서버 기반 데이터로 전환
   const [serverPlaces, setServerPlaces] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // ✅ 토큰 기반 현재 사용자 확인
+  // 토큰 기반 현재 사용자 확인
   const currentUser = getCurrentUser();
   const allItemsDebug = allItems || [];
   
-  // ✅ 서버 데이터와 로컬 데이터 모두에서 내 주차장만 필터링
+  // 서버 데이터와 로컬 데이터 모두에서 내 주차장만 필터링
   const myServerPlaces = serverPlaces.filter(place => {
     // 서버 데이터의 경우 등록자 정보로 필터링 (임시로 모든 데이터 표시 안함)
     return false; // 백엔드에서 소유자 정보를 제공하지 않으므로 서버 데이터는 제외
@@ -38,7 +38,7 @@ export default function ParkingPlaceManage() {
   const myLocalPlaces = getMyItems(); // 이미 토큰 기반 필터링됨
   const places = [...myServerPlaces, ...myLocalPlaces]; // 로컬 데이터 우선
   
-  // ✅ 로컬 스토리지 원본 데이터 확인
+  // 로컬 스토리지 원본 데이터 확인
   const rawStorageData = localStorage.getItem('my-parkings');
   const parsedStorage = rawStorageData ? JSON.parse(rawStorageData) : null;
   
@@ -75,7 +75,7 @@ export default function ParkingPlaceManage() {
       return;
     }
 
-    // ✅ 내 주차장인지 확인
+    // 내 주차장인지 확인
     if (!parking.isMyParking && parking.origin !== "server") {
       alert("본인이 등록한 주차장만 토글할 수 있습니다.");
       return;
@@ -123,13 +123,13 @@ export default function ParkingPlaceManage() {
     try {
       setLoading(true);
       
-      // ✅ 내가 등록한 주차장만 조회하는 API 호출
+      // 내가 등록한 주차장만 조회하는 API 호출
       const response = await getMyParkings();
       const data = response.data;
       
       console.log("[SYNC] 서버 응답 (내 주차장만):", data);
       
-      // ✅ 현재 로그인한 사용자 정보 확인
+      // 현재 로그인한 사용자 정보 확인
       const currentUser = getCurrentUser(); // ✅ JWT 기반으로 통일
       console.log("[SYNC] 현재 사용자:", currentUser);
       
@@ -163,7 +163,7 @@ export default function ParkingPlaceManage() {
       console.log("[SYNC] 가공된 데이터 (내 주차장만):", serverParkings);
       console.log("[SYNC] 총 개수:", serverParkings.length);
       
-      // ✅ 서버 데이터와 로컬 데이터 병합 (덮어쓰기 방지)
+      // 서버 데이터와 로컬 데이터 병합 (덮어쓰기 방지)
       const existingItems = allItems || [];
       
       // 서버에서 온 데이터로 업데이트하되, 기존 로컬 데이터는 유지
@@ -223,7 +223,7 @@ export default function ParkingPlaceManage() {
     window.clearMyDataOnly = clearMyDataOnly;
   }
 
-  // ✅ 서버에서 내 주차장만 가져오기
+  // 서버에서 내 주차장만 가져오기
   const fetchMyParkingsFromServer = async () => {
     setLoading(true);
     try {
@@ -254,10 +254,10 @@ export default function ParkingPlaceManage() {
       }));
       
       setServerPlaces(serverData);
-      console.log("[MANAGE] ✅ 서버 데이터 로드 완료:", serverData.length);
+      console.log("[MANAGE] 서버 데이터 로드 완료:", serverData.length);
       
     } catch (error) {
-      console.error("[MANAGE] ❌ 서버 조회 실패:", error);
+      console.error("[MANAGE] 서버 조회 실패:", error);
       console.log("[MANAGE] 🔄 로컬 스토리지로 폴백");
       // 서버 실패 시 로컬 데이터 사용
     } finally {
@@ -268,11 +268,11 @@ export default function ParkingPlaceManage() {
   // 컴포넌트 마운트 시 서버에서 데이터 로드
   useEffect(() => {
     fetchMyParkingsFromServer();
-  }, []); // ✅ 마운트 시에만 실행
+  }, []); // 마운트 시에만 실행
 
   const edit = (p) => {
-    loadFromPlace(p); // ✅ 기존 데이터 주입
-    navigate("/confirm"); // ✅ confirm부터 시작하도록 수정
+    loadFromPlace(p); // 기존 데이터 주입
+    navigate("/confirm"); // confirm부터 시작하도록 수정
   };
 
   const removeWatched = (id) => {
@@ -307,7 +307,7 @@ export default function ParkingPlaceManage() {
           onClick={() => navigate("/home")}
           aria-label="뒤로가기"
         >
-          <img src={backIcon} alt="" />
+          <img src={backIcon} alt="" className="ppm-previous-img"/>
         </button>
         <h1 className="ppm-title">
           주차 장소 관리 {loading && "(동기화 중...)"}
