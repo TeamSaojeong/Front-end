@@ -343,12 +343,7 @@ placeholder = "장소 검색"
         </div>
       )}
       
-      {/* 디버깅용: 제안 상태 표시 */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-          제안 개수: {suggestions.length}, 열림: {openSuggest ? 'true' : 'false'}
-        </div>
-      )}
+
 
       {/* 검색 결과 목록 - 키워드 선택 후에는 숨김 */}
       {places.length > 0 && !openSuggest && !keywordSelected && (

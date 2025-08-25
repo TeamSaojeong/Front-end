@@ -223,7 +223,8 @@ export default function PayPage() {
       finalTotal,
       pricePer10Min,
       orderId,
-      reservationId
+      reservationId,
+      userAgent: navigator.userAgent
     });
 
     setPosting(true);
@@ -275,10 +276,20 @@ export default function PayPage() {
           
           res = await preparePayment(paymentPayload, queryParams);
           console.log('결제 준비 응답:', res);
+          console.log('응답 구조 분석:', {
+            hasData: !!res?.data,
+            hasDataData: !!res?.data?.data,
+            mobileUrl: res?.data?.data?.next_redirect_mobile_url,
+            backupMobileUrl: res?.data?.next_redirect_mobile_url,
+            pcUrl: res?.data?.data?.next_redirect_pc_url,
+            status: res?.status
+          });
           
-          // API 응답이 성공적인지 확인
-          if (res?.data?.data?.next_redirect_mobile_url || res?.data?.next_redirect_mobile_url) {
+          // API 응답이 성공적인지 확인 (백엔드 응답 구조: res.data.data.next_redirect_mobile_url)
+          if (res?.data?.data?.next_redirect_mobile_url) {
             console.log('API 호출 성공 - 실제 카카오페이 URL 획득');
+          } else if (res?.data?.next_redirect_mobile_url) {
+            console.log('API 호출 성공 - 백업 구조에서 카카오페이 URL 획득');
           } else {
             console.log('API 응답 구조:', res);
             throw new Error('API 응답에 결제 URL이 없습니다.');
@@ -298,6 +309,7 @@ export default function PayPage() {
       }
 
       // 카카오페이 리다이렉트 URL 추출 - 백엔드 응답 구조에 맞춤
+      // 백엔드 응답: { status: 200, data: { tid: "...", next_redirect_mobile_url: "..." } }
       const paymentRedirectUrl = res?.data?.data?.next_redirect_mobile_url || res?.data?.next_redirect_mobile_url;
 
       if (paymentRedirectUrl) {
@@ -322,9 +334,28 @@ export default function PayPage() {
           url.searchParams.set('parkingInfo', JSON.stringify(state.parkingInfo));
         }
         
-        const finalRedirectUrl = url.toString();
-        console.log('API 성공 - 카카오페이로 이동:', finalRedirectUrl);
-        window.location.href = finalRedirectUrl;
+        const kakaoRedirectMobileUrl = url.toString();
+        console.log('API 성공 - 카카오페이로 이동:', kakaoRedirectMobileUrl);
+        
+        // 모바일 환경에서 현재 탭에서 카카오페이 열기
+        try {
+          // 모바일 환경 감지
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+            // 모바일에서는 현재 탭에서 리다이렉트
+            console.log('모바일 환경 - 현재 탭에서 카카오페이 열기');
+            window.location.href = kakaoRedirectMobileUrl;
+          } else {
+            // 데스크톱에서는 새 탭에서 열기
+            console.log('데스크톱 환경 - 새 탭에서 카카오페이 열기');
+            window.open(kakaoRedirectMobileUrl, '_blank');
+          }
+        } catch (redirectError) {
+          console.error('리다이렉트 오류:', redirectError);
+          // 폴백: 현재 탭에서 열기
+          window.location.href = kakaoRedirectMobileUrl;
+        }
       } else {
         alert("결제 준비에 실패했습니다. 응답을 확인해주세요.");
         console.error('결제 URL을 찾을 수 없음:', res);

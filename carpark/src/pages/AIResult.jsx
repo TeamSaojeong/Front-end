@@ -400,7 +400,12 @@ const AIResult = () => {
         )}
       </div>
 
-      <NextBtn className="ar-next" label="확인" />
+      <NextBtn 
+        className="ar-next" 
+        label="확인" 
+        isActive={true}
+        onClick={() => navigate("/home")}
+      />
     </div>
   );
 };

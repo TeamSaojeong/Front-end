@@ -58,8 +58,35 @@ const RegisterPayPage = () => {
     setSubmitting(true);
 
     try {
+      // 필수 데이터 검증
+      if (!name || !name.trim()) {
+        throw new Error("주차장 이름을 입력해주세요.");
+      }
+      if (!address || !address.trim()) {
+        throw new Error("주차장 주소를 입력해주세요.");
+      }
+      if (!lat || !lng) {
+        throw new Error("주차장 위치 정보가 없습니다. 주소를 다시 선택해주세요.");
+      }
+      if (amount <= 0) {
+        throw new Error("주차 요금을 입력해주세요.");
+      }
+
       setField("charge", amount);
       const token = localStorage.getItem("accessToken") || "";
+
+      // 디버깅: 전송할 데이터 확인
+      console.log("[RegisterPayPage] 전송할 데이터:", {
+        name,
+        address,
+        lat,
+        lng,
+        charge: amount,
+        zipcode,
+        content,
+        operateTimes,
+        hasImage: !!image
+      });
 
       let patched;
       if (editingId) {

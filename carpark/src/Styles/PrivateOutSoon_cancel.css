@@ -121,7 +121,7 @@
 
 .privatecancel-button-section {
   display: flex;
-  margin: 56px 24px;
+  margin: 20px 24px; 
   width: calc(100% - 48px);
 }
 

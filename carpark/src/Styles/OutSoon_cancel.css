@@ -8,7 +8,7 @@
 }
 
 .outsoon-cancel-header {
-  margin-top: 84px;
+  margin-top: 90px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -109,13 +109,14 @@
 }
 
 .outsoon-cancel-car-section {
+  margin-top: 30px;
   display: flex;
   justify-content: center;
 }
 
-.outsoon-outsoon-car-icon{
-  width: 390px !important;
-  height: 346px !important;
+.outsoon-cancel-car-section img {
+  width: 100%;
+  height: auto;
 }
 
 .outsoon-cancel-button-section {

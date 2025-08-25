@@ -4,7 +4,7 @@ import "../Styles/TimeProvider.css";
 
 import backIcon from "../Assets/arrow.png";
 import closeSvg from "../Assets/close1.svg";
-import { useParkingForm } from "../store/ParkingForm"; // ✅ 추가
+import { useParkingForm } from "../store/ParkingForm";
 
 const ITEM_H = 44;
 const AMPM = ["오전", "오후"];
@@ -40,10 +40,10 @@ export default function TimeProvider() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [picking, setPicking] = useState("start");
 
-  // ✅ 등록 폼 저장소
+  // store
   const setField = useParkingForm((s) => s.setField);
 
-  // 휠 refs & 타이머
+  // wheels & timers
   const refA = useRef(null);
   const tA = useRef(null);
   const refH = useRef(null);
@@ -101,8 +101,9 @@ export default function TimeProvider() {
     return dur >= 10;
   };
 
-  const allValid = useMemo(
-    () => slots.length > 0 && slots.every(isSlotValid) && !loading && !error,
+  //하나라도 유효하면 true
+  const anyValid = useMemo(
+    () => slots.some(isSlotValid) && !loading && !error,
     [slots, loading, error]
   );
 
@@ -123,21 +124,23 @@ export default function TimeProvider() {
   };
 
   const handleNext = () => {
-    if (!allValid) return;
-    const payload = slots.map((s) => ({
-      start: fmt24(s.start),
-      end: fmt24(s.end),
-    }));
-    // ✅ 스토어에 저장 (register 호출 시 사용)
+    if (!anyValid) return;
+    // 유효한 항목만 저장/전달
+    const validSlots = slots.filter(isSlotValid);
+    const payload = validSlots.map((s) => ({
+     start: fmt24(s.start),
+      end: fmt24(s.end)
+        }));
     setField("operateTimes", payload);
-
     navigate("/registerpay", {
       state: { lotId: placeId ?? 0, lotName: placeName, timeRanges: payload },
     });
   };
 
   return (
+    //div로 묶기만 변경
     <div className="time-container">
+      {/* back icon (고정) */}
       <img
         src={backIcon}
         alt="뒤로가기"
@@ -145,6 +148,7 @@ export default function TimeProvider() {
         onClick={() => navigate(-1)}
       />
 
+      {/* 상단 헤더 (고정) */}
       <div className="time-header">
         <div className="time-title">주차 가능 시간 설정</div>
         <div className="time-desc">
@@ -154,6 +158,7 @@ export default function TimeProvider() {
         </div>
       </div>
 
+      {/* 가운데 스크롤 영역 */}
       <div className="time-scroll">
         <div className="time-slots">
           {slots.map((s, idx) => {
@@ -297,18 +302,15 @@ export default function TimeProvider() {
           <button className="time-add" onClick={addSlot}>
             + 항목 추가하기
           </button>
-
-          <div className="time-bottom">
-            <button
-              className="time-next"
-              onClick={handleNext}
-              disabled={!allValid}
-            >
-              다음
-            </button>
-            {error && <div className="time-error">{error}</div>}
-          </div>
         </div>
+      </div>
+
+      {/* 하단 버튼 (고정) */}
+      <div className="time-bottom-fixed">
+      <button className="time-next" onClick={handleNext} disabled={!anyValid}>
+          다음
+        </button>
+        {error && <div className="time-error">{error}</div>}
       </div>
     </div>
   );

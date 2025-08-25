@@ -215,14 +215,7 @@ export default function MapRoute() {
         </div>
       </div>
 
-      {/* 뒤로가기 */}
-      <button
-        className="map-top-back"
-        onClick={() => navigate(-1)}
-        aria-label="뒤로가기"
-      >
-        ←
-      </button>
+
 
       {/* 지도 */}
       <div ref={mapEl} className="map-fill" />

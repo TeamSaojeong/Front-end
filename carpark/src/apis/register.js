@@ -43,6 +43,20 @@ export async function register(accessToken) {
     lng: s.lng ?? null,
   };
 
+  // 필수 필드 검증
+  if (!request.name) {
+    throw new Error("주차장 이름은 필수입니다.");
+  }
+  if (!request.address) {
+    throw new Error("주차장 주소는 필수입니다.");
+  }
+  if (!request.charge || request.charge <= 0) {
+    throw new Error("주차 요금은 0보다 커야 합니다.");
+  }
+  if (!request.lat || !request.lng) {
+    throw new Error("주차장 위치 정보가 필요합니다.");
+  }
+
   console.log("[REGISTER] 전송할 JSON:", request);
 
   let file = s.image;

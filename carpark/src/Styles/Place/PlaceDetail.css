@@ -1,275 +1,262 @@
-  .pub-wrap {
-    background: #fff;
-    width: 390px;
-    min-height: 844px;
-    margin: 0 auto;
-    position: relative;
-    box-sizing: border-box;
-    padding: 0 24px 46px;
-  }
 
-  /* Top bar */
-  .pub-topbar {
-    position: relative;
-    height: 84px;
-  }
-  .pub-close {
-    position: absolute;
-    padding: 0 !important;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-  }
-  .pub-close img{
-    height: 24px !important;
-    width: 24px !important;
-    margin-top: 60px;
+.pub-wrap {
+  background: #fff;
+  width: 390px;
+  min-height: 844px;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0 24px 46px;
+}
 
-  }
-  .pub-chip-icon img,
-  .pub-copy-btn{
-    width: 20px !important;
-    height: 20px !important;
-    display: flex;
-  }
+/* Top bar */
+.pub-topbar {
+  position: relative;
+  height: 84px;
+}
+.pub-close {
+  position: absolute;
+  padding: 0 !important;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.pub-close img{
+  height: 24px !important;
+  width: 24px !important;
+  margin-top: 60px;
 
-  /* Title */
-  .pub-title {
-    color: #303030;
-  font-family: Pretendard;
-  font-size: 20px;
-  font-style: normal;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-    margin: 24px 0 14px;
-  }
+}
+.pub-chip-icon img,
+.pub-copy-btn{
+  width: 20px !important;
+  height: 20px !important;
+  display: flex;
+}
 
-  /* Chips */
-  .pub-chips {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .pub-chip-moneyicon,
-  .pub-chip-locationicon{
-    margin-right: 6px !important;
-  }
-  .pub-bell,
-  .pub-alarm{
-    background: transparent;
-    border: 0;
-  }
+/* Title */
+.pub-title {
+  color: #303030;
+font-family: Pretendard;
+font-size: 20px;
+font-style: normal;
+font-weight: 600;
+letter-spacing: -0.5px;
+  margin: 24px 0 14px;
+}
 
-  .pub-alarm-img,
-  .pub-report-img{
-    position: absolute;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-  }
+/* Chips */
+.pub-chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.pub-chip-moneyicon,
+.pub-chip-locationicon{
+  margin-right: 6px !important;
+}
+.pub-bell,
+.pub-alarm{
+  background: transparent;
+  border: 0;
+}
 
-  .pub-alarm-img{
-    width: 24px;
-    height: 24px;
-    margin-left: 274px;
-    margin-top: 40px;
-    
-  }
+.pub-alarm-img,
+.pub-report-img{
+  position: absolute;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
 
-  .pub-report-img{
-    width: 24px;
-    height: 24px;
-    margin-left: 300px;
-    margin-top: 40px;
-    
-  }
+.pub-alarm-img{
+  width: 24px;
+  height: 24px;
+  margin-left: 274px;
+  margin-top: 40px;
+  
+}
+
+.pub-report-img{
+  width: 24px;
+  height: 24px;
+  margin-left: 300px;
+  margin-top: 40px;
+  
+}
 
 
-  .pub-chip-moneytext,
-  .pub-chip-locationtext{
-    color: #303030;
+.pub-chip-moneytext,
+.pub-chip-locationtext{
+  color: #303030;
+font-family: Pretendard;
+font-size: 14px;
+font-style: normal;
+font-weight: 600;
+letter-spacing: -0.35px;
+}
+
+.pub-chip-value{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pub-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  /* 고정 크기 */
+  width: 169px;
+  height: 68px !important;
+
+  padding: 12px 30px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #eaeaea;
+  box-sizing: border-box;
+}
+
+.pub-chip-text strong {
+  color: #303030;
+}
+.pub-chip-sub {
+  color: #767676;
+font-family: Pretendard;
+font-size: 12px;
+font-style: normal;
+font-weight: 400;
+line-height: 18px; /* 150% */
+letter-spacing: -0.3px;
+}
+
+/* Section */
+.pub-section {
+  margin-top: 16px;
+}
+.pub-section-title {
+  color: #767676;
   font-family: Pretendard;
   font-size: 14px;
   font-style: normal;
   font-weight: 600;
+  line-height: 20px; /* 142.857% */
   letter-spacing: -0.35px;
-  }
+  margin-bottom: 8px;
+}
 
-  .pub-chip-value{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .pub-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    /* 고정 크기 */
-    width: 169px;
-    height: 68px !important;
-
-    padding: 12px 30px;
-    border: 1px solid #eaeaea;
-    border-radius: 12px;
-    background: #eaeaea;
-    box-sizing: border-box;
-  }
-
-  .pub-chip-text strong {
-    color: #303030;
-  }
-  .pub-chip-sub {
-    color: #767676;
+/* Address */
+.pub-address-row {
+  display: flex;
+  align-items: flex-start !important;
+}
+.pub-address {
+  color: #303030;
   font-family: Pretendard;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 18px; /* 150% */
-  letter-spacing: -0.3px;
-  }
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 20px; /* 142.857% */
+letter-spacing: -0.35px;
+margin-right: 8px;
+}
 
-  /* Section */
-  .pub-section {
-    margin-top: 16px;
-  }
-  .pub-section-title {
-    color: #767676;
-    font-family: Pretendard;
-    font-size: 14px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 20px; /* 142.857% */
-    letter-spacing: -0.35px;
-    margin-bottom: 8px;
-  }
-
-  /* Address */
-  .pub-address-row {
-    display: flex;
-    align-items: flex-start !important;
-  }
-  .pub-address {
-    color: #303030;
-    font-family: Pretendard;
+/* Time */
+.pub-times {
+  color: #303030;
+  font-family: Pretendard;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
   line-height: 20px; /* 142.857% */
   letter-spacing: -0.35px;
-  margin-right: 8px;
-  }
+}
 
-  /* Time */
-  .pub-times {
-    color: #303030;
-    font-family: Pretendard;
-    font-size: 14px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 20px; /* 142.857% */
-    letter-spacing: -0.35px;
-  }
+/* Photo */
+.pub-photo-box {
+  width: 342px;
+  height: 192px;
+  background: #eaeaea;
+  border: 1px solid #eaeaea;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  margin: 8px 0 8px;
+}
+.pub-photo-placeholder {
+  font-size: 28px;
+  opacity: 0.6;
+}
 
-  /* Photo */
-  .pub-photo-box {
-    width: 342px;
-    height: 192px;
-    background: #eaeaea;
-    border: 1px solid #eaeaea;
-    border-radius: 6px;
-    display: grid;
-    place-items: center;
-    margin: 8px 0 8px;
-  }
-  .pub-photo-placeholder {
-    font-size: 28px;
-    opacity: 0.6;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .pub-photo-placeholder img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border-radius: 6px;
-  }
+/* Note */
+.pub-note {
+  color: #303030;
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px; /*줄 간격(행간)*/
+  letter-spacing: -0.35px;
+  white-space: pre-wrap;
+}
 
-  /* Note */
-  .pub-note {
-    color: #303030;
-    font-family: Pretendard;
-    font-size: 14px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 20px; /*줄 간격(행간)*/
-    letter-spacing: -0.35px;
-    white-space: pre-wrap;
-  }
+/* Bottom buttons */
+.pub-actions {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  gap: 12px;
+  padding: 20px 0 0;
+  margin-top: 35px;
+  top: 742px;
+}
+.pub-btn {
+  height: 52px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pub-btn-outline {
+  width: 167px;
+  height: 56px;
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #303030;
+}
+.pub-btn-primary {
+  width: 167px;
+  height: 56px;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6; /* 파랑 */
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pub-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-  /* Bottom buttons */
-  .pub-actions {
-    position: sticky;
-    bottom: 0;
-    background: #fff;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 24px;
-    gap: 12px;
-    padding: 20px 0 0;
-    margin-top: 35px;
-    top: 742px;
-  }
-  .pub-btn {
-    height: 52px;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .pub-btn-outline {
-    width: 167px;
-    height: 56px;
-    border: 1px solid #e1e1e1;
-    border-radius: 6px;
-    background: #fff;
-    color: #303030;
-  }
-  .pub-btn-primary {
-    width: 167px;
-    height: 56px;
-    border: none;
-    border-radius: 6px;
-    background: #3b82f6; /* 파랑 */
-    color: #fff;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .pub-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+.pub-btn-primary:disabled {
+  background: #eaeaea; /* 흐린 회색 */
+  color: #767676; /* 글자도 어둡게 */
+  cursor: not-allowed; /* 클릭 차단 */
+  opacity: 1; /* 흐림 효과 제거 */
+}
 
-  .pub-btn-primary:disabled {
-    background: #eaeaea; /* 흐린 회색 */
-    color: #767676; /* 글자도 어둡게 */
-    cursor: not-allowed; /* 클릭 차단 */
-    opacity: 1; /* 흐림 효과 제거 */
-  }
-
-  /* 이용 중 상태 */
-  .pub-btn-primary.in-use {
-    background: #eaeaea; /* 밝은 회색 */
-    color: #5c5c5c; /* 어두운 회색 글씨 */
-    cursor: not-allowed; /* 클릭 불가 */
-  }
+/* 이용 중 상태 */
+.pub-btn-primary.in-use {
+  background: #eaeaea; /* 밝은 회색 */
+  color: #5c5c5c; /* 어두운 회색 글씨 */
+  cursor: not-allowed; /* 클릭 불가 */
+}

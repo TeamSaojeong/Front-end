@@ -8,7 +8,6 @@ import AddImg from "../../components/Register/AddImg";
 import { useParkingForm } from "../../store/ParkingForm";
 import "../../Styles/Register/DescriptionPage.css";
 
-/* ===== Kakao 지오코딩 ===== */
 const SDK_SRC =
   "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
 
@@ -96,7 +95,7 @@ export default function DescriptionPage() {
             setField("lat", null);
             setField("lng", null);
 
-            // ✅ 검색결과에서 좌표 제공 시 그대로 사용
+            // 검색결과에서 좌표 제공 시 그대로 사용
             if (addr?.x && addr?.y) {
               console.log(
                 "[DescriptionPage] 검색결과 좌표 사용:",
@@ -108,7 +107,7 @@ export default function DescriptionPage() {
               return;
             }
 
-            // ✅ 없으면 geocode fallback
+            // 없으면 geocode fallback
             const xy = await geocodeAddressToXY(full);
             console.log("[DescriptionPage] 주소 → 좌표 변환:", full, xy);
 
@@ -128,7 +127,8 @@ export default function DescriptionPage() {
       </div>
 
       <div className="ds-input-wrapper">
-        <InputBox
+        <textarea
+          raw={3}
           className="ds-input"
           value={content}
           onChange={(e) => setField("content", e.target.value)}
