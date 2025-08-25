@@ -534,7 +534,7 @@ export const getSeochoGangnamDummies = () => {
     leavingSoon: false,
   },
   {
-    id: 28,
+    id: 87,
     kakaoId: "prv-dummy-sc-18",
     name: "상호 민영 주차장",
     address: "서울 서초구 양재동 269-2",
