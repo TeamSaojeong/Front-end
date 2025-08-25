@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/OutSoon_cancel.css";
 
-import car_icon from "../Assets/car.png";
+import car_icon from "../Assets/car.svg";
 import clock_icon from "../Assets/clock.svg";
 import info_icon from "../Assets/info.svg";
 
@@ -158,7 +158,7 @@ const OutSoon_cancel = () => {
       </div>
 
       <div className="outsoon-cancel-car-section">
-        <img src={car_icon} alt="자동차 아이콘" />
+        <img src={car_icon} alt="자동차 아이콘" className="outsoon-car-icon"/>
       </div>
 
       <div className="outsoon-cancel-button-section">
