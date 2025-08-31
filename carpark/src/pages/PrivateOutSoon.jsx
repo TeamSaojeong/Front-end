@@ -85,15 +85,99 @@ const getCoords = (fallback) =>
 
 export default function PrivateOutSoon() {
   const navigate = useNavigate();
-  const { state } = useLocation() || {};
+  const { state, search } = useLocation() || {};
+  const qs = new URLSearchParams(search || "");
 
   console.log('[PrivateOutSoon] 받은 state:', state);
+  console.log('[PrivateOutSoon] state 상세 분석:', {
+    parkName: state?.parkName,
+    placeName: state?.placeName,
+    parkingId: state?.parkingId,
+    placeId: state?.placeId,
+    parkingInfo: state?.parkingInfo,
+    address: state?.address,
+    pricePer10Min: state?.pricePer10Min,
+    openRangesText: state?.openRangesText
+  });
+  
+  // URL 파라미터에서 placeId 가져오기
+  const placeIdFromUrl = qs.get("placeId");
+  console.log('[PrivateOutSoon] URL 파라미터 placeId:', placeIdFromUrl);
+  
+  // 주차장 정보 가져오기 함수
+  const getParkingInfo = () => {
+    // 1. state에서 받은 정보 우선
+    if (state?.parkingInfo) {
+      console.log('[PrivateOutSoon] state에서 parkingInfo 찾음:', state.parkingInfo);
+      return state.parkingInfo;
+    }
+    
+    // 2. state에서 개별 필드들로 주차장 정보 구성
+    if (state?.parkName || state?.placeName || state?.parkingId) {
+      const constructedInfo = {
+        id: state?.parkingId || state?.placeId,
+        name: state?.parkName || state?.placeName,
+        address: state?.address || "",
+        charge: state?.pricePer10Min || 0,
+        availableTimes: state?.openRangesText || "",
+        isPrivate: true
+      };
+      console.log('[PrivateOutSoon] state에서 주차장 정보 구성:', constructedInfo);
+      return constructedInfo;
+    }
+    
+    console.log('[PrivateOutSoon] state에서 주차장 정보를 찾을 수 없음:', {
+      parkName: state?.parkName,
+      placeName: state?.placeName,
+      parkingId: state?.parkingId,
+      parkingInfo: state?.parkingInfo
+    });
+    
+    // 3. sessionStorage에서 placeId로 검색
+    if (placeIdFromUrl) {
+      try {
+        const saved = sessionStorage.getItem('nfcParkingInfo');
+        if (saved) {
+          const info = JSON.parse(saved);
+          if (info.id == placeIdFromUrl || info.placeId == placeIdFromUrl) {
+            console.log('[PrivateOutSoon] sessionStorage에서 주차장 정보 찾음:', info);
+            return info;
+          }
+        }
+      } catch (error) {
+        console.error('[PrivateOutSoon] sessionStorage 로드 실패:', error);
+      }
+    }
+    
+    // 4. localStorage 백업 확인
+    try {
+      const backup = localStorage.getItem('lastNfcParkingInfo');
+      if (backup) {
+        const info = JSON.parse(backup);
+        if (placeIdFromUrl && (info.id == placeIdFromUrl || info.placeId == placeIdFromUrl)) {
+          console.log('[PrivateOutSoon] localStorage에서 주차장 정보 찾음:', info);
+          return info;
+        }
+      }
+    } catch (error) {
+      console.error('[PrivateOutSoon] localStorage 로드 실패:', error);
+    }
+    
+    return null;
+  };
+
+  const parkingInfo = getParkingInfo();
+  console.log('[PrivateOutSoon] 최종 주차장 정보:', parkingInfo);
 
   const selectedPlace = useMemo(readSelectedPlace, []);
+  
+  // 주차장 정보 우선순위: parkingInfo > state > selectedPlace > 기본값
   const placeName =
-    state?.parkName ?? state?.placeName ?? selectedPlace?.name ?? "규장 앞 주차장(구간 182)";
-  const placeId = state?.placeId ?? selectedPlace?.id ?? placeName;
-  const address = state?.address ?? selectedPlace?.address ?? "";
+    parkingInfo?.name || state?.parkName || state?.placeName || selectedPlace?.name || "주차장";
+  const placeId = 
+    (parkingInfo?.id || parkingInfo?.placeId || state?.placeId) ?? selectedPlace?.id ?? placeIdFromUrl ?? placeName;
+  const address = 
+    (parkingInfo?.address || state?.address) ?? selectedPlace?.address ?? "";
 
   // 현재 시간 기준으로 예약 시간 설정
   const now0 = useMemo(() => new Date(), []);
@@ -122,6 +206,18 @@ export default function PrivateOutSoon() {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // 주차장 정보 디버깅
+  useEffect(() => {
+    console.log('[PrivateOutSoon] 주차장 정보:', {
+      parkingInfo,
+      placeName,
+      placeId,
+      address,
+      placeIdFromUrl,
+      state: state
+    });
+  }, [parkingInfo, placeName, placeId, address, placeIdFromUrl, state]);
 
   // 시간 정보 디버깅
   useEffect(() => {
@@ -196,11 +292,11 @@ export default function PrivateOutSoon() {
           placeName,
           startAt: startAt.toISOString(),
           endAt: endAt.toISOString(),
-          parkingId: state?.parkingId,
-          parkName: state?.parkName,
+          parkingId: parkingInfo?.id || state?.parkingId,
+          parkName: parkingInfo?.name || state?.parkName,
           total: state?.total,
           usingMinutes: state?.usingMinutes,
-          parkingInfo: state?.parkingInfo,
+          parkingInfo: parkingInfo || state?.parkingInfo,
           orderId: state?.orderId,
           reservationId: state?.reservationId
         }

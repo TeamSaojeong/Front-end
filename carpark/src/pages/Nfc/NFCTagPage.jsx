@@ -135,11 +135,17 @@ const NFCTagPage = () => {
                 // return;
               }
 
-              // PvTimeSelect로 이동 (NFC 태그된 것처럼)
+              // PvTimeSelect로 이동 (NFC 태그된 것처럼) - 모든 주차장 정보 전달
               navigate("/pv/time-select", {
                 state: {
                   placeId: parkingInfo.id,
                   placeName: parkingInfo.name,
+                  address: parkingInfo.address,
+                  openRangesText: parkingInfo.availableTimes,
+                  pricePer10Min: parkingInfo.charge,
+                  lat: parkingInfo.lat,
+                  lng: parkingInfo.lng,
+                  isPrivate: parkingInfo.isPrivate,
                   prefetched: true
                 }
               });
@@ -162,6 +168,156 @@ const NFCTagPage = () => {
           }}
         >
           🏷️ 테스트 태그
+        </button>
+      </div>
+
+      {/* 화면 밖 작은 버튼들 */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        right: '10px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '5px',
+        zIndex: 9999
+      }}>
+        {/* PvTimeSelect로 이동 */}
+        <button
+          onClick={() => {
+            if (parkingInfo) {
+              navigate("/pv/time-select", {
+                state: {
+                  placeId: parkingInfo.id,
+                  placeName: parkingInfo.name,
+                  address: parkingInfo.address,
+                  openRangesText: parkingInfo.availableTimes,
+                  pricePer10Min: parkingInfo.charge,
+                  lat: parkingInfo.lat,
+                  lng: parkingInfo.lng,
+                  isPrivate: parkingInfo.isPrivate,
+                  prefetched: true
+                }
+              });
+            } else {
+              alert("주차장 정보를 불러오는 중입니다.");
+            }
+          }}
+          style={{
+            padding: '6px 8px',
+            fontSize: '10px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          ⏰ 시간선택
+        </button>
+
+        {/* PayPage로 이동 */}
+        <button
+          onClick={() => {
+            if (parkingInfo) {
+              const now = new Date();
+              const end = new Date(now.getTime() + 60 * 60000); // 1시간
+              
+              navigate("/PayPage", {
+                state: {
+                  parkingId: parkingInfo.id,
+                  parkName: parkingInfo.name,
+                  startAt: now.toISOString(),
+                  endAt: end.toISOString(),
+                  durationMin: 60,
+                  usingMinutes: 60,
+                  estimatedCost: parkingInfo.charge * 6, // 10분당 요금 * 6
+                  total: parkingInfo.charge * 6,
+                  parkingInfo: parkingInfo
+                }
+              });
+            } else {
+              alert("주차장 정보를 불러오는 중입니다.");
+            }
+          }}
+          style={{
+            padding: '6px 8px',
+            fontSize: '10px',
+            backgroundColor: '#2196F3',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          💳 결제
+        </button>
+
+        {/* PrivateOutSoon으로 이동 */}
+        <button
+          onClick={() => {
+            if (parkingInfo) {
+              const now = new Date();
+              const end = new Date(now.getTime() + 60 * 60000); // 1시간
+              
+              navigate("/privateoutsoon", {
+                state: {
+                  parkingId: parkingInfo.id,
+                  parkName: parkingInfo.name,
+                  startAt: now.toISOString(),
+                  endAt: end.toISOString(),
+                  usingMinutes: 60,
+                  parkingInfo: parkingInfo
+                }
+              });
+            } else {
+              alert("주차장 정보를 불러오는 중입니다.");
+            }
+          }}
+          style={{
+            padding: '6px 8px',
+            fontSize: '10px',
+            backgroundColor: '#FF9800',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          🚗 이용중
+        </button>
+
+        {/* MapRoute로 이동 */}
+        <button
+          onClick={() => {
+            if (parkingInfo) {
+              navigate("/MapRoute", {
+                state: {
+                  dest: { lat: parkingInfo.lat, lng: parkingInfo.lng },
+                  name: parkingInfo.name,
+                  address: parkingInfo.address,
+                  placeId: parkingInfo.id,
+                  isPrivate: parkingInfo.isPrivate,
+                },
+              });
+            } else {
+              alert("주차장 정보를 불러오는 중입니다.");
+            }
+          }}
+          style={{
+            padding: '6px 8px',
+            fontSize: '10px',
+            backgroundColor: '#9C27B0',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          🗺️ 경로
         </button>
       </div>
 

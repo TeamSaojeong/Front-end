@@ -27,53 +27,95 @@ export default function PvTimeSelect() {
   
   // NFC URL 진입 시 ?placeId=xxx 지원
   const placeId = state?.placeId ?? qs.get("placeId") ?? nfcInfo?.placeId ?? 999;
+  
+  // URL 파라미터로 접근했을 때 sessionStorage에서 주차장 정보 찾기
+  const getParkingInfoFromStorage = () => {
+    if (state?.placeName) return null; // state에 데이터가 있으면 스토리지 검색 불필요
+    
+    try {
+      const saved = sessionStorage.getItem('nfcParkingInfo');
+      if (saved) {
+        const info = JSON.parse(saved);
+        // placeId가 일치하는지 확인
+        if (info.id == placeId || info.placeId == placeId) {
+          return info;
+        }
+      }
+    } catch (error) {
+      console.error('스토리지에서 주차장 정보 로드 실패:', error);
+    }
+    return null;
+  };
 
-  // ✅ 요청 값(기본값) - nfcInfo > state > 기본값 순서로 우선순위 적용 (교장 앞 주차장 우선)
+  const storageInfo = getParkingInfoFromStorage();
+
+  // 실제 데이터 우선순위: state > storageInfo > nfcInfo > 기본값
   const DEFAULTS = {
-    placeName: nfcInfo?.name || nfcInfo?.placeName || state?.placeName || "교장 앞 주차장(구간 182)",
-    openRangesText: nfcInfo?.availableTimes || nfcInfo?.openRangesText || state?.openRangesText || "00:00 ~ 08:30",
-    pricePer10Min: nfcInfo?.charge || nfcInfo?.pricePer10Min || state?.pricePer10Min || 1800,
+    placeName: state?.placeName || storageInfo?.name || nfcInfo?.name || nfcInfo?.placeName || "주차장",
+    openRangesText: state?.openRangesText || storageInfo?.availableTimes || nfcInfo?.availableTimes || nfcInfo?.openRangesText || "운영시간 정보 없음",
+    pricePer10Min: state?.pricePer10Min || storageInfo?.charge || nfcInfo?.charge || nfcInfo?.pricePer10Min || 0,
   };
   
-  console.log('PvTimeSelect NFC 정보:', {
+  console.log('PvTimeSelect 데이터 확인:', {
+    state,
     nfcInfo,
+    storageInfo,
+    placeId,
     defaults: DEFAULTS,
     placeName: DEFAULTS.placeName,
-    pricePer10Min: DEFAULTS.pricePer10Min
+    openRangesText: DEFAULTS.openRangesText,
+    pricePer10Min: DEFAULTS.pricePer10Min,
+    prefetched: state?.prefetched,
+    hasStateData: !!(state?.placeName || state?.openRangesText || state?.pricePer10Min),
+    hasStorageData: !!storageInfo
   });
 
   // ------- 백엔드에서 받아올 값들 -------
-  const [loading, setLoading] = useState(!state?.prefetched);
+  const [loading, setLoading] = useState(!state?.prefetched && !state?.placeName);
   const [error, setError] = useState(null);
-  const [placeName, setPlaceName] = useState(
-    state?.placeName ?? DEFAULTS.placeName
-  );
-  const [openRangesText, setOpenRangesText] = useState(
-    state?.openRangesText ?? DEFAULTS.openRangesText
-  );
-  const [pricePer10Min, setPricePer10Min] = useState(
-    state?.pricePer10Min ?? DEFAULTS.pricePer10Min
-  );
+  const [placeName, setPlaceName] = useState(DEFAULTS.placeName);
+  const [openRangesText, setOpenRangesText] = useState(DEFAULTS.openRangesText);
+  const [pricePer10Min, setPricePer10Min] = useState(DEFAULTS.pricePer10Min);
   // ------------------------------------
 
   useEffect(() => {
-    if (!placeId || state?.prefetched) return;
+    // prefetched가 true면 state에서 받은 데이터를 사용
+    if (state?.prefetched) {
+      console.log('PvTimeSelect: prefetched 데이터 사용', state);
+      setPlaceName(state.placeName || DEFAULTS.placeName);
+      setOpenRangesText(state.openRangesText || DEFAULTS.openRangesText);
+      setPricePer10Min(state.pricePer10Min || DEFAULTS.pricePer10Min);
+      setLoading(false);
+      return;
+    }
+
+    // storageInfo가 있으면 즉시 사용 (URL 파라미터로 접근한 경우)
+    if (storageInfo && !state?.placeName) {
+      console.log('PvTimeSelect: storageInfo 데이터 사용', storageInfo);
+      setPlaceName(storageInfo.name || DEFAULTS.placeName);
+      setOpenRangesText(storageInfo.availableTimes || DEFAULTS.openRangesText);
+      setPricePer10Min(storageInfo.charge || DEFAULTS.pricePer10Min);
+      setLoading(false);
+      return;
+    }
+
+    // prefetched가 false이고 storageInfo도 없으면 API 호출
+    if (!placeId) return;
     let aborted = false;
     (async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // TODO: 실제 API로 교체
-        // const res = await fetch(`/api/parking/places/${placeId}`);
-        // const data = await res.json();
-
-        // mock (요청하신 값으로 세팅)
-        await new Promise((r) => setTimeout(r, 200));
+        // 실제 API 호출
+        const res = await fetch(`/api/parking/places/${placeId}`);
+        const apiData = await res.json();
+        
+        // API 응답이 없으면 기본값 사용
         const data = {
-          placeName: DEFAULTS.placeName,
-          openRangesText: DEFAULTS.openRangesText,
-          pricePer10Min: DEFAULTS.pricePer10Min,
+          placeName: apiData?.placeName || DEFAULTS.placeName,
+          openRangesText: apiData?.openRangesText || DEFAULTS.openRangesText,
+          pricePer10Min: apiData?.pricePer10Min || DEFAULTS.pricePer10Min,
         };
 
         if (aborted) return;
@@ -89,7 +131,7 @@ export default function PvTimeSelect() {
     return () => {
       aborted = true;
     };
-  }, [placeId, state?.prefetched]);
+  }, [placeId, state?.prefetched, state?.placeName, state?.openRangesText, state?.pricePer10Min, storageInfo]);
 
   // 휠 데이터
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -165,10 +207,10 @@ export default function PvTimeSelect() {
     const now = new Date();
     const end = new Date(now.getTime() + totalMinutes * 60000);
 
-    // 결제 정보 준비 - 교장 앞 주차장 데이터 우선 사용
+    // 결제 정보 준비 - 실제 데이터 사용
     const paymentData = {
-      demo: true, // 데모 플래그 (PayPage에서 API 생략)
-      lotId: placeId || 999,
+      demo: false, // 실제 결제 플래그
+      lotId: placeId,
       parkingId: nfcInfo?.id || placeId,
       parkName: placeName,
       startAt: now.toISOString(),
@@ -177,7 +219,7 @@ export default function PvTimeSelect() {
       usingMinutes: totalMinutes,
       estimatedCost,
       total: estimatedCost,
-      // 주차장 정보 - nfcInfo 우선, state 백업
+      // 주차장 정보 - 실제 데이터 사용
       parkingInfo: {
         id: nfcInfo?.id || placeId,
         name: placeName,
@@ -192,7 +234,7 @@ export default function PvTimeSelect() {
     };
 
     console.log('PvTimeSelect에서 PayPage로 전달:', paymentData);
-    console.log('교장 앞 주차장 데이터 확인:', {
+    console.log('주차장 데이터 확인:', {
       name: paymentData.parkingInfo.name,
       charge: paymentData.parkingInfo.charge,
       address: paymentData.parkingInfo.address

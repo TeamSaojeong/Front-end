@@ -13,7 +13,8 @@ const fmt = new Intl.DateTimeFormat("ko-KR", {
 
 const PayComplete = () => {
   const navigate = useNavigate();
-  const { state } = useLocation() || {};
+  const { state, search } = useLocation() || {};
+  const qs = new URLSearchParams(search || "");
  
   const startAt = state?.startAt ? new Date(state.startAt) : null;
   const endAt = state?.endAt ? new Date(state.endAt) : null;
@@ -34,18 +35,83 @@ const PayComplete = () => {
   const startAtParam = params.get('startAt');
   const endAtParam = params.get('endAt');
   
-  // 주차장 상세 정보 파싱
-  let parkingInfo = null;
-  if (parkingInfoStr) {
+  // URL 파라미터에서 placeId 가져오기
+  const placeIdFromUrl = qs.get("placeId");
+  console.log('[PayComplete] URL 파라미터 placeId:', placeIdFromUrl);
+  
+  // 주차장 정보 가져오기 함수
+  const getParkingInfo = () => {
+    // 1. state에서 받은 정보 우선
+    if (state?.parkingInfo) {
+      // state에서 받은 정보를 sessionStorage에 저장
+      try {
+        sessionStorage.setItem('nfcParkingInfo', JSON.stringify(state.parkingInfo));
+        console.log('[PayComplete] state에서 받은 주차장 정보를 sessionStorage에 저장:', state.parkingInfo);
+      } catch (error) {
+        console.error('[PayComplete] sessionStorage 저장 실패:', error);
+      }
+      return state.parkingInfo;
+    }
+    
+    // 2. URL 파라미터에서 파싱한 정보
+    if (parkingInfoStr) {
+      try {
+        const info = JSON.parse(parkingInfoStr);
+        console.log('[PayComplete] URL 파라미터에서 주차장 정보 파싱:', info);
+        return info;
+      } catch (e) {
+        console.error('[PayComplete] 주차장 정보 파싱 실패:', e);
+      }
+    }
+    
+    // 3. sessionStorage에서 placeId로 검색
+    if (placeIdFromUrl) {
+      try {
+        const saved = sessionStorage.getItem('nfcParkingInfo');
+        if (saved) {
+          const info = JSON.parse(saved);
+          if (info.id == placeIdFromUrl || info.placeId == placeIdFromUrl) {
+            console.log('[PayComplete] sessionStorage에서 주차장 정보 찾음:', info);
+            return info;
+          }
+        }
+      } catch (error) {
+        console.error('[PayComplete] sessionStorage 로드 실패:', error);
+      }
+    }
+    
+    // 4. localStorage 백업 확인
     try {
-      parkingInfo = JSON.parse(parkingInfoStr);
-    } catch (e) {
-      console.error('주차장 정보 파싱 실패:', e);
+      const backup = localStorage.getItem('lastNfcParkingInfo');
+      if (backup) {
+        const info = JSON.parse(backup);
+        if (placeIdFromUrl && (info.id == placeIdFromUrl || info.placeId == placeIdFromUrl)) {
+          console.log('[PayComplete] localStorage에서 주차장 정보 찾음:', info);
+          return info;
+        }
+      }
+    } catch (error) {
+      console.error('[PayComplete] localStorage 로드 실패:', error);
+    }
+    
+    return null;
+  };
+
+  const parkingInfo = getParkingInfo();
+  console.log('[PayComplete] 최종 주차장 정보:', parkingInfo);
+  
+  // 주차장 정보를 sessionStorage에 저장 (PrivateOutSoon에서 사용하기 위해)
+  if (parkingInfo && !sessionStorage.getItem('nfcParkingInfo')) {
+    try {
+      sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
+      console.log('[PayComplete] sessionStorage에 주차장 정보 저장:', parkingInfo);
+    } catch (error) {
+      console.error('[PayComplete] sessionStorage 저장 실패:', error);
     }
   }
   
   // 주차장 이름 설정 (parkingInfo에서 우선 가져오고, 없으면 parkName, 없으면 기본값)
-  const finalParkName = parkingInfo?.name || parkName || "교장 앞 주차장(구간 182)";
+  const finalParkName = parkingInfo?.name || parkName || "주차장";
 
   console.log('[PayComplete] URL 파라미터:', {
     orderId,
@@ -134,6 +200,26 @@ const PayComplete = () => {
     total,
     usingMinutes
   });
+  
+  // PrivateOutSoon으로 전달할 정보 로그
+  const privateOutSoonState = {
+    parkingId: parkingInfo?.id || parkingId,
+    parkName: finalParkName,
+    total,
+    usingMinutes,
+    parkingInfo,
+    startAt: startAtParam,
+    endAt: endAtParam,
+    orderId,
+    reservationId,
+    placeName: finalParkName,
+    placeId: parkingInfo?.id || parkingId,
+    address: parkingInfo?.address || "",
+    pricePer10Min: parkingInfo?.charge || 0,
+    openRangesText: parkingInfo?.availableTimes || ""
+  };
+  
+  console.log('[PayComplete] PrivateOutSoon으로 전달할 state:', privateOutSoonState);
 
   return (
     <div className="paycomplete-container">
@@ -165,7 +251,7 @@ const PayComplete = () => {
           className="paycomplete-outsoon"
           onClick={() => navigate("/privateoutsoon", { 
             state: {
-              parkingId,
+              parkingId: parkingInfo?.id || parkingId,
               parkName: finalParkName,
               total,
               usingMinutes,
@@ -173,7 +259,13 @@ const PayComplete = () => {
               startAt: startAtParam,
               endAt: endAtParam,
               orderId,
-              reservationId
+              reservationId,
+              // 주차장 정보를 더 명확하게 전달
+              placeName: finalParkName,
+              placeId: parkingInfo?.id || parkingId,
+              address: parkingInfo?.address || "",
+              pricePer10Min: parkingInfo?.charge || 0,
+              openRangesText: parkingInfo?.availableTimes || ""
             }
           })}
         >

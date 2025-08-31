@@ -25,10 +25,65 @@ const hhmm = new Intl.DateTimeFormat("ko-KR", {
 
 export default function PayPage() {
   const navigate = useNavigate();
-  const { state } = useLocation() || {};
+  const { state, search } = useLocation() || {};
+  const qs = new URLSearchParams(search || "");
 
   console.log("[PayPage] 받은 state 정보:", state);
   console.log("[PayPage] parkingInfo:", state?.parkingInfo);
+  
+  // URL 파라미터에서 placeId 가져오기
+  const placeIdFromUrl = qs.get("placeId");
+  console.log("[PayPage] URL 파라미터 placeId:", placeIdFromUrl);
+  
+  // 주차장 정보 가져오기 함수
+  const getParkingInfo = () => {
+    // 1. state에서 받은 정보 우선
+    if (state?.parkingInfo) {
+      // state에서 받은 정보를 sessionStorage에 저장
+      try {
+        sessionStorage.setItem('nfcParkingInfo', JSON.stringify(state.parkingInfo));
+        console.log("[PayPage] state에서 받은 주차장 정보를 sessionStorage에 저장:", state.parkingInfo);
+      } catch (error) {
+        console.error("[PayPage] sessionStorage 저장 실패:", error);
+      }
+      return state.parkingInfo;
+    }
+    
+    // 2. sessionStorage에서 placeId로 검색
+    if (placeIdFromUrl) {
+      try {
+        const saved = sessionStorage.getItem('nfcParkingInfo');
+        if (saved) {
+          const info = JSON.parse(saved);
+          if (info.id == placeIdFromUrl || info.placeId == placeIdFromUrl) {
+            console.log("[PayPage] sessionStorage에서 주차장 정보 찾음:", info);
+            return info;
+          }
+        }
+      } catch (error) {
+        console.error("[PayPage] sessionStorage 로드 실패:", error);
+      }
+    }
+    
+    // 3. localStorage 백업 확인
+    try {
+      const backup = localStorage.getItem('lastNfcParkingInfo');
+      if (backup) {
+        const info = JSON.parse(backup);
+        if (placeIdFromUrl && (info.id == placeIdFromUrl || info.placeId == placeIdFromUrl)) {
+          console.log("[PayPage] localStorage에서 주차장 정보 찾음:", info);
+          return info;
+        }
+      }
+    } catch (error) {
+      console.error("[PayPage] localStorage 로드 실패:", error);
+    }
+    
+    return null;
+  };
+
+  const parkingInfo = getParkingInfo();
+  console.log("[PayPage] 최종 주차장 정보:", parkingInfo);
 
   // A) 바로 리디렉트 모드(이 로직은 유지하되, 버튼은 직접 완료 페이지로 이동)
   const paymentUrl =
@@ -45,19 +100,20 @@ export default function PayPage() {
     : new Date(startAt.getTime() + 2 * 60 * 60 * 1000);
   const startInMinutes = state?.startInMinutes;
 
-  // C) NFC/PvTimeSelect에서 넘어온 정보
+  // C) NFC/PvTimeSelect에서 넘어온 정보 (parkingInfo 우선 사용)
   const parkName =
-    state?.parkingInfo?.name || state?.parkName || "규장 앞 주차장(구간 182)";
-  const total = state?.total || state?.estimatedCost || 1800;
+    parkingInfo?.name || state?.parkingInfo?.name || state?.parkName || "주차장";
+  const total = state?.total || state?.estimatedCost || 0;
   const usingMinutes = state?.usingMinutes || state?.durationMin || 10;
 
-  console.log("[PayPage] 규장 앞 주차장 데이터 확인:", {
-    parkingInfo: state?.parkingInfo,
+  console.log("[PayPage] 주차장 데이터 확인:", {
+    parkingInfo: parkingInfo,
+    stateParkingInfo: state?.parkingInfo,
     parkName: state?.parkName,
     finalParkName: parkName,
-    charge: state?.parkingInfo?.charge,
-    pricePer10Min: state?.parkingInfo?.charge || 1800,
-    availableTimes: state?.parkingInfo?.availableTimes || state?.openRangesText,
+    charge: parkingInfo?.charge || state?.parkingInfo?.charge,
+    pricePer10Min: parkingInfo?.charge || state?.parkingInfo?.charge || 0,
+    availableTimes: parkingInfo?.availableTimes || state?.parkingInfo?.availableTimes || state?.openRangesText,
   });
 
   // D) 주문/예약 ID
@@ -73,16 +129,17 @@ export default function PayPage() {
     endAt,
   });
 
-  // 화면 데이터
+  // 화면 데이터 (parkingInfo 우선 사용)
   const [loading, setLoading] = useState(!parkName);
   const [lotName, setLotName] = useState(parkName);
   const [pricePer10Min, setPricePer10Min] = useState(
-    state?.parkingInfo?.charge || state?.pricePer10Min || 1800
+    parkingInfo?.charge || state?.parkingInfo?.charge || state?.pricePer10Min || 0
   );
   const [availableTimes, setAvailableTimes] = useState(
-    state?.parkingInfo?.availableTimes ||
+    parkingInfo?.availableTimes ||
+      state?.parkingInfo?.availableTimes ||
       state?.openRangesText ||
-      "00:00 ~ 23:59"
+      "운영시간 정보 없음"
   );
   const [nearbyAvg10Min, setNearbyAvg10Min] = useState(null);
   const [posting, setPosting] = useState(false);
@@ -129,11 +186,30 @@ export default function PayPage() {
     }
   }, [paymentUrl, presetReservationId, navigate]);
 
-  // 2) 계산/예약 모드: 가격 정보 로드
+  // 2) 주차장 정보 업데이트 (parkingInfo가 있으면 즉시 사용)
+  useEffect(() => {
+    if (parkingInfo) {
+      console.log("[PayPage] parkingInfo로 화면 데이터 업데이트:", parkingInfo);
+      setLotName(parkingInfo.name || parkName);
+      setPricePer10Min(parkingInfo.charge || pricePer10Min);
+      setAvailableTimes(parkingInfo.availableTimes || availableTimes);
+      setLoading(false);
+      
+      // sessionStorage에 주차장 정보 저장 (PayComplete에서 사용하기 위해)
+      try {
+        sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
+        console.log("[PayPage] sessionStorage에 주차장 정보 저장:", parkingInfo);
+      } catch (error) {
+        console.error("[PayPage] sessionStorage 저장 실패:", error);
+      }
+    }
+  }, [parkingInfo, parkName, pricePer10Min, availableTimes]);
+
+  // 3) 계산/예약 모드: 가격 정보 로드
   useEffect(() => {
     let mounted = true;
 
-    if (!parkingId || paymentUrl || presetReservationId) {
+    if (!parkingId || paymentUrl || presetReservationId || parkingInfo) {
       setLoading(false);
       return () => {
         mounted = false;
@@ -200,6 +276,13 @@ export default function PayPage() {
           startAt: state?.startAt || startAt.toISOString(),
           endAt: state?.endAt || endAt.toISOString(),
           from: "PayPage-direct",
+          // 주차장 정보 추가
+          parkingInfo: parkingInfo || state?.parkingInfo,
+          parkName: parkingInfo?.name || lotName,
+          placeName: parkingInfo?.name || lotName,
+          address: parkingInfo?.address || state?.address || "",
+          pricePer10Min: parkingInfo?.charge || pricePer10Min,
+          openRangesText: parkingInfo?.availableTimes || availableTimes,
         },
       });
     } finally {
