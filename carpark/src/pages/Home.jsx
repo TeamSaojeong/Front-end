@@ -24,10 +24,10 @@ export default function Home() {
   const userKey = getUserKey();
   const watchedIds = useWatchedIds(userKey);
 
-  // KakaoMap 훅 사용 
+  // KakaoMap 훅 사용 (내부적으로 getnearby 호출) 
   const {
     mapRef,
-    places,
+    places, //getNearby로 가져온 주차장 목록 
     isLoading,
     errorMsg,
     showRequery,
@@ -40,51 +40,6 @@ export default function Home() {
 
   // OutModal 훅 사용 (places 전달)
   const modalHandlers = useOutModal(places);
-
-  // 10초마다 테스트 모달 표시 (단순화된 버전)
-  React.useEffect(() => {
-    console.log('[디버그] 10초 모달 타이머 시작');
-    console.log('[디버그] 현재 환경:', window.location.hostname);
-    console.log('[디버그] HTTPS 여부:', window.location.protocol === 'https:');
-    
-    const showModal = () => {
-      console.log('[디버그] 10초 타이머 실행 - 모달 표시 시도');
-      console.log('[디버그] modalHandlers:', modalHandlers);
-      console.log('[디버그] places 개수:', places.length);
-      console.log('[디버그] 현재 시간:', new Date().toISOString());
-      
-      if (modalHandlers && modalHandlers.showTestOutModal) {
-        console.log('[디버그] showTestOutModal 호출');
-        modalHandlers.showTestOutModal();
-      } else {
-        console.warn('[디버그] modalHandlers.showTestOutModal이 없습니다');
-      }
-      
-      // 말풍선 업데이트
-      setTimeout(() => {
-        if (mapRef.current) {
-          const c = mapRef.current.getCenter();
-          if (c) {
-            window.dispatchEvent(new CustomEvent('refreshMap', {
-              detail: { lat: c.getLat(), lng: c.getLng() }
-            }));
-          }
-        }
-      }, 100);
-    };
-
-    // 첫 번째 모달은 10초 후에 표시
-    const firstTimeout = setTimeout(showModal, 10_000);
-    
-    // 이후 10초마다 반복
-    const interval = setInterval(showModal, 10_000);
-
-    return () => {
-      console.log('[디버그] 10초 모달 타이머 정리');
-      clearTimeout(firstTimeout);
-      clearInterval(interval);
-    };
-  }, [modalHandlers, places, mapRef]);
 
   // places 변경 시 모달 체크
   React.useEffect(() => {
@@ -124,9 +79,10 @@ export default function Home() {
         </button>
       )}
 
+      {/* 주변 주차장 목록을 바텀시트에 표시시 */}
       <BottomSheet
         hostRef={wrapRef}
-        places={places}
+        places={places} //getNearby 결과
         isLoading={isLoading}
         errorMsg={errorMsg}
         onRefreshHere={refreshFromCurrentPosition}

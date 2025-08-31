@@ -12,25 +12,11 @@ import {
 } from "../utils/mapUtils";
 import { getNearby } from "../apis/parking";
 import { postMyLocation } from "../apis/location";
-import { 
-  getYangjaeDummies, 
-  getSeochoGangnamDummies, 
-  isNearYangjae, 
-  isNearSeochoGangnam, 
-  forceYangjae, 
-  forceSeochoGangnam, 
-  uniqueById,
-  distKm 
-} from "../utils/dummyData";
+import { distKm } from "../utils/mapUtils";
 
 const SDK_SRC = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=68f3d2a6414d779a626ae6805d03b074&autoload=false&libraries=services";
 
-const params = new URLSearchParams(window.location.search);
-const useMock =
-  params.get("mock") === "1" ||
-  (typeof import.meta !== "undefined" &&
-    import.meta.env?.VITE_USE_MOCK === "1") ||
-  process.env.REACT_APP_USE_MOCK === "1";
+
 
 export const useKakaoMap = (mapEl, myParks) => {
   const navigate = useNavigate();
@@ -78,9 +64,7 @@ export const useKakaoMap = (mapEl, myParks) => {
         return;
       }
       
-      // 더미 데이터인 경우 공용 주차장 상세 페이지로 이동
-      const isDummyData = String(p.id).startsWith('pub-dummy-') || String(p.id).startsWith('pv-dummy-') || String(p.id).startsWith('prv-dummy-');
-      const path = isDummyData ? `/place/${p.id}` : (isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`);
+      const path = isPrivate(p) ? `/pv/place/${p.id}` : `/place/${p.id}`;
       console.log('이동할 경로:', path);
       
       navigate(path, {
@@ -160,21 +144,21 @@ export const useKakaoMap = (mapEl, myParks) => {
 
   // 위치 감지 - 양재AT센터 고정 위치 사용
   const detectAndLoad = () => {
-    const fixedLoc = getCachedLoc(); // 항상 양재AT센터 위치 반환
+    const fixedLoc = getCachedLoc(); // 항상 양재AT센터 위치 고정 
     console.log('고정 위치 사용 (양재AT센터):', fixedLoc);
     
     setCenter(fixedLoc);
     recenterMap(mapRef, fixedLoc.lat, fixedLoc.lng);
     showMyLocation(mapRef, myLocOverlayRef, fixedLoc.lat, fixedLoc.lng);
-    syncAndFetch(fixedLoc.lat, fixedLoc.lng);
+    syncAndFetch(fixedLoc.lat, fixedLoc.lng); //위치 전송 + 주변 검색 
   };
 
   const syncAndFetch = async (lat, lng) => {
     try {
-      setCachedLoc(lat, lng);
-      await postMyLocation({ lat, lng });
+      setCachedLoc(lat, lng); //로컬에 위치 저장
+      await postMyLocation({ lat, lng }); //서버에 위치 전송 
     } catch {}
-    await fetchNearby(lat, lng);
+    await fetchNearby(lat, lng); //주변 주차장 검색 
   };
 
   const renderBubbles = (rows) => {
@@ -256,7 +240,7 @@ export const useKakaoMap = (mapEl, myParks) => {
   };
 
   const fetchNearby = async (lat, lng) => {
-    if (loadingRef.current) return;
+    if (loadingRef.current) return; //중복 요청 방지 
     loadingRef.current = true;
     setIsLoading(true);
     setErrorMsg("");
@@ -267,45 +251,42 @@ export const useKakaoMap = (mapEl, myParks) => {
     overlaysRef.current = [];
 
     try {
-      let rows;
-      if (useMock) {
-        rows = [];
-      } else {
-        const { data } = await getNearby(lat, lng);
-        const rowsRaw = Array.isArray(data) ? data : data?.data ?? data?.items ?? [];
-        rows = rowsRaw.map((r, idx) => {
-          const id = r.id ?? r.kakaoId ?? r.placeId ?? r.parkingId ?? String(idx + 1);
-          const x = r.x ?? r.lon ?? r.longitude ?? r.lng;
-          const y = r.y ?? r.lat ?? r.latitude;
-          const unitMin = r.timerate ?? r.timeRate ?? null;
-          const unitPrice = r.addrate ?? r.addRate ?? null;
-          const computed =
-            unitMin && unitPrice
-              ? Math.round((unitPrice * 10) / unitMin)
-              : r.price != null
-              ? Number(r.price)
-              : null;
-          return {
-            id,
-            kakaoId: id,
-            name: r.placeName ?? r.name ?? "주차장",
-            lat: y,
-            lng: x,
-            price: computed,
-            address: r.addressName ?? r.address ?? "",
-            type: (r.type || r.category || "PUBLIC").toUpperCase(),
-            distanceKm:
-              r.distance != null
-                ? Number(r.distance) / 1000
-                : r.distanceMeters != null
-                ? r.distanceMeters / 1000
-                : r.distanceKm,
-            etaMin: r.etaMin ?? r.etaMinutes,
-            leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut),
-          };
-        });
-      }
+      //api 호출해서 주변 주차장 정보 가져오는 부분 
+      const { data } = await getNearby(lat, lng);
+      const rowsRaw = Array.isArray(data) ? data : data?.data ?? data?.items ?? [];
+      const rows = rowsRaw.map((r, idx) => {
+        const id = r.id ?? r.kakaoId ?? r.placeId ?? r.parkingId ?? String(idx + 1);
+        const x = r.x ?? r.lon ?? r.longitude ?? r.lng;
+        const y = r.y ?? r.lat ?? r.latitude;
+        const unitMin = r.timerate ?? r.timeRate ?? null;
+        const unitPrice = r.addrate ?? r.addRate ?? null;
+        const computed = //10분당 요금 계산 
+          unitMin && unitPrice
+            ? Math.round((unitPrice * 10) / unitMin)
+            : r.price != null
+            ? Number(r.price)
+            : null;
+        return {
+          id,
+          kakaoId: id,
+          name: r.placeName ?? r.name ?? "주차장",
+          lat: y,
+          lng: x,
+          price: computed,
+          address: r.addressName ?? r.address ?? "",
+          type: (r.type || r.category || "PUBLIC").toUpperCase(),
+          distanceKm:
+            r.distance != null
+              ? Number(r.distance) / 1000
+              : r.distanceMeters != null
+              ? r.distanceMeters / 1000
+              : r.distanceKm,
+          etaMin: r.etaMin ?? r.etaMinutes,
+          leavingSoon: !!(r.leavingSoon ?? r.soonOut ?? r.isSoonOut), //곧 나감 상태 
+        };
+      });
 
+      //내 주차장 정보와 병합 
       const mine = (myParks || [])
         .filter((m) => m.enabled && typeof m.lat === "number" && typeof m.lng === "number")
         .map((m) => {
@@ -328,26 +309,7 @@ export const useKakaoMap = (mapEl, myParks) => {
           };
         });
 
-      // 더미 데이터 항상 표시 (디버깅용)
-      const yg = getYangjaeDummies().map(dummy => ({
-        ...dummy,
-        id: dummy.kakaoId, // kakaoId를 id로 사용
-        distanceKm: Math.round(distKm({ lat, lng }, { lat: dummy.lat, lng: dummy.lng }) * 10) / 10
-      }));
-      const sg = getSeochoGangnamDummies().map(dummy => ({
-        ...dummy,
-        id: dummy.kakaoId, // kakaoId를 id로 사용
-        distanceKm: Math.round(distKm({ lat, lng }, { lat: dummy.lat, lng: dummy.lng }) * 10) / 10
-      }));
-      
-      console.log('[디버그] 더미 데이터 개수:', {
-        yangjaeDummies: yg.length,
-        seochoGangnamDummies: sg.length,
-        myParks: mine.length,
-        apiRows: rows.length
-      });
-
-      const merged = uniqueById([...yg, ...sg, ...mine, ...rows]);
+      const merged = [...mine, ...rows];
       
       console.log('[디버그] 병합 후 총 주차장 개수:', merged.length);
       console.log('[디버그] 병합된 주차장 이름들:', merged.map(p => p.name));
@@ -400,9 +362,7 @@ export const useKakaoMap = (mapEl, myParks) => {
     const c = mapRef.current.getCenter();
     setCenter({ lat: c.getLat(), lng: c.getLng() });
     
-    // "다시 검색" 버튼에서는 "곧 나감" 상태를 초기화
-    window.dummyLeavingSoonIds = [];
-    console.log('[다시 검색] "곧 나감" 상태 초기화');
+
     
     syncAndFetch(c.getLat(), c.getLng());
   };

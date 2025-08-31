@@ -6,6 +6,19 @@ const normalizeId = (id) => String(id ?? "").replace(/^kakao:/i, "");
 // 양재AT센터 고정 위치 (정확한 좌표)
 const FIXED_LOCATION = { lat: 37.468358, lng: 127.039229 };
 
+// 거리 계산 함수
+export const distKm = (a, b) => {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const la1 = (a.lat * Math.PI) / 180;
+  const la2 = (b.lat * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+};
+
 /** 로컬 저장 유틸 - 양재AT센터로 고정 */
 export const getCachedLoc = () => {
   // 항상 양재AT센터 위치 반환
@@ -127,6 +140,7 @@ export default {
   getCachedLoc,
   setCachedLoc,
   near,
+  distKm,
   getUserKey,
   useWatchedIds,
   attachTouchClick,

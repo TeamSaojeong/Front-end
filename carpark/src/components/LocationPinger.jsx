@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { postMyLocation } from "../apis/location";
 
 export default function LocationPinger({
-  intervalMinutes = 10,
+  intervalMinutes = 10, //여기가 10분 마다 전송할 때 그 10분 
   intervalSeconds, // 테스트 시 10 같은 값 넣으면 초 단위
   watch = true,
 }) {
@@ -49,7 +49,7 @@ export default function LocationPinger({
     const send = async () => {
       if (!pos) return;
       try {
-        await postMyLocation(pos);
+        await postMyLocation(pos); //10분마다 위치 전송송
         console.debug("[location] sent", pos);
       } catch (e) {
         console.debug(

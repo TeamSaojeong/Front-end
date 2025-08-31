@@ -135,60 +135,17 @@ export default function PlaceDetail() {
       return;
     }
     
-    // 교장 앞 주차장의 경우 NFC 페이지로 이동
-    if (kakaoId === "pub-dummy-gn-4") {
-      console.log('[PlaceDetail] 교장 앞 주차장 - NFC 페이지로 이동');
-      
-      // NFC 페이지로 전달할 주차장 정보 준비
-      const parkingInfo = {
-        id: parkingId ?? kakaoId,
-        name: detail?.name || "교장 앞 주차장(구간 182)",
-        address: detail?.address || "",
-        availableTimes: detail?.availableTimes || "",
-        isPrivate: true,
-        lat: targetLat,
-        lng: targetLng,
-        charge: detail?.pricePer10m || 1800,
-        note: detail?.note || "",
-      };
-
-      console.log('PlaceDetail에서 NFC로 전달하는 정보:', parkingInfo);
-      
-      // 세션 스토리지에 저장
-      try {
-        sessionStorage.setItem('nfcParkingInfo', JSON.stringify(parkingInfo));
-        console.log('[PlaceDetail] sessionStorage 저장 완료');
-      } catch (error) {
-        console.error('[PlaceDetail] 스토리지 저장 실패:', error);
-      }
-      
-      // NFC 페이지로 이동
-      navigate("/nfc", {
-        state: {
-          prefetched: true,
-          placeId: parkingId ?? kakaoId,
-          placeName: detail?.name,
-          address: detail?.address,
-          openRangesText: detail?.availableTimes,
-          isPrivate: true,
-          lat: targetLat,
-          lng: targetLng,
-          pricePer10Min: detail?.pricePer10m || 1800,
-        },
-      });
-    } else {
-      // 일반 공용 주차장 플로우
-      navigate("/pub/time-select", {
-        state: {
-          prefetched: true,
-          placeId: parkingId ?? kakaoId,
-          placeName: detail?.name,
-          address: detail?.address,
-          openRangesText: detail?.availableTimes,
-          isPrivate: false,
-        },
-      });
-    }
+    // 일반 공용 주차장 플로우
+    navigate("/pub/time-select", {
+      state: {
+        prefetched: true,
+        placeId: parkingId ?? kakaoId,
+        placeName: detail?.name,
+        address: detail?.address,
+        openRangesText: detail?.availableTimes,
+        isPrivate: false,
+      },
+    });
   };
 
   // 상세
@@ -203,59 +160,7 @@ export default function PlaceDetail() {
       setLoading(true);
       setError("");
       
-      // 더미 데이터 ID인지 확인
-      const isDummyData = String(kakaoId).startsWith('pub-dummy-') || String(kakaoId).startsWith('pv-dummy-') || String(kakaoId).startsWith('prv-dummy-');
-      
-      if (isDummyData) {
-        console.log('[PlaceDetail] 더미 데이터 감지, API 호출 건너뛰기:', kakaoId);
-        
-        try {
-          // 더미 데이터에서 해당 주차장 정보 찾기
-          const { getYangjaeDummies, getSeochoGangnamDummies } = await import('../../utils/dummyData');
-          const allDummies = [...getYangjaeDummies(), ...getSeochoGangnamDummies()];
-          const dummyPlace = allDummies.find(p => p.id === kakaoId);
-          
-          if (dummyPlace) {
-            const d = dummyPlace;
-            const pid = d.id ?? d.parkingId ?? null;
-            setParkingId(pid);
-
-            const lat = toNum(d?.lat) ?? sessionLat ?? null;
-            const lng = toNum(d?.lng) ?? sessionLng ?? null;
-            
-            // 양재 AT센터에서의 거리 계산
-            const calculatedDistance = lat && lng 
-              ? calculateDistance(YANGJAE_AT_CENTER.lat, YANGJAE_AT_CENTER.lng, lat, lng)
-              : null;
-            
-            // leavingSoon 상태 확인
-            const leavingSoon = !!d.leavingSoon;
-            setIsLeavingSoon(leavingSoon);
-            console.log('[PlaceDetail] 더미 데이터 leavingSoon 상태:', leavingSoon, d.name);
-
-            const normalized = {
-              id: pid ?? kakaoId,
-              name: d.name ?? placeFromSession?.name ?? "주차 장소",
-              distanceKm: calculatedDistance ?? d.distanceKm ?? placeFromSession?.distanceKm ?? null,
-              pricePer10m: d.charge != null ? Number(d.charge) : (placeFromSession?.price ?? 0),
-              address: d.address ?? placeFromSession?.address ?? "",
-              availableTimes: Array.isArray(d.operateTimes)
-                ? d.operateTimes.map((t) => `${t.start} ~ ${t.end}`).join("  |  ")
-                : (placeFromSession?.available ?? "00:00 ~ 00:00"),
-              note: d.note ?? placeFromSession?.note ?? "",
-              lat,
-              lng,
-            };
-            setDetail(normalized);
-            setLoading(false);
-            return;
-          }
-        } catch (error) {
-          console.error('[PlaceDetail] 더미 데이터 처리 중 오류:', error);
-        }
-      }
-      
-      // 실제 API 호출 (더미 데이터가 아닌 경우)
+      // 실제 API 호출
       try {
         const { data } = await getPublicDetail(
           kakaoId,
@@ -279,6 +184,7 @@ export default function PlaceDetail() {
           ? calculateDistance(YANGJAE_AT_CENTER.lat, YANGJAE_AT_CENTER.lng, lat, lng)
           : null;
 
+          //api 응답을 ui용으로 정규화
         const normalized = {
           id: pid ?? kakaoId,
           name: d.placeName ?? d.name ?? placeFromSession?.name ?? "주차 장소 이름",

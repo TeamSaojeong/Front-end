@@ -9,6 +9,7 @@ import rg_location from "../../Assets/rg_location.svg";
 import { useParkingForm } from "../../store/ParkingForm";
 import { client } from "../../apis/client";
 import { register, modify } from "../../apis/register";
+import { getAvgFee } from "../../apis/parking";
 import { useMyParkings } from "../../store/MyParkings";
 
 const rg_price = (n) =>
@@ -154,9 +155,7 @@ const RegisterPayPage = () => {
     const fetchAvg = async () => {
       if (!lat || !lng) return;
       try {
-        const { data } = await client.get("/api/parking/avg", {
-          params: { lat, lon: lng },
-        });
+        const { data } = await getAvgFee(lat, lng);
         setAvgFee(data?.data?.averageFeePer10m ?? null);
       } catch (e) {
         console.error("[RegisterPayPage] 평균 요금 조회 실패:", e);

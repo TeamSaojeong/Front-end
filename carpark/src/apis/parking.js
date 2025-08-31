@@ -8,7 +8,7 @@ const authHeader = () => {
   return t ? { Authorization: `Bearer ${t}` } : {};
 };
 
-/** 주변 주차장 검색 : Query => lat, lon */
+/**nearby api 사용부분 */
 export const getNearby = (lat, lng, config = {}) => {
   const _lat = typeof lat === "number" ? lat : Number(lat);
   const _lon = typeof lng === "number" ? lng : Number(lng);
@@ -18,7 +18,7 @@ export const getNearby = (lat, lng, config = {}) => {
   });
 };
 
-/** [공영 상세] kakaoId(nearby의 id), lat(y), lon(x) */
+/**[공영 상세] kakaoId(nearby의 id), lat(y), lon(x) */
 export const getPublicDetail = (kakaoId, lat, lon) => {
   const cleanId = normalizeId(kakaoId);
   return client.get("/api/parking/detail", {
@@ -87,10 +87,10 @@ export function subscribeAlert({ provider, externalId, parkingId }) {
   
   if (parkingId && parkingId !== externalId) {
     // 개인 주차장: parkingId만 전송
-    params.parkingId = normalizeId(parkingId);
+    params.parkingId = normalizeId(parkingId); //개인주차장장
   } else {
     // 공용 주차장: provider + externalId만 전송
-    params.provider = provider || "kakao";
+    params.provider = provider || "kakao"; //공용주차장
     params.externalId = normalizeId(externalId);
   }
   

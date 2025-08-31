@@ -7,10 +7,11 @@ const pad2 = (n) => String(n ?? "").padStart(2, "0");
 
 /** 신규 등록 */
 export async function register(accessToken) {
-  const s = useParkingForm.getState();
+  const s = useParkingForm.getState(); //parkingform store에서 데이터 가져오는 중중
 
   console.log("[REGISTER] 함수 진입");
 
+  //주소 정보 처리리
   const addressStr =
     typeof s.address === "string"
       ? s.address.trim()
@@ -21,6 +22,7 @@ export async function register(accessToken) {
           ""
         ).trim();
 
+        //운영 시간 처리리
   const operateTimes = Array.isArray(s.operateTimes)
     ? s.operateTimes.map(({ start, end }) => ({
         start:
@@ -59,6 +61,7 @@ export async function register(accessToken) {
 
   console.log("[REGISTER] 전송할 JSON:", request);
 
+  //이미지 압축 처리리
   let file = s.image;
   let hasImage = file instanceof File;
   
@@ -72,6 +75,7 @@ export async function register(accessToken) {
     });
   }
 
+  //formdata로 서버 전송송
   async function postOnce(f, hasImg) {
     const fd = new FormData();
     fd.append(
