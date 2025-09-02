@@ -6,6 +6,7 @@ import arrow from "../../Assets/arrow.png";
 import kakaopay from "../../Assets/kakaopay.svg";
 
 import { getPublicDetail } from "../../apis/parking"; // preparePayment 제거
+import { client } from "../../apis/client"; // API 클라이언트 추가
 
 const KRW = (n) =>
   (isNaN(n) ? 0 : Math.round(n))
@@ -255,36 +256,168 @@ export default function PayPage() {
     state?.openRangesText,
   ]);
 
-  // 3) 예약/결제 실행 - 카카오페이 생략, 바로 완료 페이지로 이동
-  const handlePay = () => {
+  // 3) 예약/결제 실행 - 실제 결제 API 호출
+  const handlePay = async () => {
     if (posting) return;
     if (minutes <= 0) return alert("이용 시간을 확인해 주세요.");
 
     setPosting(true);
     try {
-      const mockReservationId =
-        presetReservationId || reservationId || orderId || `mock_${Date.now()}`;
+      // 결제 준비 API 호출
+      const paymentData = {
+        parkName: parkingInfo?.name || lotName,
+        parkingId: parkingInfo?.id || parkingId,
+        total: finalTotal,
+        usingMinutes: minutes
+      };
 
-      navigate("/paycomplete", {
-        replace: true,
-        state: {
-          reservationId: mockReservationId,
-          parkingId,
-          lotName,
-          total: finalTotal,
-          usingMinutes: minutes,
-          startAt: state?.startAt || startAt.toISOString(),
-          endAt: state?.endAt || endAt.toISOString(),
-          from: "PayPage-direct",
-          // 주차장 정보 추가
-          parkingInfo: parkingInfo || state?.parkingInfo,
-          parkName: parkingInfo?.name || lotName,
-          placeName: parkingInfo?.name || lotName,
-          address: parkingInfo?.address || state?.address || "",
-          pricePer10Min: parkingInfo?.charge || pricePer10Min,
-          openRangesText: parkingInfo?.availableTimes || availableTimes,
-        },
-      });
+      console.log('[PayPage] 결제 요청 데이터:', paymentData);
+
+      // API 클라이언트 사용
+      let result;
+      try {
+        // Authorization 헤더 추가
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+          alert('로그인이 필요합니다. 다시 로그인해주세요.');
+          navigate('/login');
+          return;
+        }
+        
+        const headers = { Authorization: `Bearer ${accessToken}` };
+        result = await client.post('/api/pay/ready', paymentData, { headers });
+        console.log('[PayPage] 결제 준비 응답:', result);
+      } catch (error) {
+        console.error('[PayPage] API 호출 실패:', error);
+        
+        // 운영시간 오류인 경우 사용자에게 알림
+        if (error.response?.status === 400 && error.response?.data?.code === 'NO_OPERATE_TIME') {
+          alert('현재 운영시간이 아닙니다. 운영시간을 확인해주세요.');
+          return;
+        }
+        
+        // 기타 API 오류인 경우
+        if (error.response?.status >= 400) {
+          const errorMessage = error.response?.data?.message || '결제 준비에 실패했습니다.';
+          alert(errorMessage);
+          return;
+        }
+        
+        // 네트워크 오류 등 기타 오류
+        alert('결제 준비 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+
+      if (result.data?.status === 200) {
+        // 결제 준비 성공 - 실제 API 응답 구조에 맞게 수정
+        const reservationId = result.data?.data?.tid || `res_${Date.now()}`;
+        const nextRedirectPcUrl = result.data?.data?.next_redirect_pc_url;
+        const nextRedirectMobileUrl = result.data?.data?.next_redirect_mobile_url;
+        
+        console.log('[PayPage] 결제 준비 성공:', {
+          reservationId,
+          nextRedirectPcUrl,
+          nextRedirectMobileUrl
+        });
+        
+        // 모바일 환경인지 확인
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile && nextRedirectMobileUrl) {
+          // 모바일 환경에서는 카카오페이 리다이렉트 URL로 현재 탭에서 이동
+          console.log('[PayPage] 모바일 카카오페이 리다이렉트:', nextRedirectMobileUrl);
+          
+          // PayComplete로 이동하기 전에 결제 정보를 sessionStorage에 저장
+          const paymentState = {
+            reservationId,
+            parkingId: parkingInfo?.id || parkingId,
+            lotName,
+            total: finalTotal,
+            usingMinutes: minutes,
+            startAt: state?.startAt || startAt.toISOString(),
+            endAt: state?.endAt || endAt.toISOString(),
+            from: "PayPage-API",
+            parkingInfo: parkingInfo || state?.parkingInfo,
+            parkName: parkingInfo?.name || lotName,
+            placeName: parkingInfo?.name || lotName,
+            address: parkingInfo?.address || state?.address || "",
+            pricePer10Min: parkingInfo?.charge || pricePer10Min,
+            openRangesText: parkingInfo?.availableTimes || availableTimes,
+            paymentData: result.data,
+            tid: result.data?.data?.tid
+          };
+          
+          try {
+            sessionStorage.setItem('pendingPayment', JSON.stringify(paymentState));
+            console.log('[PayPage] 결제 정보를 sessionStorage에 저장:', paymentState);
+          } catch (error) {
+            console.error('[PayPage] sessionStorage 저장 실패:', error);
+          }
+          
+          // 현재 탭에서 카카오페이 리다이렉트 URL로 이동
+          window.location.href = nextRedirectMobileUrl;
+        } else if (nextRedirectPcUrl) {
+          // PC 환경에서는 팝업으로 카카오페이 열기
+          console.log('[PayPage] PC 카카오페이 팝업:', nextRedirectPcUrl);
+          
+          const popup = window.open(nextRedirectPcUrl, 'kakaoPay', 'width=500,height=600');
+          
+          if (popup) {
+            // 팝업이 열린 후 PayComplete로 이동
+            navigate("/paycomplete", {
+              replace: true,
+              state: {
+                reservationId,
+                parkingId: parkingInfo?.id || parkingId,
+                lotName,
+                total: finalTotal,
+                usingMinutes: minutes,
+                startAt: state?.startAt || startAt.toISOString(),
+                endAt: state?.endAt || endAt.toISOString(),
+                from: "PayPage-API",
+                parkingInfo: parkingInfo || state?.parkingInfo,
+                parkName: parkingInfo?.name || lotName,
+                placeName: parkingInfo?.name || lotName,
+                address: parkingInfo?.address || state?.address || "",
+                pricePer10Min: parkingInfo?.charge || pricePer10Min,
+                openRangesText: parkingInfo?.availableTimes || availableTimes,
+                paymentData: result.data,
+                tid: result.data?.data?.tid
+              },
+            });
+          } else {
+            throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+          }
+                  } else {
+            // 리다이렉트 URL이 없으면 바로 PayComplete로 이동
+            navigate("/paycomplete", {
+              replace: true,
+              state: {
+                reservationId,
+                parkingId: parkingInfo?.id || parkingId,
+                lotName,
+                total: finalTotal,
+                usingMinutes: minutes,
+                startAt: state?.startAt || startAt.toISOString(),
+                endAt: state?.endAt || endAt.toISOString(),
+                from: "PayPage-API",
+                parkingInfo: parkingInfo || state?.parkingInfo,
+                parkName: parkingInfo?.name || lotName,
+                placeName: parkingInfo?.name || lotName,
+                address: parkingInfo?.address || state?.address || "",
+                pricePer10Min: parkingInfo?.charge || pricePer10Min,
+                openRangesText: parkingInfo?.availableTimes || availableTimes,
+                paymentData: result.data,
+                tid: result.data?.data?.tid
+              },
+            });
+          }
+      } else {
+        throw new Error(result.message || '결제 준비에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('[PayPage] 결제 오류:', error);
+      alert(`결제 처리 중 오류가 발생했습니다: ${error.message}`);
     } finally {
       setPosting(false);
     }
