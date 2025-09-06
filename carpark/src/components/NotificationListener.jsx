@@ -20,15 +20,20 @@ export default function NotificationListener() {
     if (!token) return;
 
     try {
-      // 로컬 스토리지에서 pendingNotifications 확인
-      const currentUserKey = localStorage.getItem("userKey") || "guest";
+      // 세션 스토리지에서 pendingNotifications 확인 (탭별 독립)
+      const currentUserKey = sessionStorage.getItem("userKey") || localStorage.getItem("userKey") || "guest";
       const notificationsKey = `pendingNotifications__${currentUserKey}`;
       
-      // console.log(`[폴링] 사용자 ${currentUserKey}의 알림 확인 중...`);
-      // console.log(`[폴링] 확인할 키: ${notificationsKey}`);
+      console.log(`[폴링] 사용자 ${currentUserKey}의 알림 확인 중...`);
+      console.log(`[폴링] 확인할 키: ${notificationsKey}`);
       
       try {
-        const pendingNotifications = JSON.parse(localStorage.getItem(notificationsKey) || "[]");
+        // sessionStorage 우선, 없으면 localStorage 확인
+        const pendingNotifications = JSON.parse(
+          sessionStorage.getItem(notificationsKey) || 
+          localStorage.getItem(notificationsKey) || 
+          "[]"
+        );
         // 알림이 있을 때만 로그 출력
         if (pendingNotifications.length > 0) {
           console.log(`[폴링] 발견된 알림:`, pendingNotifications);
@@ -72,7 +77,8 @@ export default function NotificationListener() {
             }
           });
           
-          // 처리된 알림은 로컬 스토리지에서 제거
+          // 처리된 알림은 세션 스토리지에서 제거
+          sessionStorage.removeItem(notificationsKey);
           localStorage.removeItem(notificationsKey);
           
           console.log(`[폴링] ${pendingNotifications.length}개의 새 알림 처리 완료`);
@@ -82,30 +88,9 @@ export default function NotificationListener() {
         console.error('[폴링] 로컬 알림 처리 실패:', error);
       }
 
-      // 여기서 서버에 알림이 있는지 확인하는 API를 호출
-      // 예: GET /api/notifications/check 또는 GET /api/alerts/check
-      // 현재는 구현되지 않은 상태이므로 주석으로 표시
-      
-      // const response = await fetch('/api/notifications/check', {
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //     'Content-Type': 'application/json'
-      //   }
-      // });
-      // const data = await response.json();
-      
-      // if (data.notifications && data.notifications.length > 0) {
-      //   data.notifications.forEach(notification => {
-      //     addNotification({
-      //       id: notification.id,
-      //       type: notification.type,
-      //       parkingId: notification.parkingId,
-      //       placeName: notification.placeName,
-      //       minutesAgo: notification.minutesAgo || 10,
-      //       timestamp: Date.now()
-      //     });
-      //   });
-      // }
+      // 현재는 서버 알림 API가 구현되지 않음
+      // TODO: 서버에서 실제 알림 API 구현 필요
+      // 예: GET /api/alerts/notifications
 
       // console.log(`[폴링] 현재 알림 개수: ${notifications.length}`);
     } catch (error) {
@@ -135,6 +120,12 @@ export default function NotificationListener() {
 
   // 컴포넌트 마운트 시 폴링 시작
   useEffect(() => {
+    // sessionStorage에 userKey가 없으면 localStorage에서 복사
+    if (!sessionStorage.getItem("userKey") && localStorage.getItem("userKey")) {
+      sessionStorage.setItem("userKey", localStorage.getItem("userKey"));
+      console.log(`[NotificationListener] userKey를 localStorage에서 sessionStorage로 복사: ${localStorage.getItem("userKey")}`);
+    }
+    
     startPolling();
     
     return () => {
@@ -186,12 +177,12 @@ export default function NotificationListener() {
     
     addNotification(testNotification);
     
-    // 로컬 스토리지에도 추가 (실제 시나리오 시뮬레이션)
-    const currentUserKey = localStorage.getItem("userKey") || "guest";
+    // 세션 스토리지에도 추가 (실제 시나리오 시뮬레이션)
+    const currentUserKey = sessionStorage.getItem("userKey") || localStorage.getItem("userKey") || "guest";
     const notificationsKey = `pendingNotifications__${currentUserKey}`;
-    const existingNotifications = JSON.parse(localStorage.getItem(notificationsKey) || "[]");
+    const existingNotifications = JSON.parse(sessionStorage.getItem(notificationsKey) || "[]");
     existingNotifications.push(testNotification);
-    localStorage.setItem(notificationsKey, JSON.stringify(existingNotifications));
+    sessionStorage.setItem(notificationsKey, JSON.stringify(existingNotifications));
     
     console.log('[테스트] 알림 추가됨:', testNotification);
   };

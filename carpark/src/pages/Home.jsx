@@ -7,6 +7,7 @@ import Mapmenu from "../components/Mapmenu";
 import Aiforecast from "../components/Aiforecast";
 import "../Styles/map-poi.css";
 import OutModal from "../components/Modal/OutModal";
+import NotificationListener from "../components/NotificationListener";
 import { useMyParkings } from "../store/MyParkings";
 import { useWatchedIds } from "../utils/mapUtils";
 import { useKakaoMap } from "../hooks/useKakaoMap";
@@ -98,6 +99,9 @@ export default function Home() {
         onClose={() => modalHandlers.setModalOpen(false)}
         onViewDetail={goDetailFromModal}
       />
+
+      {/* 푸시 알림 리스너 추가 */}
+      <NotificationListener />
     </div>
   );
 }//수정 체크

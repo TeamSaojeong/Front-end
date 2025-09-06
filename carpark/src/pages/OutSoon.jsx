@@ -286,17 +286,30 @@ export default function OutSoon() {
 
       // 🔔 같은 주차장을 구독한 다른 사용자들에게 알림 시뮬레이션
       try {
-        // 현재 사용자 키
-        const currentUserKey = localStorage.getItem("userKey") || "guest";
+        // 현재 사용자 키 (sessionStorage 우선)
+        const currentUserKey = sessionStorage.getItem("userKey") || localStorage.getItem("userKey") || "guest";
         console.log(`[알림] 현재 사용자: ${currentUserKey}`);
         
-        // 모든 사용자 키 찾기 (실제로는 서버에서 처리해야 함)
+        // 모든 사용자 키 찾기 (localStorage와 sessionStorage 모두 확인)
         const allUserKeys = [];
+        
+        // localStorage에서 찾기
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && key.startsWith("watchedPlaceIds__")) {
             const userKey = key.replace("watchedPlaceIds__", "");
             if (userKey !== currentUserKey) {
+              allUserKeys.push(userKey);
+            }
+          }
+        }
+        
+        // sessionStorage에서 찾기
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith("watchedPlaceIds__")) {
+            const userKey = key.replace("watchedPlaceIds__", "");
+            if (userKey !== currentUserKey && !allUserKeys.includes(userKey)) {
               allUserKeys.push(userKey);
             }
           }
@@ -336,10 +349,17 @@ export default function OutSoon() {
               
               console.log(`[알림] 생성된 알림 데이터:`, notificationData);
               
-              // 해당 사용자의 알림 목록에 추가
+              // 해당 사용자의 알림 목록에 추가 (sessionStorage 우선)
               const notificationsKey = `pendingNotifications__${userKey}`;
-              const existingNotifications = JSON.parse(localStorage.getItem(notificationsKey) || "[]");
+              const existingNotifications = JSON.parse(
+                sessionStorage.getItem(notificationsKey) || 
+                localStorage.getItem(notificationsKey) || 
+                "[]"
+              );
               existingNotifications.push(notificationData);
+              
+              // sessionStorage와 localStorage 모두에 저장
+              sessionStorage.setItem(notificationsKey, JSON.stringify(existingNotifications));
               localStorage.setItem(notificationsKey, JSON.stringify(existingNotifications));
               
               console.log(`[알림] 사용자 ${userKey}의 알림 목록에 추가됨:`, {

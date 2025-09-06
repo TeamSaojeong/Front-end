@@ -117,6 +117,9 @@ const LoginPage = () => {
         res.data?.loginId ||
         idValue;
       localStorage.setItem("userKey", String(userKey));
+      
+      // ✅ sessionStorage에도 userKey 저장 (탭별 독립 알림을 위해)
+      sessionStorage.setItem("userKey", String(userKey));
 
       // ✅ (선택) 이전 공용 watchedPlaceIds → 사용자별로 마이그레이션
       try {
